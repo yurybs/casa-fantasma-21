@@ -1,0 +1,68 @@
+fantôme niveau 2 clown niveau 4 épouvantail niveau 6 T-Rex
+niveau 9 vampire niveau 11 boule de feu niveau 13  pieuvre
+niveau 15 Scorpion 19 Robot du mal
+21 Fantome araigné ptits monstres squelette zombie Phantom de feu
+mini clown minnie-épouvantail mini T-Rex mini vampire mini boule de feu
+mini pieuvre mini scorpion mini robot araignée
+
+
+
+---------------
+
+Nível,Vilão,Características Prováveis
+02,Fantasma,"Flutuação, atravessa paredes, ataques rápidos."
+04,Palhaço,"Projéteis de malabarismo, risada intimidadora."
+06,Espantalho,"Alcance longo com braços de palha, corvos."
+09,T-Rex,"Dano de impacto, investidas pesadas, rugidos."
+11,Vampiro,"Transformação em morcego, roubo de vida (lifesteal)."
+13,Bola de Fogo,"Rastro de fogo, explosões de área, alta velocidade."
+15,Polvo,"Múltiplos braços, tinta para cegar, ataques de baixo para cima."
+19,Escorpião,"Ataque de veneno (DoT), carapaça resistente."
+21,Robô do Mal,"Mísseis, lasers e a maior barra de vida do jogo."
+
+---------------
+
+Essa é uma progressão bem interessante de chefões! Para um jogo de plataforma em **pixel art**, a clareza visual é fundamental para que o jogador identifique os padrões de ataque.
+
+Aqui está a sua lista organizada por níveis e categorias, seguida de um prompt otimizado para geração de assets.
+
+---
+
+## 👾 Lista de Vilões: Progressão de Nível
+
+### Chefes Principais (Bosses)
+| Nível | Vilão | Características Prováveis |
+| :--- | :--- | :--- |
+| **02** | **Fantasma** | Flutuação, atravessa paredes, ataques rápidos. |
+| **04** | **Palhaço** | Projéteis de malabarismo, risada intimidadora. |
+| **06** | **Espantalho** | Alcance longo com braços de palha, corvos. |
+| **09** | **T-Rex** | Dano de impacto, investidas pesadas, rugidos. |
+| **11** | **Vampiro** | Transformação em morcego, roubo de vida (lifesteal). |
+| **13** | **Bola de Fogo** | Rastro de fogo, explosões de área, alta velocidade. |
+| **15** | **Polvo** | Múltiplos braços, tinta para cegar, ataques de baixo para cima. |
+| **19** | **Escorpião** | Ataque de veneno (DoT), carapaça resistente. |
+| **21** | **Robô do Mal** | Mísseis, lasers e a maior barra de vida do jogo. |
+
+### Inimigos Comuns e Minis (Mobs)
+* **Mortos-Vivos:** Squeleto, Zumbi.
+* **Variantes Elementais/Híbridas:** Fantasma Aranha, Fantasma de Fogo, Monstrinhos.
+* **Minis (Versões menores dos chefes):** Mini Palhaço, Mini Espantalho, Mini T-Rex, Mini Vampiro, Mini Bola de Fogo, Mini Polvo, Mini Escorpião, Mini Robô Aranha.
+
+---
+
+## 🎨 Prompt para Geração de Assets (Pixel Art)
+
+Se você for usar uma IA (como a que tenho acesso aqui ou o Midjourney/DALL-E) para visualizar esses personagens, use este prompt estruturado para manter a consistência de um jogo de plataforma:
+
+> **Prompt:**
+> "A character sheet for a [NOME DO VILÃO], side-view, 16-bit pixel art style, platformer video game sprite. High contrast colors, clean outlines, standing on a transparent background. Vibrant colors, retro aesthetic like SNES or Genesis. The character should look menacing but fit within a 64x64 or 128x128 pixel grid."
+
+### Exemplo aplicado ao "Robô do Mal" (Nível 21):
+> "A character sheet for an Evil Robot boss, side-view, 16-bit pixel art style, platformer video game sprite. Features glowing red eyes, metallic plating with battle damage, and integrated arm cannons. High contrast colors, clean outlines, transparent background, retro aesthetic, 128x128 pixel grid scale."
+
+---
+
+### Dica de Design:
+Como você tem muitos "Minis", uma técnica legal em pixel art é usar a **mesma paleta de cores** do chefe original, mas simplificar a silhueta. Por exemplo, se o **Vampiro** é um sprite de 64x64 com capa detalhada, o **Mini Vampiro** pode ser um sprite de 32x32 apenas com as orelhas pontudas e os caninos em evidência.
+
+Qual desses vilões você imagina que será o mais difícil para o jogador derrotar?
