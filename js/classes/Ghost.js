@@ -34,6 +34,9 @@ export default class Ghost extends Boss {
         }
 
         // Update visual position
-        this.visual.setPosition(this.x, this.y);
+        if (this.visual) {
+            this.visual.setPosition(this.x, this.y);
+        }
+        console.log('Ghost update called, position:', this.x, this.y);
     }
 }
