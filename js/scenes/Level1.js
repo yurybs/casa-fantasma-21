@@ -29,6 +29,9 @@ export default class Level1 extends Phaser.Scene {
         this.player.setTint(0xff0000);
         this.player.setCollideWorldBounds(true);
 
+        // Player visual (since sprite has no texture)
+        this.playerVisual = this.add.rectangle(this.player.x, this.player.y, 32, 32, 0xff0000);
+
         // Collision
         this.physics.add.collider(this.player, this.platforms);
 
@@ -52,6 +55,9 @@ export default class Level1 extends Phaser.Scene {
             this.player.setVelocityX(0);
         }
 
+
+        // Update player visual position
+        this.playerVisual.setPosition(this.player.x, this.player.y);
         if (this.spaceKey.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(-330);
         }
