@@ -89,11 +89,14 @@ export default class Level1 extends Phaser.Scene {
     }
 
     shootProjectile() {
+        console.log('shootProjectile called');
         const projectile = this.add.rectangle(this.player.x, this.player.y, 10, 10, 0xffff00);
+        console.log('Created projectile at', this.player.x, this.player.y);
         this.physics.add.existing(projectile);
         projectile.body.setVelocityX(300); // Always shoot right
         projectile.body.setCollideWorldBounds(true);
         this.projectiles.add(projectile);
+        console.log('Added projectile to group');
 
         // Destroy after 2 seconds
         this.time.delayedCall(2000, () => {
