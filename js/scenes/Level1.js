@@ -73,6 +73,18 @@ export default class Level1 extends Phaser.Scene {
         if (this.spaceKey.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(-330);
         }
+
+        // Player attack
+        if (Phaser.Input.Keyboard.JustDown(this.xKey)) {
+            console.log('X key pressed');
+            this.shootProjectile();
+        }
+
+        // Update boss
+        if (this.boss && this.boss.isAlive) {
+            console.log('Updating boss');
+            this.boss.update(this.time.now, this.game.loop.delta);
+        }
     }
 
     spawnBoss() {
