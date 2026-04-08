@@ -66,4 +66,32 @@ export default class Level1 extends Phaser.Scene {
             this.player.setVelocityY(-330);
         }
     }
+
+    spawnBoss() {
+        switch (GameState.currentLevel) {
+            case 2:
+                this.boss = new Ghost(this, 600, 300);
+                break;
+            // Add more cases for other levels
+            default:
+                this.boss = null;
+        }
+    }
+
+    shootProjectile() {
+        const projectile = this.projectiles.create(this.player.x, this.player.y, null);
+        projectile.setDisplaySize(10, 10);
+        projectile.setTint(0xffff00); // Yellow star
+        projectile.setVelocityX(this.player.flipX ? -300 : 300); // Direction based on player facing? For now, right.
+
+        // Destroy after 2 seconds
+        this.time.delayedCall(2000, () => {
+            if (projectile.active) projectile.destroy();
+        });
+    }
+
+    hitBoss(projectile, boss) {
+        projectile.destroy();
+        boss.takeDamage(10); // Damage amount
+    }
 }
