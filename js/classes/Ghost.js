@@ -32,5 +32,8 @@ export default class Ghost extends Boss {
                 this.y += (dy / distance) * 0.5;
             }
         }
+
+        // Update visual position
+        this.visual.setPosition(this.x, this.y);
     }
 }

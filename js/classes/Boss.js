@@ -5,6 +5,9 @@ export default class Boss extends Enemy {
         super(scene, x, y, texture, health, damage);
         this.maxHealth = health;
 
+        // Visual (since no texture)
+        this.visual = scene.add.rectangle(x, y, 40, 40, 0xff0000); // Default red, override in subclasses
+
         // Health bar
         this.healthBarBg = scene.add.rectangle(400, 20, 400, 20, 0x000000);
         this.healthBar = scene.add.rectangle(400, 20, 400, 20, 0xff0000);
@@ -24,6 +27,7 @@ export default class Boss extends Enemy {
         if (this.health <= 0) {
             this.healthBarBg.destroy();
             this.healthBar.destroy();
+            if (this.visual) this.visual.destroy();
         }
     }
 
@@ -31,5 +35,6 @@ export default class Boss extends Enemy {
         super.destroy();
         if (this.healthBarBg) this.healthBarBg.destroy();
         if (this.healthBar) this.healthBar.destroy();
+        if (this.visual) this.visual.destroy();
     }
 }
