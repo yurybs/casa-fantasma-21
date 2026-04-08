@@ -7,6 +7,9 @@ export default class Level1 extends Phaser.Scene {
     }
 
     create() {
+        // Set background color
+        this.cameras.main.setBackgroundColor('#87CEEB'); // Sky blue
+
         // Create platforms
         this.platforms = this.physics.add.staticGroup();
 
