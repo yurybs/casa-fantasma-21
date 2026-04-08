@@ -36,6 +36,9 @@ export default class Level1 extends Phaser.Scene {
         // Player visual (since sprite has no texture)
         this.playerVisual = this.add.rectangle(this.player.x, this.player.y, 32, 32, 0xff0000);
 
+        // Player direction (1 = right, -1 = left)
+        this.playerDirection = 1;
+
         // Collision
         this.physics.add.collider(this.player, this.platforms);
 
@@ -61,8 +64,10 @@ export default class Level1 extends Phaser.Scene {
     update() {
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
+            this.playerDirection = -1;
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
+            this.playerDirection = 1;
         } else {
             this.player.setVelocityX(0);
         }
@@ -103,7 +108,8 @@ export default class Level1 extends Phaser.Scene {
     shootProjectile() {
         console.log('shootProjectile called');
         const projectile = this.add.rectangle(this.player.x, this.player.y, 10, 10, 0xffff00);
-        console.log('Created projectile at', this.player.x, this.player.y);
+        console.log('Created projectile  * this.playerDirection); // Fire in player direction
+        projectile.body.setVelocityY(0); // No vertical velocity.player.y);
         this.physics.add.existing(projectile);
         projectile.body.setVelocityX(300); // Always shoot right
         projectile.body.setCollideWorldBounds(true);
@@ -116,8 +122,14 @@ export default class Level1 extends Phaser.Scene {
         });
     }
 
-    hitBoss(projectile, boss) {
+    hitBconsole.log('hitBoss called, boss type:', boss.constructor.name);
         projectile.destroy();
+        if (boss && typeof boss.takeDamage === 'function') {
+            console.log('Calling takeDamage');
+            boss.takeDamage(10); // Damage amount
+        } else {
+            console.log('boss.takeDamage does not exist or is not a function');
+        }
         boss.takeDamage(10); // Damage amount
     }
 }
