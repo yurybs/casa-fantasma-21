@@ -1,4 +1,5 @@
 import GameState from '../GameState.js';
+import Ghost from '../classes/Ghost.js';
 
 export default class Level1 extends Phaser.Scene {
     constructor() {
@@ -35,15 +36,12 @@ export default class Level1 extends Phaser.Scene {
         // Collision
         this.physics.add.collider(this.player, this.platforms);
 
-        // Controls
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        // Player attack
+        this.projectiles = this.physics.add.group();
+        this.xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
-        // GameState
-        console.log('Current Level:', GameState.currentLevel);
-
-        // TODO: In Level 2, spawn Boss Fantasma here
-        // const bossFantasma = new BossFantasma(this, x, y);
+        // Spawn boss based on level
+        this.spawnBoss(); this.hitBoss, null, this);
     }
 
     update() {
