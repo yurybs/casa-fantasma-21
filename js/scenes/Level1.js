@@ -41,7 +41,10 @@ export default class Level1 extends Phaser.Scene {
         this.xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
         // Spawn boss based on level
-        this.spawnBoss(); this.hitBoss, null, this);
+        this.spawnBoss();
+
+        // Collision between projectiles and boss
+        this.physics.add.overlap(this.projectiles, this.boss, this.hitBoss, null, this);
     }
 
     update() {
