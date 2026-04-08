@@ -50,7 +50,9 @@ export default class Level1 extends Phaser.Scene {
         this.spawnBoss();
 
         // Collision between projectiles and boss
-        this.physics.add.overlap(this.projectiles, this.boss, this.hitBoss, null, this);
+        if (this.boss) {
+            this.physics.add.overlap(this.projectiles, this.boss, this.hitBoss, null, this);
+        }
 
         // Controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -72,22 +74,20 @@ export default class Level1 extends Phaser.Scene {
             this.player.setVelocityX(0);
         }
 
-
         // Update player visual position
         this.playerVisual.setPosition(this.player.x, this.player.y);
+
         if (this.spaceKey.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(-330);
         }
 
         // Player attack
         if (Phaser.Input.Keyboard.JustDown(this.xKey)) {
-            console.log('X key pressed');
             this.shootProjectile();
         }
 
         // Update boss
         if (this.boss && this.boss.isAlive) {
-            console.log('Updating boss');
             this.boss.update(this.time.now, this.game.loop.delta);
         }
     }
@@ -106,15 +106,12 @@ export default class Level1 extends Phaser.Scene {
     }
 
     shootProjectile() {
-        console.log('shootProjectile called');
         const projectile = this.add.rectangle(this.player.x, this.player.y, 10, 10, 0xffff00);
-        console.log('Created projectile  * this.playerDirection); // Fire in player direction
-        projectile.body.setVelocityY(0); // No vertical velocity.player.y);
         this.physics.add.existing(projectile);
-        projectile.body.setVelocityX(300); // Always shoot right
+        projectile.body.setVelocityX(300 * this.playerDirection); // Fire in player direction
+        projectile.body.setVelocityY(0); // No vertical velocity
         projectile.body.setCollideWorldBounds(true);
         this.projectiles.add(projectile);
-        console.log('Added projectile to group');
 
         // Destroy after 2 seconds
         this.time.delayedCall(2000, () => {
@@ -122,14 +119,10 @@ export default class Level1 extends Phaser.Scene {
         });
     }
 
-    hitBconsole.log('hitBoss called, boss type:', boss.constructor.name);
+    hitBoss(projectile, boss) {
         projectile.destroy();
         if (boss && typeof boss.takeDamage === 'function') {
-            console.log('Calling takeDamage');
             boss.takeDamage(10); // Damage amount
-        } else {
-            console.log('boss.takeDamage does not exist or is not a function');
         }
-        boss.takeDamage(10); // Damage amount
     }
 }
