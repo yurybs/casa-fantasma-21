@@ -76,9 +76,11 @@ export default class Level1 extends Phaser.Scene {
     }
 
     spawnBoss() {
+        console.log('spawnBoss called, level:', GameState.currentLevel);
         switch (GameState.currentLevel) {
             case 2:
                 this.boss = new Ghost(this, 600, 300);
+                console.log('Ghost boss spawned at', this.boss.x, this.boss.y);
                 break;
             // Add more cases for other levels
             default:
@@ -87,10 +89,11 @@ export default class Level1 extends Phaser.Scene {
     }
 
     shootProjectile() {
-        const projectile = this.projectiles.create(this.player.x, this.player.y, null);
-        projectile.setDisplaySize(10, 10);
-        projectile.setTint(0xffff00); // Yellow star
-        projectile.setVelocityX(this.player.flipX ? -300 : 300); // Direction based on player facing? For now, right.
+        const projectile = this.add.rectangle(this.player.x, this.player.y, 10, 10, 0xffff00);
+        this.physics.add.existing(projectile);
+        projectile.body.setVelocityX(300); // Always shoot right
+        projectile.body.setCollideWorldBounds(true);
+        this.projectiles.add(projectile);
 
         // Destroy after 2 seconds
         this.time.delayedCall(2000, () => {
