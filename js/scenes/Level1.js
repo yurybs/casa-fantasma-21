@@ -48,6 +48,14 @@ export default class Level1 extends Phaser.Scene {
 
         // Collision between projectiles and boss
         this.physics.add.overlap(this.projectiles, this.boss, this.hitBoss, null, this);
+
+        // Controls
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // GameState
+        console.log('Current Level:', GameState.currentLevel);
+        console.log('Level1 scene loaded');
     }
 
     update() {
