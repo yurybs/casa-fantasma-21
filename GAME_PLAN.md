@@ -1,4 +1,4 @@
-# Toy Blaster Kid — Plano de Desenvolvimento Completo
+# Toy Blaster Kid — Plano de Desenvolvimento
 
 ## Visão Geral
 
@@ -10,14 +10,14 @@ Jogo de plataforma 2D para web, gratuito, inspirado em Super Mario Bros. com est
 
 | Camada | Tecnologia | Justificativa |
 |---|---|---|
-| Engine de Jogo | **Phaser 3** | Madura, bem documentada, suporte a canvas/WebGL, física, tilemaps |
-| Linguagem | **TypeScript** | Tipagem para maior segurança no desenvolvimento |
-| Build | **Vite** | Rápido, zero config com Phaser 3 |
-| Assets de Tile | **Tiled** (formato JSON) | Padrão de mercado para tilemaps |
-| Unit Tests | **Vitest** | Compatível com Vite, rápido |
-| Integration Tests | **Vitest + mocks Phaser** | Testa sistemas isolados do jogo |
-| E2E Tests | **Playwright** | Testa o jogo rodando no browser |
-| CI | **GitHub Actions** | Pipeline automático |
+| Engine | **Phaser 3** | Madura, canvas/WebGL, física, tilemaps, áudio |
+| Linguagem | **TypeScript** | Tipagem estrita, erros em tempo de desenvolvimento |
+| Build | **Vite** | Hot reload instantâneo, bundle otimizado |
+| Unit/Integration Tests | **Vitest** | Compatível com Vite, mock nativo, rápido |
+| E2E Tests | **Playwright** | Chromium headless, automação real de browser |
+| CI/CD | **GitHub Actions + GitHub Pages** | Deploy gratuito, automático em push |
+
+> **Nota sobre sprites no Sprint 1:** Os sprites são gerados programaticamente via `Phaser.Graphics` (retângulos coloridos com estilo pixel-art). Isso elimina dependência de arquivos de imagem externos no MVP, permitindo foco total na mecânica.
 
 ---
 
@@ -26,478 +26,664 @@ Jogo de plataforma 2D para web, gratuito, inspirado em Super Mario Bros. com est
 ```
 toy-blaster-kid/
 ├── src/
-│   ├── main.ts                  # Entry point, configura Phaser
+│   ├── main.ts
 │   ├── config/
-│   │   ├── GameConfig.ts        # Configuração global do Phaser
-│   │   ├── LevelConfig.ts       # Dados de todos os 21 níveis
-│   │   └── EnemyConfig.ts       # Stats dos inimigos e chefões
+│   │   ├── GameConfig.ts          # Config global do Phaser
+│   │   ├── LevelConfig.ts         # Dados dos 21 níveis
+│   │   └── EnemyConfig.ts         # Stats de inimigos e chefões
 │   ├── scenes/
-│   │   ├── BootScene.ts         # Carrega assets iniciais
-│   │   ├── PreloadScene.ts      # Barra de carregamento
-│   │   ├── MenuScene.ts         # Menu principal
-│   │   ├── WorldMapScene.ts     # Mapa entre níveis (estilo Mario World)
-│   │   ├── GameScene.ts         # Cena principal de jogo
-│   │   ├── BossScene.ts         # Cena de batalha contra chefão
-│   │   ├── PauseScene.ts        # Menu de pausa
-│   │   ├── GameOverScene.ts     # Tela de game over
-│   │   └── VictoryScene.ts      # Tela de vitória
+│   │   ├── BootScene.ts
+│   │   ├── PreloadScene.ts
+│   │   ├── MenuScene.ts
+│   │   ├── WorldMapScene.ts       # Mapa entre níveis (estilo Mario World)
+│   │   ├── GameScene.ts           # Cena principal de jogo
+│   │   ├── BossScene.ts           # Batalha contra chefão
+│   │   ├── BossIntroScene.ts      # Carta estilo Pokédex antes do boss
+│   │   ├── PauseScene.ts
+│   │   ├── GameOverScene.ts
+│   │   └── VictoryScene.ts
 │   ├── entities/
-│   │   ├── Player.ts            # Classe do jogador
+│   │   ├── Player.ts
 │   │   ├── enemies/
-│   │   │   ├── BaseEnemy.ts     # Classe base de inimigo
+│   │   │   ├── BaseEnemy.ts
 │   │   │   ├── Skeleton.ts
 │   │   │   ├── Zombie.ts
 │   │   │   ├── SpiderGhost.ts
 │   │   │   ├── FireGhost.ts
-│   │   │   └── MiniEnemy.ts     # Classe genérica para minis
+│   │   │   ├── Bat.ts
+│   │   │   └── MiniEnemy.ts       # Genérico para minis de boss
 │   │   └── bosses/
-│   │       ├── BaseBoss.ts      # Classe base de chefão
-│   │       ├── GhostBoss.ts     # Nível 2
-│   │       ├── ClownBoss.ts     # Nível 4
-│   │       ├── ScarecrowBoss.ts # Nível 6
-│   │       ├── TRexBoss.ts      # Nível 9
-│   │       ├── VampireBoss.ts   # Nível 11
-│   │       ├── FireballBoss.ts  # Nível 13
-│   │       ├── OctopusBoss.ts   # Nível 15
-│   │       ├── ScorpionBoss.ts  # Nível 19
-│   │       └── RobotBoss.ts     # Nível 21 (chefão final)
+│   │       ├── BaseBoss.ts
+│   │       ├── GhostBoss.ts       # Nível 2
+│   │       ├── ClownBoss.ts       # Nível 4
+│   │       ├── ScarecrowBoss.ts   # Nível 6
+│   │       ├── TRexBoss.ts        # Nível 9
+│   │       ├── VampireBoss.ts     # Nível 11
+│   │       ├── FireballBoss.ts    # Nível 13
+│   │       ├── OctopusBoss.ts     # Nível 15
+│   │       ├── ScorpionBoss.ts    # Nível 19
+│   │       └── RobotBoss.ts       # Nível 21
 │   ├── weapons/
 │   │   ├── BaseWeapon.ts
-│   │   ├── FoamGun.ts           # Arma padrão (espuma)
-│   │   ├── WaterGun.ts          # Power-up de água (derrota fantasmas)
-│   │   └── Nerf.ts              # Power-up avançado
+│   │   ├── FoamGun.ts
+│   │   ├── WaterGun.ts
+│   │   └── NerfRifle.ts
 │   ├── systems/
-│   │   ├── CameraSystem.ts      # Scroll da câmera
-│   │   ├── CollisionSystem.ts   # Detecção de colisão
-│   │   ├── PhysicsSystem.ts     # Gravidade e pulo
-│   │   ├── SaveSystem.ts        # Salvar progresso (localStorage)
-│   │   ├── SoundSystem.ts       # Gerenciador de áudio
-│   │   ├── InputSystem.ts       # Teclado + touch mobile
-│   │   └── HUDSystem.ts         # Interface: vida, moedas, tempo
+│   │   ├── InputSystem.ts
+│   │   ├── PhysicsSystem.ts
+│   │   ├── CollisionSystem.ts
+│   │   ├── CameraSystem.ts
+│   │   ├── DotSystem.ts           # Damage over time (veneno)
+│   │   ├── SaveSystem.ts
+│   │   ├── SoundSystem.ts
+│   │   └── HUDSystem.ts
 │   ├── ui/
-│   │   ├── HealthBar.ts         # Barra de vida (jogador e chefões)
-│   │   ├── CoinCounter.ts       # Contador de moedas
-│   │   ├── LivesDisplay.ts      # Vidas restantes
-│   │   └── TouchControls.ts     # D-pad virtual para mobile
+│   │   ├── HealthBar.ts
+│   │   ├── CoinCounter.ts
+│   │   ├── LivesDisplay.ts
+│   │   ├── PoisonIndicator.ts
+│   │   └── TouchControls.ts
 │   ├── utils/
-│   │   ├── AssetLoader.ts       # Helpers para carregar sprites
-│   │   ├── TilemapBuilder.ts    # Monta fase a partir do JSON do Tiled
-│   │   └── AnimationFactory.ts  # Registra todas as animações
+│   │   ├── TilemapBuilder.ts
+│   │   ├── AnimationFactory.ts
+│   │   └── ObjectPool.ts          # Pool de projéteis e partículas
 │   └── types/
-│       ├── GameTypes.ts         # Interfaces e tipos globais
-│       └── PhaserExtensions.ts  # Extensões de tipo do Phaser
+│       └── GameTypes.ts
 ├── assets/
-│   ├── sprites/
-│   │   ├── player/              # Spritesheet do menino (idle, run, jump, shoot, die)
-│   │   ├── enemies/             # Spritesheets dos inimigos comuns
-│   │   ├── bosses/              # Spritesheets dos 9 chefões
-│   │   ├── weapons/             # Projéteis: espuma, água, nerf
-│   │   └── ui/                  # Ícones de HUD, botões, corações
-│   ├── tilesets/
-│   │   ├── world1_grass.png     # Tileset mundo 1 (floresta)
-│   │   ├── world2_cave.png      # Tileset mundo 2 (caverna)
-│   │   ├── world3_city.png      # Tileset mundo 3 (cidade)
-│   │   └── world4_castle.png    # Tileset mundo 4 (castelo)
-│   ├── tilemaps/
-│   │   ├── level_01.json        # ... level_21.json
-│   ├── audio/
-│   │   ├── music/               # BGM por mundo (.ogg + .mp3)
-│   │   └── sfx/                 # Jump, shoot, hit, coin, etc.
-│   └── fonts/
-│       └── pixel_font.png       # Bitmap font estilo pixel
+│   ├── sprites/                   # Adicionados a partir do Sprint 2
+│   ├── tilesets/                  # Um por mundo
+│   ├── tilemaps/                  # level_01.json … level_21.json
+│   └── audio/                     # Adicionado no Sprint 9
 ├── tests/
 │   ├── unit/
-│   │   ├── entities/
-│   │   │   ├── Player.test.ts
-│   │   │   ├── BaseEnemy.test.ts
-│   │   │   └── BaseBoss.test.ts
-│   │   ├── systems/
-│   │   │   ├── SaveSystem.test.ts
-│   │   │   ├── CollisionSystem.test.ts
-│   │   │   └── PhysicsSystem.test.ts
-│   │   └── weapons/
-│   │       └── FoamGun.test.ts
 │   ├── integration/
-│   │   ├── PlayerEnemyInteraction.test.ts
-│   │   ├── BossFight.test.ts
-│   │   ├── LevelProgression.test.ts
-│   │   └── SaveLoad.test.ts
 │   └── e2e/
-│       ├── menu.spec.ts
-│       ├── gameplay.spec.ts
-│       ├── boss_fight.spec.ts
-│       └── progression.spec.ts
-├── public/
-│   └── index.html
+├── .github/workflows/ci.yml
 ├── playwright.config.ts
 ├── vitest.config.ts
 ├── vite.config.ts
-├── tsconfig.json
 └── package.json
 ```
 
 ---
 
-## Mecânicas de Jogo
+## Mecânicas Completas
 
-### Personagem Principal — "Toy Blaster Kid"
-- **Movimento:** andar (esquerda/direita), agachar
-- **Pulo:** pulo simples + pulo duplo (como Mario moderno)
-- **Ataque:** disparo de projétil com arma de brinquedo (espuma por padrão)
-- **Vida:** 3 corações (cada coração = 2 HP) → 6 HP total
-- **Vidas:** começa com 3; ao chegar a 0 → Game Over
-- **Invencibilidade temporária:** 1,5s após levar dano (pisca)
-
-### Controles
+### Personagem — "Toy Blaster Kid"
 | Ação | Teclado | Mobile |
 |---|---|---|
-| Mover | Setas / A-D | D-pad virtual |
-| Pular | Espaço / W / Seta cima | Botão A |
-| Atirar | Z / J / Ctrl | Botão B |
-| Agachar | S / Seta baixo | Seta baixo do D-pad |
-| Pausa | Esc / P | Botão Pause |
+| Mover | Setas / A-D | D-pad |
+| Pular (simples/duplo) | Espaço / W / ↑ | Botão A |
+| Atirar | Z / J | Botão B |
+| Agachar | S / ↓ | ↓ no D-pad |
+| Pausar | Esc / P | Botão Pause |
 
-### Física (estilo Mario)
-- Gravidade constante puxando o personagem para baixo
-- Pulo com apex variável (segurar = pulo maior, soltar = pulo menor)
-- Plataformas sólidas (top), atravessáveis de baixo para cima (tipo "plataformas flutuantes")
-- Aceleração e fricção no movimento horizontal
-- Velocidade máxima de queda (terminal velocity)
+- **Vida:** 3 corações × 2 HP = 6 HP. Máx 5 corações com power-ups
+- **Vidas:** 3. Chegar a 0 → Game Over
+- **Invencibilidade:** 1,5s após dano (personagem pisca)
+- **Pulo variável:** segurar = pulo alto, soltar cedo = pulo baixo
 
-### Power-ups (inspirados em Mario)
-| Item | Efeito |
-|---|---|
-| Estrela de Brinquedo | Invencibilidade temporária (10s) |
-| Pistola de Água | Troca a arma para água — eficaz contra fantasmas/vampiro |
-| Nerf Rifle | Projéteis mais rápidos e maior dano por 30s |
-| Coração Extra | +1 coração (máx 5) |
-| Cogumelo de Crescimento | Aumenta o personagem, mais resistente por 20s |
-| Moeda de Ouro | +1 ao contador; a cada 100 → vida extra |
+### Power-ups
+| Item | Efeito | Duração |
+|---|---|---|
+| Pistola de Água | Dano duplo em Fantasma e Vampiro; cancela lifesteal | 30s |
+| Nerf Rifle | Projéteis mais rápidos, +1 dano | 30s |
+| Estrela de Brinquedo | Invencibilidade + dano por contato | 10s |
+| Coração Extra | +1 coração (máx 5) | Permanente |
+| Moeda de Ouro | +1 contador; 100 moedas = vida extra | — |
+
+### Sistema de Progressão e Save
+```typescript
+interface SaveData {
+  currentLevel: number;
+  lives: number;
+  coins: number;
+  levelsCompleted: boolean[];   // [21]
+  checkpoints: Record<number, number>; // level → checkpoint index
+  unlockedWorlds: number[];
+  highScore: number;
+}
+```
+- Salvo no `localStorage` ao completar nível ou atingir checkpoint
+- Bandeiras de checkpoint dentro de níveis longos (≥ 4 telas)
 
 ---
 
-## Estrutura dos 21 Níveis
+## Mundos e Níveis
 
-### Mundos e Temas (grupos de níveis)
-| Mundo | Níveis | Tema Visual | Tileset |
+| Mundo | Níveis | Tema | Tileset |
 |---|---|---|---|
 | 1 — Floresta Encantada | 1–3 | Árvores, grama, flores | `world1_grass` |
-| 2 — Caverna Assombrada | 4–6 | Pedras, estalactites, escuridão | `world2_cave` |
-| 3 — Cidade Abandonada | 7–12 | Prédios, asfalto, luzes quebradas | `world3_city` |
+| 2 — Caverna Assombrada | 4–6 | Pedras, estalactites | `world2_cave` |
+| 3 — Cidade Abandonada | 7–12 | Prédios, asfalto | `world3_city` |
 | 4 — Castelo do Robô | 13–21 | Metal, lasers, engrenagens | `world4_castle` |
 
-### Progressão de Níveis com Chefões
-| Nível | Tipo | Chefão | Inimigos Comuns |
+| Nível | Tipo | Chefão | Inimigos |
 |---|---|---|---|
 | 1 | Normal | — | Esqueleto, Zumbi |
-| 2 | **BOSS** | Fantasma | Mini Fantasma, Monstrinhos |
+| **2** | **BOSS** | **Fantasma** | Mini Fantasma, Monstrinhos |
 | 3 | Normal | — | Esqueleto, Zumbi, Fantasma Aranha |
-| 4 | **BOSS** | Palhaço | Mini Palhaço, Monstrinhos |
+| **4** | **BOSS** | **Palhaço** | Mini Palhaço, Monstrinhos |
 | 5 | Normal | — | Zumbi, Fantasma Aranha |
-| 6 | **BOSS** | Espantalho | Mini Espantalho, Corvos |
+| **6** | **BOSS** | **Espantalho** | Mini Espantalho, Corvos |
 | 7 | Normal | — | Esqueleto, Fantasma de Fogo |
 | 8 | Normal | — | Zumbi, Fantasma Aranha |
-| 9 | **BOSS** | T-Rex | Mini T-Rex, Esqueleto |
+| **9** | **BOSS** | **T-Rex** | Mini T-Rex, Esqueleto |
 | 10 | Normal | — | Fantasma de Fogo, Mini T-Rex |
-| 11 | **BOSS** | Vampiro | Mini Vampiro, Morcegos |
+| **11** | **BOSS** | **Vampiro** | Mini Vampiro, Morcegos |
 | 12 | Normal | — | Mini Vampiro, Fantasma de Fogo |
-| 13 | **BOSS** | Bola de Fogo | Mini Bola de Fogo |
+| **13** | **BOSS** | **Bola de Fogo** | Mini Bola de Fogo |
 | 14 | Normal | — | Mini Bola de Fogo, Zumbi |
-| 15 | **BOSS** | Polvo | Mini Polvo, Monstrinhos |
+| **15** | **BOSS** | **Polvo** | Mini Polvo, Monstrinhos |
 | 16 | Normal | — | Mini Polvo, Esqueleto |
 | 17 | Normal | — | Todos os minis anteriores |
-| 18 | Normal | — | Mistura de inimigos difíceis |
-| 19 | **BOSS** | Escorpião | Mini Escorpião, Fantasma Aranha |
+| 18 | Normal | — | Mix de inimigos difíceis |
+| **19** | **BOSS** | **Escorpião** | Mini Escorpião, Fantasma Aranha |
 | 20 | Normal | — | Mini Robô Aranha, todos os minis |
-| 21 | **BOSS FINAL** | Robô do Mal | Mini Robô, Mini Escorpião |
+| **21** | **BOSS FINAL** | **Robô do Mal** | Mini Robô, Mini Escorpião |
 
 ---
 
 ## Chefões — Comportamento Detalhado
 
-### Nível 2 — Fantasma
-- **HP:** 30 | **Fase:** 1
-- Flutua horizontalmente; pode atravessar paredes
-- Ataque 1: investida rápida em linha reta
-- Ataque 2: invoca 2 mini fantasmas a cada 50% de HP
-- **Fraqueza:** Pistola de Água causa dano duplo
+### Nível 2 — Fantasma (HP: 30)
+- Flutua; pode atravessar paredes por 2s
+- Ataque 1: investida horizontal rápida
+- Ataque 2 (≤50% HP): invoca 2 mini-fantasmas
+- Fraqueza: Pistola de Água = dano duplo
 
-### Nível 4 — Palhaço
-- **HP:** 50 | **Fases:** 2
-- Fase 1: arremessa 3 bolas de malabarismo em arco
-- Fase 2 (< 50% HP): velocidade aumenta 40%, risada ativa efeito de confusão na tela (leve distorção visual)
-- Padrão: pular para outra plataforma a cada 5s
+### Nível 4 — Palhaço (HP: 50, 2 fases)
+- Fase 1: arremessa 3 bolas em arco, pula entre plataformas a cada 5s
+- Fase 2 (≤50% HP): velocidade +40%, efeito de distorção visual (risada)
 
-### Nível 6 — Espantalho
-- **HP:** 70 | **Fases:** 2
-- Braços se estendem horizontalmente (alcance de 3 tiles)
-- Invoca corvos que voam em padrão senoidal
-- Fase 2 (< 40% HP): braços giram 360°
+### Nível 6 — Espantalho (HP: 70, 2 fases)
+- Braços se estendem 3 tiles horizontalmente
+- Invoca corvos em padrão senoidal
+- Fase 2 (≤40% HP): braços giram 360°
 
-### Nível 9 — T-Rex
-- **HP:** 120 | **Fases:** 3
-- Fase 1: caminha pesadamente, rugido causa trêmulo na câmera
-- Fase 2 (< 66% HP): investida em alta velocidade atravessando a arena
-- Fase 3 (< 33% HP): pisa forte causando ondas de choque no chão
-- **Hitbox grande:** requer ~10 acertos de espuma
+### Nível 9 — T-Rex (HP: 120, 3 fases)
+- Fase 1: caminhada pesada, rugido com camera shake
+- Fase 2 (≤66% HP): investida atravessando arena
+- Fase 3 (≤33% HP): pisada = onda de choque no chão
 
-### Nível 11 — Vampiro
-- **HP:** 100 | **Fases:** 2
-- Fase 1: flutua, dispara morcegos teleguiados
-- Capacidade lifesteal: cura 5 HP a cada 3 acertos no jogador
-- Fase 2 (< 50% HP): transforma-se em morcego gigante, velocidade triplicada
-- **Fraqueza:** Pistola de Água cancela lifesteal temporariamente
+### Nível 11 — Vampiro (HP: 100, 2 fases)
+- Lifesteal: recupera 5 HP a cada 3 acertos no jogador
+- Dispara morcegos teleguiados
+- Fase 2 (≤50% HP): transforma em morcego gigante, velocidade ×3
+- Fraqueza: Pistola de Água cancela lifesteal por 5s
 
-### Nível 13 — Bola de Fogo
-- **HP:** 90 | **Fases:** 2
-- Deixa rastro de fogo no chão por 3s
-- Explode em área ao colidir com parede (raio de 2 tiles)
-- Fase 2 (< 50% HP): divide-se em 2 bolas menores temporariamente
+### Nível 13 — Bola de Fogo (HP: 90, 2 fases)
+- Deixa rastro de fogo por 3s
+- Explode em área (raio 2 tiles) ao colidir com paredes
+- Fase 2 (≤50% HP): divide-se em 2 bolas temporariamente
 
-### Nível 15 — Polvo
-- **HP:** 140 | **Fases:** 3
-- 4 tentáculos atacam de posições diferentes simultaneamente
-- Lança tinta que escurece 30% da tela por 4s
-- Fase 2 (< 60% HP): 2 tentáculos extras emergem
-- Fase 3 (< 30% HP): lança tinta contínua + tentáculos frenéticos
+### Nível 15 — Polvo (HP: 140, 3 fases)
+- 4 tentáculos atacam posições diferentes
+- Lança tinta: escurece 30% da tela por 4s
+- Fase 2 (≤60% HP): +2 tentáculos
+- Fase 3 (≤30% HP): tinta contínua + tentáculos frenéticos
 
-### Nível 19 — Escorpião
-- **HP:** 160 | **Fases:** 3
-- Veneno (DoT): 1 dano a cada 2s por 8s
-- Carapaça: imune a projéteis frontais, ponto fraco na cauda
-- Fase 2 (< 50% HP): veneno mais rápido (1 dano/s)
-- Fase 3 (< 20% HP): frenesi de ataques com pinças
+### Nível 19 — Escorpião (HP: 160, 3 fases)
+- Veneno DoT: 1 dano a cada 2s por 8s
+- Carapaça frontal: imune a projéteis pela frente; ponto fraco = cauda
+- Fase 2 (≤50% HP): veneno mais rápido (1 dano/s)
+- Fase 3 (≤20% HP): frenesi de pinças
 
-### Nível 21 — Robô do Mal (Boss Final)
-- **HP:** 300 | **Fases:** 4
-- Fase 1: mísseis teleguiados, laser horizontal
-- Fase 2 (< 75% HP): laser vertical varrendo arena
-- Fase 3 (< 50% HP): invoca 3 mini robôs aranha + escudo de energia
-- Fase 4 (< 25% HP): todas as habilidades simultâneas, velocidade máxima
-- **Cutscene de derrota:** robô explode em pixels estilo Minecraft
-
----
-
-## Inimigos Comuns
-
-| Inimigo | HP | Dano | Comportamento |
-|---|---|---|---|
-| Esqueleto | 3 | 1 | Patrulha horizontal, arremessa ossos |
-| Zumbi | 5 | 1 | Persegue o jogador lentamente |
-| Fantasma Aranha | 4 | 1 | Flutua e descende em fio de teia |
-| Fantasma de Fogo | 6 | 2 | Patrulha; deixa rastro de fogo |
-| Monstrinhos | 2 | 1 | Saltam aleatoriamente |
-| Mini [Boss] | 50% stats do boss | — | Comportamento simplificado do chefão |
-
----
-
-## Sistema de Progressão e Salvamento
-
-```
-SaveData {
-  currentLevel: number          // Nível atual
-  lives: number                 // Vidas restantes
-  coins: number                 // Moedas acumuladas
-  levelsCompleted: boolean[]    // Array de 21 posições
-  highScore: number             // Pontuação máxima
-  unlockedWorlds: number[]      // Mundos desbloqueados
-}
-```
-
-- Salvo automaticamente ao completar cada nível (`localStorage`)
-- Checkpoints visuais dentro de níveis longos (bandeiras como Mario)
-- Ao continuar: começa do último checkpoint ou início do nível
-
----
-
-## HUD (Interface durante o jogo)
-
-```
-┌─────────────────────────────────────────┐
-│ ❤️❤️❤️  VIDAS: 3   💰 MOEDAS: 042  ⏱️ 400 │
-│                                         │
-│                  [JOGO]                 │
-│                                         │
-│ [BOSS HP: ████████░░░░░░░░ 60%]        │
-└─────────────────────────────────────────┘
-```
-
-- Corações para vida (máx 5)
-- Contador de moedas
-- Cronômetro regressivo (penalidade de pontos ao esgotar, não game over)
-- Barra de HP do chefão (aparece apenas em batalhas de boss)
+### Nível 21 — Robô do Mal (HP: 300, 4 fases)
+- Fase 1: mísseis teleguiados + laser horizontal
+- Fase 2 (≤75% HP): laser vertical varrendo arena
+- Fase 3 (≤50% HP): 3 mini-robôs aranha + escudo de energia
+- Fase 4 (≤25% HP): todas as habilidades simultâneas
+- Derrota: explosão em pixels estilo Minecraft + cutscene vitória
 
 ---
 
 ## Visual — Pixel Art Estilo Minecraft
 
-### Paleta de Cores por Mundo
-| Mundo | Cores Primárias |
+| Regra | Detalhe |
 |---|---|
-| Floresta | Verde (#5B8A52), Marrom (#8B5E3C), Azul Céu (#87CEEB) |
-| Caverna | Cinza (#555), Azul Escuro (#1A1A2E), Laranja de Tocha (#FF6B35) |
-| Cidade | Cinza Asfalto (#3D3D3D), Amarelo Neon (#FFE600), Vermelho (#CC2936) |
-| Castelo | Prata (#B0B0B0), Vermelho Escuro (#8B0000), Preto (#111) |
+| Anti-aliasing | **Desativado** (`antialias: false` no Phaser) |
+| Tiles | 16×16px, aspecto quadrado e blocos sólidos |
+| Player | 32×48px (2 blocos de altura) |
+| Inimigos comuns | 32×32px |
+| Chefões | 64×64px a 128×128px |
+| Projéteis | 8×8px |
 
-### Tamanhos de Sprite
-- **Player:** 32×48px (bloco Minecraft = 16px, personagem = 2 blocos)
-- **Inimigos comuns:** 32×32px
-- **Chefões:** 64×64px a 128×128px (conforme tamanho narrativo)
-- **Tiles do mapa:** 16×16px
-- **Projéteis:** 8×8px
+| Mundo | Paleta Principal |
+|---|---|
+| Floresta | Verde #5B8A52, Marrom #8B5E3C, Céu #87CEEB |
+| Caverna | Cinza #555, Azul Escuro #1A1A2E, Tocha #FF6B35 |
+| Cidade | Asfalto #3D3D3D, Neon #FFE600, Vermelho #CC2936 |
+| Castelo | Prata #B0B0B0, Vermelho Escuro #8B0000, Preto #111 |
 
-### Animações Obrigatórias por Entidade
+---
 
-**Player:**
-- `idle` (2 frames), `run` (6 frames), `jump` (2 frames)
-- `fall` (2 frames), `shoot` (3 frames), `hurt` (2 frames), `die` (5 frames)
+---
+
+# SPRINTS DE DESENVOLVIMENTO
+
+> **Regra de autorização:** Cada sprint só começa após confirmação explícita do responsável.
+> Cada sprint entrega um jogo jogável e uma suite de testes automatizados que passam 100%.
+
+---
+
+## SPRINT 1 — MVP Jogável: Nível 1 com todas as mecânicas
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Primeira fase completamente jogável com todas as mecânicas centrais funcionando. Sprites gerados programaticamente (sem dependência de arquivos de imagem externos).
+
+### Entregável
+> Jogo rodando no browser. O jogador pode: abrir menu → jogar Nível 1 → mover, pular (duplo pulo), atirar, matar inimigos (Esqueleto, Zumbi), coletar moedas, tomar dano, perder vidas, sofrer Game Over, chegar à bandeira final e ver tela de vitória do nível.
+
+### Escopo Técnico
+
+**Setup:**
+- Projeto Vite + Phaser 3 + TypeScript
+- Vitest configurado com mocks para Phaser
+- Playwright configurado com servidor de dev
+- `package.json` com todos os scripts de teste
+
+**Cenas:**
+- `BootScene` → `PreloadScene` (barra de carregamento)
+- `MenuScene` (título + botão Jogar)
+- `GameScene` (nível 1)
+- `GameOverScene` + `LevelCompleteScene`
+
+**Player (src/entities/Player.ts):**
+- Movimento horizontal com aceleração e fricção
+- Pulo simples e duplo pulo (resetado ao tocar o chão)
+- Pulo variável (segurar = maior)
+- Shoot: projétil de espuma para frente, cooldown 300ms
+- 6 HP (3 corações), invencibilidade 1,5s após dano
+- 3 vidas; morte → perde vida → respawn ou Game Over
+- Animações via `Phaser.Graphics`: idle, run, jump, shoot, hurt, die
+
+**Física (PhysicsSystem):**
+- Gravidade 980px/s²
+- Terminal velocity de queda: 600px/s
+- Plataformas sólidas por cima, passáveis por baixo
+
+**Nível 1 (assets/tilemaps/level_01.json):**
+- Tilemap em JSON do Tiled, ~5 telas de largura
+- Tiles gerados por `Phaser.Graphics` (sem PNG externo)
+- Esqueleto × 4, Zumbi × 3, moedas × 20
+- Bandeira de chegada no final
 
 **Inimigos:**
-- `idle` (2 frames), `walk` (4 frames), `attack` (3 frames), `die` (4 frames)
+- `Skeleton`: patrulha entre bordas, lança osso a cada 2s
+- `Zombie`: detecta jogador em 200px, persegue lentamente
 
-**Chefões:**
-- Todas as do inimigo + `phase_transition` (5 frames) + animação única por habilidade
+**HUD:**
+- Corações (vida), contador de moedas, cronômetro
+- Contador de vidas
 
----
+**Save (básico):**
+- Salva `lives` e `coins` no `localStorage` ao completar o nível
 
-## Sistema de Testes
+### Testes do Sprint 1
 
-### Unit Tests (Vitest)
-
-Cobrem lógica pura, sem depender do Phaser rodando.
-
+**Unit Tests (Vitest):**
 ```
 tests/unit/entities/Player.test.ts
-  ✓ começa com 6 HP
-  ✓ perde HP ao tomar dano
-  ✓ não pode ter HP negativo
-  ✓ morre quando HP chega a 0
-  ✓ período de invencibilidade após dano
-  ✓ duplo pulo reseta ao tocar o chão
-  ✓ coin collection incrementa contador
+  ✓ inicia com 6 HP e 3 vidas
+  ✓ takeDamage() reduz HP corretamente
+  ✓ HP não vai abaixo de 0
+  ✓ HP 0 aciona morte e reduz vida
+  ✓ invencibilidade ativa por 1,5s após dano
+  ✓ não toma dano durante invencibilidade
+  ✓ duplo pulo disponível após pulo simples
+  ✓ duplo pulo não permite terceiro pulo
+  ✓ jumpsAvailable resetado ao tocar o chão
+  ✓ collectCoin() incrementa contador
+  ✓ 100 moedas concedem 1 vida extra
 
-tests/unit/entities/BaseEnemy.test.ts
-  ✓ patrulha inverte direção na borda de plataforma
-  ✓ detecta jogador no range de visão
+tests/unit/entities/Skeleton.test.ts
+  ✓ inverte direção ao atingir borda de plataforma
+  ✓ lança projétil a cada 2s
   ✓ morre quando HP ≤ 0
-  ✓ aplica dano correto ao jogador
+  ✓ takeDamage() reduz HP
 
-tests/unit/entities/BaseBoss.test.ts
-  ✓ transição de fase ao atingir threshold de HP
-  ✓ fase 1 ativa habilidades corretas
-  ✓ fase 2 ativa habilidades corretas
-  ✓ derrota aciona sequência de morte
-  ✓ lifesteal funciona corretamente (Vampiro)
-  ✓ veneno aplica DoT corretamente (Escorpião)
-
-tests/unit/systems/SaveSystem.test.ts
-  ✓ salva estado no localStorage
-  ✓ carrega estado do localStorage
-  ✓ fallback para novo jogo quando save corrompido
-  ✓ atualiza nível completado corretamente
-
-tests/unit/systems/CollisionSystem.test.ts
-  ✓ detecta colisão jogador-plataforma
-  ✓ detecta colisão projétil-inimigo
-  ✓ detecta colisão inimigo-jogador
-  ✓ não detecta colisão fora do range
+tests/unit/entities/Zombie.test.ts
+  ✓ permanece parado se jogador > 200px
+  ✓ persegue jogador quando ≤ 200px
+  ✓ morre quando HP ≤ 0
 
 tests/unit/systems/PhysicsSystem.test.ts
-  ✓ aplica gravidade corretamente
-  ✓ limita velocidade de queda
-  ✓ pulo com hold vs tap
-  ✓ duplo pulo disponível após pulo simples
+  ✓ aplica gravidade a cada frame
+  ✓ respeita terminal velocity
+  ✓ pulo alto com keydown longo
+  ✓ pulo baixo com keydown curto
+
+tests/unit/systems/CollisionSystem.test.ts
+  ✓ detecta colisão jogador-plataforma (topo)
+  ✓ ignora colisão plataforma por baixo
+  ✓ detecta colisão projétil-inimigo
+  ✓ detecta colisão inimigo-jogador
+  ✓ sem colisão fora do range
 
 tests/unit/weapons/FoamGun.test.ts
-  ✓ dispara projétil na direção correta
-  ✓ cooldown entre disparos
-  ✓ projétil expira ao sair da tela
-  ✓ projétil aplica dano ao colidir com inimigo
+  ✓ dispara projétil na direção do jogador
+  ✓ cooldown impede disparo imediato
+  ✓ projétil some ao atingir parede
+  ✓ projétil aplica 1 de dano ao inimigo
+
+tests/unit/systems/SaveSystem.test.ts
+  ✓ salva SaveData no localStorage
+  ✓ carrega SaveData do localStorage
+  ✓ retorna novo jogo padrão se save inválido ou ausente
+  ✓ markLevelComplete() atualiza levelsCompleted[]
 ```
 
-### Integration Tests (Vitest com mocks de Phaser)
-
-Testam interação entre sistemas, usando mocks do Phaser para evitar necessidade de browser.
-
+**Integration Tests (Vitest):**
 ```
 tests/integration/PlayerEnemyInteraction.test.ts
-  ✓ jogador perde HP ao colidir com inimigo
-  ✓ inimigo perde HP ao ser atingido por projétil
-  ✓ inimigo morre e remove-se da cena
-  ✓ power-up é coletado e aplica efeito
-  ✓ moeda é coletada e incrementa contador
+  ✓ colisão jogador-inimigo reduz HP do jogador
+  ✓ projétil atinge inimigo e reduz HP do inimigo
+  ✓ inimigo com HP 0 é removido da cena
+  ✓ moeda coletada incrementa Player.coins
+  ✓ bandeira de chegada aciona LevelComplete
 
-tests/integration/BossFight.test.ts
-  ✓ boss spawna ao entrar na arena de boss
-  ✓ barra de HP do boss aparece na HUD
-  ✓ boss transita de fase ao atingir threshold
-  ✓ derrota do boss aciona cutscene + avança nível
-  ✓ mini inimigos spawnam nos momentos corretos
-
-tests/integration/LevelProgression.test.ts
-  ✓ completar nível normal → desbloqueia próximo
-  ✓ completar nível boss → desbloqueia mundo novo
-  ✓ coleta de 100 moedas → vida extra
-  ✓ morte com 0 vidas → Game Over
-  ✓ continuar após Game Over mantém nível atual
-
-tests/integration/SaveLoad.test.ts
-  ✓ progresso persiste ao recarregar a página
-  ✓ recomeçar do checkpoint após morte
-  ✓ níveis completados persistem entre sessões
+tests/integration/GameFlow.test.ts
+  ✓ 0 vidas → dispara evento GameOver
+  ✓ completar nível → marca level 1 como completo no save
+  ✓ reiniciar após Game Over → lives resetado para 3
 ```
 
-### E2E Tests (Playwright)
-
-Testam o jogo real rodando no browser com Chromium headless.
-
+**E2E Tests (Playwright):**
 ```
-tests/e2e/menu.spec.ts
-  ✓ menu principal carrega e exibe título
-  ✓ botão "Jogar" inicia o jogo
-  ✓ botão "Continuar" aparece se há save
-  ✓ botão "Continuar" carrega o save correto
-  ✓ música do menu toca (verifica AudioContext ativo)
-
-tests/e2e/gameplay.spec.ts
+tests/e2e/sprint1.spec.ts
+  ✓ página carrega sem erros de console
+  ✓ menu exibe título "Toy Blaster Kid"
+  ✓ clicar "Jogar" inicia o Nível 1
   ✓ personagem aparece na posição inicial
-  ✓ tecla direita move o personagem para a direita
-  ✓ tecla espaço faz o personagem pular
-  ✓ personagem cai ao pular sem plataforma abaixo
-  ✓ personagem aterrissa em plataforma
-  ✓ tecla Z dispara projétil visível
+  ✓ pressionar → move o personagem para a direita
+  ✓ pressionar Espaço faz o personagem pular
+  ✓ segundo Espaço no ar executa duplo pulo
+  ✓ pressionar Z dispara projétil visível
   ✓ projétil desaparece ao atingir parede
-  ✓ HUD exibe corações, moedas e tempo corretamente
-  ✓ pausar com Esc exibe menu de pausa
-  ✓ retomar do pause continua de onde parou
-
-tests/e2e/boss_fight.spec.ts
-  ✓ transição de cena ao entrar no boss
-  ✓ barra de HP do boss visível na tela
-  ✓ boss muda de comportamento ao mudar de fase
-  ✓ derrota do boss exibe animação de vitória
-  ✓ jogador avança para próximo nível após boss
-
-tests/e2e/progression.spec.ts
-  ✓ completar nível 1 desbloqueia nível 2 no mapa
-  ✓ mapa do mundo exibe progresso corretamente
-  ✓ completar nível 2 (boss) muda visual do mapa
-  ✓ Game Over retorna ao menu com opção de continuar
-  ✓ salvar e recarregar mantém progresso no mapa
+  ✓ inimigo some ao ser atingido por projétil (HP = 0)
+  ✓ HUD exibe 3 corações, 0 moedas, timer ativo
+  ✓ colidir com inimigo reduz corações no HUD
+  ✓ alcançar bandeira exibe tela "Nível Completo"
+  ✓ pressionar Esc exibe menu de pausa
+  ✓ retomar do pause continua o jogo
 ```
+
+### Critério de Conclusão do Sprint 1
+- [ ] `npm run test:unit` → 100% passando
+- [ ] `npm run test:integration` → 100% passando
+- [ ] `npm run test:e2e` → 100% passando
+- [ ] `npm run build` → sem erros de TypeScript
+- [ ] Jogo jogável manualmente pelo responsável
 
 ---
 
-## Configuração de CI/CD (GitHub Actions)
+## SPRINT 2 — Mundo 1 Completo (Níveis 1–3 + Boss Fantasma)
 
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Mundo 1 completo com mapa de mundo navegável, batalha de boss (Fantasma), sistema de save com checkpoints e carta estilo Pokédex antes do boss.
+
+### Entregável
+> O jogador pode abrir o mapa do Mundo 1, selecionar qualquer nível já desbloqueado, jogar os Níveis 1, 2 (boss Fantasma) e 3, salvar progresso entre sessões, e passar pelos checkpoints em níveis longos.
+
+### Escopo Técnico
+- `WorldMapScene`: nós conectados estilo Mario World, nível desbloqueado acende
+- `BossIntroScene`: carta com silhueta + nome + tipo estilo Pokédex (2s antes do boss)
+- Nível 2: arena fechada para boss
+- `GhostBoss`: flutua, dash attack, invoca 2 mini-fantasmas a 50% HP, fraqueza à água
+- `MiniGhost`: versão pequena com comportamento simplificado
+- Nível 3: tilemap com `SpiderGhost` (flutua, desce em teia)
+- `WaterGun`: power-up no Nível 2, dano duplo em fantasmas
+- Bandeiras de checkpoint dentro de níveis
+- `SaveSystem` completo: checkpoints + nível completado + estado do mapa
+
+### Testes do Sprint 2
+**Unit:** `GhostBoss` (fases, spawn de minis, fraqueza), `SpiderGhost`, `WaterGun`, checkpoint save/load
+**Integration:** boss fight fluxo completo, WaterGun + GhostBoss dano duplo, checkpoint persistido após morte
+**E2E:** completar nível 1 → mapa → entrar nível 2 → ver carta Pokédex → derrotar Fantasma → nível 3 desbloqueado → save persiste no reload
+
+### Critério de Conclusão
+- [ ] Todos os testes passando
+- [ ] Mundo 1 jogável do início ao fim
+- [ ] Save persiste entre sessões do browser
+
+---
+
+## SPRINT 3 — Mundo 2 (Níveis 4–6 + Palhaço + Espantalho)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Mundo 2 (Caverna Assombrada) com tileset de caverna, 2 novos bosses e inimigos, power-ups de Estrela e Coração Extra.
+
+### Entregável
+> O jogador pode acessar e completar o Mundo 2 com seus 3 níveis, enfrentar o Palhaço (com efeito de confusão de tela) e o Espantalho (com corvos e braços giratórios).
+
+### Escopo Técnico
+- Tileset `world2_cave.png` aplicado aos níveis 4–6
+- `ClownBoss`: bolas de malabarismo, 2 fases (confusão visual na Fase 2)
+- `ScarecrowBoss`: extensão de braços 3 tiles, corvos, rotação 360° na Fase 2
+- `FireGhost`: patrulha deixando rastro de fogo
+- Mini Palhaço, Mini Espantalho, Corvo como inimigos
+- Power-ups: Estrela (invencibilidade 10s), Coração Extra
+- Efeito de distorção/confusão de tela (shader ou filter Phaser)
+
+### Testes do Sprint 3
+**Unit:** `ClownBoss` (2 fases, efeito confusão), `ScarecrowBoss` (alcance braços, spawn corvos), `FireGhost`
+**Integration:** confusão de tela ativa e desativa corretamente, corvos seguem padrão senoidal, Estrela cancela dano
+**E2E:** Mundo 2 completo, ambos os bosses derrotados, efeito de confusão visível na Fase 2 do Palhaço
+
+---
+
+## SPRINT 4 — Mundo 3 Parte 1 (Níveis 7–9 + T-Rex)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Início do Mundo 3 (Cidade Abandonada) com tileset urbano, T-Rex com 3 fases e sistema de camera shake.
+
+### Entregável
+> O jogador pode jogar os níveis 7, 8 e 9, enfrentar o T-Rex com suas 3 fases (caminhada pesada, investida, onda de choque) e sentir o tremor de câmera no rugido.
+
+### Escopo Técnico
+- Tileset `world3_city.png` aplicado aos níveis 7–9
+- `CameraSystem`: camera shake configurável (intensidade, duração)
+- `TRexBoss`: 3 fases completas, hitbox grande, rugido = shake
+- Fase 3: shockwave no chão (hitbox rastejante)
+- `NerfRifle` power-up: projéteis mais rápidos, +1 dano, 30s
+- Mini T-Rex como inimigo comum
+
+### Testes do Sprint 4
+**Unit:** `TRexBoss` (3 fases, shockwave), `CameraSystem` (shake parametrizado), `NerfRifle`
+**Integration:** câmera shake dispara ao rugir, shockwave causa dano ao jogador no chão, fase 2 investida percorre arena inteira
+**E2E:** T-Rex 3 fases se comportam corretamente em sequência, NerfRifle aumenta velocidade do projétil visível
+
+---
+
+## SPRINT 5 — Mundo 3 Parte 2 (Níveis 10–12 + Vampiro)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Encerrar o Mundo 3 com o Vampiro, mecânica de lifesteal visível no HUD e counter via Pistola de Água.
+
+### Entregável
+> O jogador pode completar os níveis 10, 11 (boss Vampiro) e 12. O Vampiro rouba vida e se transforma em morcego gigante. A Pistola de Água cancela o lifesteal.
+
+### Escopo Técnico
+- `VampireBoss`: 2 fases, morcegos teleguiados, lifesteal 5 HP a cada 3 hits
+- Barra de HP do Vampiro mostra recuperação (lifesteal animado)
+- Fase 2: sprite de morcego gigante, velocidade ×3
+- `Bat`: inimigo morcego teleguiado
+- Mini Vampiro como inimigo comum
+- WaterGun obtida antes do boss cancela lifesteal por 5s
+- Indicador visual de lifesteal na HUD do boss
+
+### Testes do Sprint 5
+**Unit:** `VampireBoss` (lifesteal, transformação), `Bat` (pathfinding teleguiado)
+**Integration:** lifesteal recupera HP do boss, WaterGun cancela lifesteal, fase 2 transição visual
+**E2E:** barra de HP do Vampiro sobe durante lifesteal, WaterGun para lifesteal visivelmente
+
+---
+
+## SPRINT 6 — Mundo 4 Parte 1 (Níveis 13–15 + Bola de Fogo + Polvo)
+
+**Duração estimada:** 1,5 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Início do Mundo 4 (Castelo do Robô) com tileset metálico, dois novos bosses e a mecânica de tinta (escurecimento de tela).
+
+### Entregável
+> O jogador entra no Mundo 4, enfrenta a Bola de Fogo (com rastro de fogo e divisão) e o Polvo (com tinta que escurece a tela e múltiplos tentáculos).
+
+### Escopo Técnico
+- Tileset `world4_castle.png` aplicado aos níveis 13–15
+- `FireballBoss`: rastro de fogo (hitbox persistente 3s), explosão em área, divisão em 2 bolas na Fase 2
+- `OctopusBoss`: 4 tentáculos iniciais → 6 na Fase 2; tinta = overlay escuro 30% por 4s
+- Efeito de tinta: Phaser overlay semi-transparente com timer
+- Mini Bola de Fogo, Mini Polvo como inimigos
+
+### Testes do Sprint 6
+**Unit:** `FireballBoss` (divisão, rastro), `OctopusBoss` (tentáculos, tinta timer), efeito ink overlay
+**Integration:** rastro de fogo causa dano por contato, tinta escurece tela e dura 4s, divisão cria 2 projéteis
+**E2E:** tela escurece visivelmente durante tinta, Bola de Fogo se divide, Polvo tem 6 tentáculos na Fase 2
+
+---
+
+## SPRINT 7 — Mundo 4 Parte 2 (Níveis 16–19 + Escorpião)
+
+**Duração estimada:** 1,5 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Concluir o caminho para o boss final com o Escorpião (veneno DoT + armadura frontal), todos os mini-inimigos e gauntlet dos níveis 17–18.
+
+### Entregável
+> O jogador enfrenta o Escorpião sabendo que a frente é invulnerável e que a cauda é o ponto fraco. O envenenamento é visível no HUD. Níveis 17 e 18 funcionam como gauntlet de mini-inimigos.
+
+### Escopo Técnico
+- `DotSystem`: engine de dano por tempo (DoT), suporta múltiplos efeitos simultâneos
+- `ScorpionBoss`: armadura frontal (projéteis rebatidos), ponto fraco = cauda, veneno DoT 1/2s por 8s
+- `PoisonIndicator`: ícone no HUD que pisca enquanto envenenado
+- Níveis 17–18: tilemaps com spawn de minis de todos os bosses anteriores
+- Mini Escorpião, Mini Robô Aranha como inimigos novos
+- Fase 2 veneno 1/1s, Fase 3 frenesi de pinças
+
+### Testes do Sprint 7
+**Unit:** `DotSystem` (tick rate, expiração, stack de efeitos), `ScorpionBoss` (armadura frontal, weak point cauda, 3 fases)
+**Integration:** projétil na frente é rebatido, projétil na cauda causa dano, DoT tick visível no HUD
+**E2E:** PoisonIndicator aparece ao ser envenenado, desaparece ao fim do DoT, Escorpião 3 fases completas
+
+---
+
+## SPRINT 8 — Boss Final + Fim de Jogo (Níveis 20–21)
+
+**Duração estimada:** 2 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Nível 20 como gauntlet final e Nível 21 com o Robô do Mal (4 fases), cutscene de vitória pixel-art e tela de créditos.
+
+### Entregável
+> O jogador pode completar o jogo inteiro de ponta a ponta: 21 níveis, 9 bosses, tela de vitória com explosão pixel-art e créditos. O mapa do mundo exibe todos os 21 níveis como completos.
+
+### Escopo Técnico
+- `RobotBoss`: 4 fases completas
+  - Fase 1: mísseis teleguiados + laser horizontal
+  - Fase 2: laser vertical varrendo
+  - Fase 3: escudo de energia (bloqueia projéteis) + 3 mini-robôs aranha
+  - Fase 4: todas as habilidades simultâneas
+- `ShieldSystem`: escudo que bloqueia projéteis e expira após X acertos
+- Cutscene de vitória: explosão do Robô em partículas de pixel (Phaser particles)
+- `VictoryScene`: animação + mensagem + botão para créditos
+- `CreditsScene`: lista de créditos em scroll
+- Nível 20: gauntlet com Mini Robô Aranha e todos os minis anteriores
+
+### Testes do Sprint 8
+**Unit:** `RobotBoss` (4 fases), `ShieldSystem` (bloqueia projéteis, expira), laser hitbox
+**Integration:** escudo bloqueia projétil e decrementa, Fase 3 spawna mini-robôs, Fase 4 todas as habilidades ativas
+**E2E:** jogar nível 21 completo, 4 fases do boss se sucedem, cutscene de explosão aparece, VictoryScene exibe, créditos rolam
+
+### Critério de Conclusão
+- [ ] Jogo completo jogável de ponta a ponta (nível 1 ao 21)
+- [ ] Todos os testes passando
+- [ ] Cutscene de vitória exibe corretamente
+
+---
+
+## SPRINT 9 — Áudio + Mobile + Polish Visual
+
+**Duração estimada:** 1,5 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Jogo soa e parece completo. Áudio em todos os eventos, controles touch funcionando em tablet, efeitos visuais de partículas e transições de cena.
+
+### Entregável
+> O jogo funciona bem em tablet com D-pad virtual. Sons tocam em todos os eventos importantes. Transições entre cenas são suaves. Partículas e feedback visual deixam o jogo mais vivo.
+
+### Escopo Técnico
+
+**Áudio (SoundSystem):**
+- BGM por mundo em loop (.ogg + .mp3 fallback)
+- SFX: jump, shoot, hit, coin, die, boss_intro, level_clear, boss_die, power_up, poison_tick
+- Controle de volume master e categorias (music/sfx)
+- Menu de configurações simples (volume slider)
+
+**Mobile (TouchControls):**
+- D-pad virtual: ←↑↓→
+- Botão A (pulo), Botão B (atirar), Botão Pause
+- Posicionado no canto inferior (não obscurece ação)
+- Detecta touch vs mouse, exibe controles apenas em touch
+
+**Efeitos Visuais:**
+- Partículas de moeda coletada (faíscas douradas)
+- Flash branco no personagem ao tomar dano
+- Poeira ao pousar de pulo alto
+- Trail de projétil
+- Explosão de partículas ao matar inimigo
+- Transições de cena: fade in/out 300ms
+- Animação de entrada da carta Pokédex (slide)
+
+**Pause Menu:**
+- Opções: Retomar / Reiniciar Nível / Sair para o Menu
+
+### Testes do Sprint 9
+**Unit:** `SoundSystem` (play/stop/volume com AudioContext mockado), `TouchControls` (mapeia touch para ações iguais ao teclado)
+**Integration:** SFX dispara em eventos corretos (collectCoin → coin.ogg, jump → jump.ogg), TouchControls geram mesmos eventos que teclado
+**E2E:** viewport 768px (tablet) → D-pad visível → pular, mover, atirar funcionam via touch; sons iniciam no primeiro input do usuário
+
+---
+
+## SPRINT 10 — CI/CD + Deploy + QA Final
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Jogo em produção no GitHub Pages, pipeline de CI completo, performance validada em 60fps, documentação básica para jogadores.
+
+### Entregável
+> URL pública do jogo funcionando. Push em `main` faz deploy automático. Todos os testes rodam no CI. O jogo mantém 60fps em dispositivo de médio desempenho.
+
+### Escopo Técnico
+
+**CI/CD (.github/workflows/ci.yml):**
 ```yaml
-# .github/workflows/ci.yml
 name: CI
-
 on: [push, pull_request]
-
 jobs:
-  test:
+  test-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -507,6 +693,7 @@ jobs:
       - run: npm run type-check
       - run: npm run test:unit
       - run: npm run test:integration
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run build
       - name: Deploy to GitHub Pages
@@ -517,91 +704,96 @@ jobs:
           publish_dir: ./dist
 ```
 
+**Performance:**
+- Object pooling para projéteis e partículas (sem GC spikes)
+- Física desativada para objetos fora da câmera
+- Tilemaps carregados lazy por mundo
+- Audit com Phaser Debug (`game.loop.delta` < 16ms target)
+
+**Acessibilidade infantil:**
+- Fonte mínima 16px no HUD
+- Botões ≥ 44×44px no mobile
+- Contraste AA nas cores do HUD
+
+**Regressão Final:**
+- Rodar suite completa dos Sprints 1–9 sem falha
+- Testar nos 3 browsers: Chromium, Firefox, WebKit (Playwright)
+
+**README.md:**
+- Como jogar (controles)
+- Como rodar localmente (`npm install && npm run dev`)
+- Screenshot do jogo
+
+### Testes do Sprint 10
+**E2E Regressão Completa:**
+```
+tests/e2e/regression.spec.ts
+  ✓ Menu carrega e inicia jogo
+  ✓ Nível 1 completo do início ao fim
+  ✓ Boss Fantasma (Nível 2) derrotado com mecânica de fraqueza
+  ✓ Boss Palhaço (Nível 4) — efeito confusão na Fase 2
+  ✓ Boss T-Rex (Nível 9) — 3 fases e camera shake
+  ✓ Boss Vampiro (Nível 11) — lifesteal + counter WaterGun
+  ✓ Boss Polvo (Nível 15) — tinta escurece tela
+  ✓ Boss Escorpião (Nível 19) — armadura frontal, cauda é weak point
+  ✓ Boss Robô do Mal (Nível 21) — 4 fases, vitória, créditos
+  ✓ Save persiste entre reloads
+  ✓ D-pad funciona em viewport 768px
+  ✓ Jogo funciona em Firefox e WebKit
+```
+
+### Critério de Conclusão Final
+- [ ] URL pública do GitHub Pages funcionando
+- [ ] CI passando em `main`
+- [ ] `npm run test:all` → 100% passando (unit + integration + e2e)
+- [ ] TypeScript sem erros (`npm run type-check`)
+- [ ] 60fps estável no Chrome
+
 ---
 
-## Scripts do package.json
+## Resumo dos Sprints
+
+| Sprint | Entregável de Valor | Níveis | Bosses | Status |
+|---|---|---|---|---|
+| **1** | MVP jogável: Nível 1 com todas as mecânicas | 1 | — | Aguardando autorização |
+| **2** | Mundo 1 completo + Boss Fantasma + Mapa de Mundo | 1–3 | Fantasma | Aguardando Sprint 1 |
+| **3** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | Aguardando Sprint 2 |
+| **4** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | Aguardando Sprint 3 |
+| **5** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | Aguardando Sprint 4 |
+| **6** | Mundo 4 início + Bola de Fogo + Polvo + Tinta | 1–15 | Bola de Fogo, Polvo | Aguardando Sprint 5 |
+| **7** | Mundo 4 parte 2 + Escorpião + DoT + Armadura | 1–19 | Escorpião | Aguardando Sprint 6 |
+| **8** | Jogo completo + Robô Final 4 fases + Cutscene | 1–21 | Robô do Mal | Aguardando Sprint 7 |
+| **9** | Áudio + Mobile + Partículas + Polish | 1–21 | Todos | Aguardando Sprint 8 |
+| **10** | Deploy GitHub Pages + CI/CD + QA Final | 1–21 | Todos | Aguardando Sprint 9 |
+
+---
+
+## Scripts npm
 
 ```json
 {
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit",
-    "test:unit": "vitest run tests/unit",
+    "dev":              "vite",
+    "build":            "tsc && vite build",
+    "preview":          "vite preview",
+    "type-check":       "tsc --noEmit",
+    "test:unit":        "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "playwright test",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
-    "test:watch": "vitest --watch tests/unit"
+    "test:e2e":         "playwright test",
+    "test:all":         "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:watch":       "vitest --watch tests/unit"
   }
 }
 ```
 
 ---
 
-## Ordem de Desenvolvimento Recomendada
+## Notas Arquiteturais
 
-### Fase 1 — Fundação
-1. Setup do projeto (Vite + Phaser 3 + TypeScript)
-2. `GameConfig.ts` e `main.ts`
-3. `BootScene` + `PreloadScene` com assets placeholder
-4. `Player.ts` — movimento, pulo duplo, física
-5. `InputSystem.ts` — teclado + touch
-6. `TilemapBuilder.ts` — carregar nível 1 do Tiled
-7. Testes unitários do Player e PhysicsSystem
-
-### Fase 2 — Inimigos e Combate
-8. `BaseEnemy.ts` + `Skeleton.ts` + `Zombie.ts`
-9. `FoamGun.ts` + `CollisionSystem.ts`
-10. `HUDSystem.ts` — corações, moedas, tempo
-11. Testes unitários dos inimigos e CollisionSystem
-
-### Fase 3 — Progressão
-12. `SaveSystem.ts` + `WorldMapScene.ts`
-13. Completar os 21 tilemaps de fase
-14. `GameOverScene.ts` + `VictoryScene.ts`
-15. Testes de integração de progressão e save
-
-### Fase 4 — Chefões
-16. `BaseBoss.ts` + `BossScene.ts`
-17. Implementar os 9 chefões um por um (ordem cronológica dos níveis)
-18. Testes unitários e de integração de cada boss
-
-### Fase 5 — Polimento
-19. Assets de pixel art finais (substituir placeholders)
-20. Sistema de áudio (`SoundSystem.ts`)
-21. `TouchControls.ts` (D-pad mobile)
-22. Power-ups (`WaterGun.ts`, `Nerf.ts`, etc.)
-23. Animações e partículas de efeito
-
-### Fase 6 — Testes E2E e Deploy
-24. Suite completa de testes Playwright
-25. Pipeline GitHub Actions
-26. Deploy no GitHub Pages
-
----
-
-## Estimativa de Assets Necessários
-
-| Tipo | Quantidade |
-|---|---|
-| Spritesheets de personagem | 1 (player) |
-| Spritesheets de inimigos comuns | 5 |
-| Spritesheets de chefões | 9 |
-| Tilesets | 4 (um por mundo) |
-| Tilemaps (JSON) | 21 |
-| Músicas de fundo | 5 (4 mundos + menu) |
-| Efeitos sonoros | ~15 (jump, shoot, hit, coin, die, boss_intro…) |
-| Sprites de projéteis | 3 |
-| Sprites de power-ups | 5 |
-| Sprites de UI | ~10 (corações, botões, molduras) |
-
----
-
-## Notas Finais para o Desenvolvedor
-
-- **Pixi de Minecraft:** tiles devem ter aspecto quadrado e blocos sólidos sem anti-aliasing. Desativar `antialias: false` na config do Phaser.
-- **Apelo Pokémon:** cada chefão tem uma "ficha" com nome e tipo (ex: Fantasma — Tipo: Espectral), visível antes da batalha como uma Pokédex simplificada.
-- **Acessibilidade infantil:** textos grandes, feedback sonoro e visual para cada ação, dificuldade progressiva suave nos primeiros níveis.
-- **Performance:** target 60fps. Usar object pooling para projéteis e partículas. Desligar física de objetos fora da câmera.
-- **Mobile first:** o jogo deve funcionar bem em tablet. D-pad virtual e botões de ação no canto inferior direito.
+- **Phaser sem anti-aliasing:** `antialias: false` garante look pixel-art blocky estilo Minecraft
+- **Object pool:** `ObjectPool.ts` para projéteis e partículas evita GC spikes em 60fps
+- **Sprites Sprint 1:** gerados via `Phaser.Graphics` — zero dependência de PNG externo no MVP
+- **Mocks Phaser em Vitest:** `Phaser.Scene`, `Phaser.GameObjects.Sprite` etc. são mockados para unit/integration tests rodarem fora do browser
+- **Carta Pokédex:** `BossIntroScene` exibe por 2s com nome, tipo e silhueta antes de cada boss — inspira familiaridade para fãs de Pokémon
+- **DoT genérico:** `DotSystem` suporta múltiplos efeitos simultâneos (veneno + fogo), base para expansão futura
+- **Performance mobile:** tilemaps carregados lazy por mundo, câmera desativa física de sprites fora do viewport
