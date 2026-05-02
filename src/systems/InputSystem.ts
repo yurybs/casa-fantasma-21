@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 
 export interface InputState {
   left: boolean;
@@ -19,7 +19,6 @@ const SHOOT_KEYS = ['KeyZ', 'KeyJ'];
 const PAUSE_KEYS = ['Escape', 'KeyP'];
 
 export class InputSystem {
-  private scene: Phaser.Scene;
   private heldKeys: Set<string> = new Set();
   private pressedQueue: Set<string> = new Set();
   private releasedQueue: Set<string> = new Set();
@@ -28,23 +27,36 @@ export class InputSystem {
   private readonly onKeyDown: (e: KeyboardEvent) => void;
   private readonly onKeyUp: (e: KeyboardEvent) => void;
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
+  constructor(scene?: Phaser.Scene) {
     this.onKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') e.preventDefault();
-      if (!this.heldKeys.has(e.code)) {
-        this.pressedQueue.add(e.code);
-      }
-      this.heldKeys.add(e.code);
+      this.virtualKeyDown(e.code);
     };
     this.onKeyUp = (e: KeyboardEvent) => {
-      this.heldKeys.delete(e.code);
-      this.releasedQueue.add(e.code);
+      this.virtualKeyUp(e.code);
     };
-    window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
-    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.detach());
-    scene.events.once(Phaser.Scenes.Events.DESTROY, () => this.detach());
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', this.onKeyDown);
+      window.addEventListener('keyup', this.onKeyUp);
+    }
+    if (scene) {
+      scene.events.once('shutdown', () => this.detach());
+      scene.events.once('destroy', () => this.detach());
+    }
+  }
+
+  /** Programmatic key press — used by TouchControls and tests. */
+  virtualKeyDown(code: string): void {
+    if (!this.heldKeys.has(code)) {
+      this.pressedQueue.add(code);
+    }
+    this.heldKeys.add(code);
+  }
+
+  /** Programmatic key release — used by TouchControls and tests. */
+  virtualKeyUp(code: string): void {
+    this.heldKeys.delete(code);
+    this.releasedQueue.add(code);
   }
 
   private anyHeld(codes: readonly string[]): boolean {
@@ -76,7 +88,9 @@ export class InputSystem {
   detach(): void {
     if (this.detached) return;
     this.detached = true;
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.onKeyDown);
+      window.removeEventListener('keyup', this.onKeyUp);
+    }
   }
 }

@@ -30,32 +30,69 @@ const drawFromMatrix = (
   }
 };
 
-const PLAYER_MATRIX: number[][] = [
-  [0, 0, 1, 1, 1, 1, 0, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 1, 2, 3, 3, 2, 1, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
-  [0, 0, 4, 4, 4, 4, 0, 0],
-  [0, 4, 5, 5, 5, 5, 4, 0],
-  [0, 4, 5, 5, 5, 5, 4, 0],
-  [0, 4, 4, 5, 5, 4, 4, 0],
-  [0, 0, 4, 4, 4, 4, 0, 0],
-  [0, 0, 6, 0, 0, 6, 0, 0],
-  [0, 0, 6, 0, 0, 6, 0, 0],
-  [0, 0, 7, 0, 0, 7, 0, 0],
+// 1=outline 2=skin 3=eye 4=hair 5=shirt 6=shirt_dark 7=pants 8=shoe 9=gun_body 10=gun_tip
+const PLAYER_IDLE: number[][] = [
+  [0, 0, 0, 4, 4, 4, 4, 0, 0, 0],
+  [0, 0, 4, 4, 4, 4, 4, 4, 0, 0],
+  [0, 0, 4, 2, 2, 2, 2, 4, 0, 0],
+  [0, 0, 2, 2, 3, 2, 3, 2, 0, 0],
+  [0, 0, 2, 2, 2, 2, 2, 2, 0, 0],
+  [0, 0, 0, 5, 5, 5, 5, 0, 0, 0],
+  [0, 5, 5, 6, 6, 6, 6, 5, 5, 9],
+  [0, 5, 6, 6, 6, 6, 6, 5, 9, 10],
+  [0, 5, 6, 6, 6, 6, 6, 5, 0, 0],
+  [0, 0, 5, 5, 5, 5, 5, 0, 0, 0],
+  [0, 0, 7, 7, 0, 7, 7, 0, 0, 0],
+  [0, 0, 7, 7, 0, 7, 7, 0, 0, 0],
+  [0, 0, 8, 8, 0, 8, 8, 0, 0, 0],
+];
+
+const PLAYER_RUN: number[][] = [
+  [0, 0, 0, 4, 4, 4, 4, 0, 0, 0],
+  [0, 0, 4, 4, 4, 4, 4, 4, 0, 0],
+  [0, 0, 4, 2, 2, 2, 2, 4, 0, 0],
+  [0, 0, 2, 2, 3, 2, 3, 2, 0, 0],
+  [0, 0, 2, 2, 2, 2, 2, 2, 0, 0],
+  [0, 0, 0, 5, 5, 5, 5, 0, 0, 0],
+  [0, 5, 5, 6, 6, 6, 6, 5, 5, 9],
+  [0, 5, 6, 6, 6, 6, 6, 5, 9, 10],
+  [0, 5, 6, 6, 6, 6, 6, 5, 0, 0],
+  [0, 0, 5, 5, 5, 5, 5, 0, 0, 0],
+  [0, 7, 7, 0, 0, 0, 7, 7, 0, 0],
+  [0, 7, 0, 0, 0, 0, 0, 7, 0, 0],
+  [0, 8, 8, 0, 0, 0, 8, 8, 0, 0],
+];
+
+const PLAYER_JUMP: number[][] = [
+  [0, 0, 0, 4, 4, 4, 4, 0, 0, 0],
+  [0, 0, 4, 4, 4, 4, 4, 4, 0, 0],
+  [0, 0, 4, 2, 2, 2, 2, 4, 0, 0],
+  [0, 0, 2, 2, 3, 2, 3, 2, 0, 0],
+  [0, 0, 2, 2, 2, 2, 2, 2, 0, 0],
+  [0, 0, 0, 5, 5, 5, 5, 0, 0, 0],
+  [0, 5, 5, 6, 6, 6, 6, 5, 5, 9],
+  [0, 5, 6, 6, 6, 6, 6, 5, 9, 10],
+  [0, 5, 6, 6, 6, 6, 6, 5, 0, 0],
+  [0, 0, 5, 5, 5, 5, 5, 0, 0, 0],
+  [0, 0, 0, 7, 7, 7, 0, 0, 0, 0],
+  [0, 0, 7, 7, 0, 7, 7, 0, 0, 0],
+  [0, 0, 8, 0, 0, 0, 8, 0, 0, 0],
 ];
 
 const PLAYER_PALETTE: Record<number, number> = {
   1: 0x222222,
   2: 0xfdd9b5,
   3: 0x2c1f0f,
-  4: 0x143a6b,
+  4: 0x8b4513,
   5: 0x2469c2,
-  6: 0x1a4d8f,
-  7: 0x6b3e1d,
+  6: 0x143a6b,
+  7: 0x444444,
+  8: 0x222222,
+  9: 0xff8800,
+  10: 0xffff00,
 };
 
-const SKELETON_MATRIX: number[][] = [
+const SKELETON_IDLE: number[][] = [
   [0, 0, 1, 1, 1, 1, 0, 0],
   [0, 1, 2, 2, 2, 2, 1, 0],
   [0, 1, 2, 3, 3, 2, 1, 0],
@@ -65,14 +102,23 @@ const SKELETON_MATRIX: number[][] = [
   [1, 2, 2, 2, 2, 2, 2, 1],
   [0, 1, 2, 2, 2, 2, 1, 0],
 ];
-
+const SKELETON_WALK: number[][] = [
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [1, 2, 2, 2, 2, 2, 2, 1],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [1, 0, 2, 2, 2, 2, 0, 1],
+];
 const SKELETON_PALETTE: Record<number, number> = {
   1: 0x333333,
   2: 0xe8e8d0,
   3: 0x000000,
 };
 
-const ZOMBIE_MATRIX: number[][] = [
+const ZOMBIE_IDLE: number[][] = [
   [0, 0, 1, 1, 1, 1, 0, 0],
   [0, 1, 2, 2, 2, 2, 1, 0],
   [0, 1, 2, 3, 3, 2, 1, 0],
@@ -82,7 +128,16 @@ const ZOMBIE_MATRIX: number[][] = [
   [1, 4, 4, 4, 4, 4, 4, 1],
   [0, 1, 4, 4, 4, 4, 1, 0],
 ];
-
+const ZOMBIE_WALK: number[][] = [
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 4, 4, 4, 4, 1, 0],
+  [1, 4, 4, 4, 4, 4, 4, 1],
+  [0, 1, 4, 4, 4, 4, 1, 0],
+  [1, 4, 0, 4, 4, 0, 4, 1],
+];
 const ZOMBIE_PALETTE: Record<number, number> = {
   1: 0x202b1f,
   2: 0x6c8854,
@@ -90,13 +145,23 @@ const ZOMBIE_PALETTE: Record<number, number> = {
   4: 0x556b3e,
 };
 
-const COIN_MATRIX: number[][] = [
-  [0, 1, 1, 1, 1, 0],
-  [1, 2, 3, 3, 2, 1],
-  [1, 3, 2, 2, 3, 1],
-  [1, 3, 2, 2, 3, 1],
-  [1, 2, 3, 3, 2, 1],
-  [0, 1, 1, 1, 1, 0],
+const COIN_FRAMES: number[][][] = [
+  [
+    [0, 1, 1, 1, 1, 0],
+    [1, 2, 3, 3, 2, 1],
+    [1, 3, 2, 2, 3, 1],
+    [1, 3, 2, 2, 3, 1],
+    [1, 2, 3, 3, 2, 1],
+    [0, 1, 1, 1, 1, 0],
+  ],
+  [
+    [0, 0, 1, 1, 0, 0],
+    [0, 1, 3, 3, 1, 0],
+    [0, 1, 2, 2, 1, 0],
+    [0, 1, 2, 2, 1, 0],
+    [0, 1, 3, 3, 1, 0],
+    [0, 0, 1, 1, 0, 0],
+  ],
 ];
 const COIN_PALETTE: Record<number, number> = {
   1: 0x8a6310,
@@ -122,14 +187,15 @@ const FLAG_PALETTE: Record<number, number> = {
 
 export class SpriteGenerator {
   static generate(scene: Phaser.Scene): void {
-    SpriteGenerator.generatePlayer(scene);
-    SpriteGenerator.generateSkeleton(scene);
-    SpriteGenerator.generateZombie(scene);
+    SpriteGenerator.generatePlayerFrames(scene);
+    SpriteGenerator.generateSkeletonFrames(scene);
+    SpriteGenerator.generateZombieFrames(scene);
     SpriteGenerator.generateProjectile(scene);
     SpriteGenerator.generateBone(scene);
-    SpriteGenerator.generateCoin(scene);
+    SpriteGenerator.generateCoinFrames(scene);
     SpriteGenerator.generateFlag(scene);
     SpriteGenerator.generateTiles(scene);
+    SpriteGenerator.generateBackgroundDecor(scene);
   }
 
   private static drawTexture(
@@ -146,39 +212,53 @@ export class SpriteGenerator {
     g.destroy();
   }
 
-  private static generatePlayer(scene: Phaser.Scene): void {
+  private static generatePlayerFrames(scene: Phaser.Scene): void {
     const pxSize = 4;
-    const w = PLAYER_MATRIX[0].length * pxSize;
-    const h = PLAYER_MATRIX.length * pxSize;
-    SpriteGenerator.drawTexture(scene, 'player', w, h, (g) => {
-      drawFromMatrix(g, PLAYER_MATRIX, PLAYER_PALETTE, pxSize);
-    });
+    const w = PLAYER_IDLE[0].length * pxSize;
+    const h = PLAYER_IDLE.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'player', w, h, (g) =>
+      drawFromMatrix(g, PLAYER_IDLE, PLAYER_PALETTE, pxSize),
+    );
+    SpriteGenerator.drawTexture(scene, 'player_run', w, h, (g) =>
+      drawFromMatrix(g, PLAYER_RUN, PLAYER_PALETTE, pxSize),
+    );
+    SpriteGenerator.drawTexture(scene, 'player_jump', w, h, (g) =>
+      drawFromMatrix(g, PLAYER_JUMP, PLAYER_PALETTE, pxSize),
+    );
   }
 
-  private static generateSkeleton(scene: Phaser.Scene): void {
+  private static generateSkeletonFrames(scene: Phaser.Scene): void {
     const pxSize = 4;
-    const w = SKELETON_MATRIX[0].length * pxSize;
-    const h = SKELETON_MATRIX.length * pxSize;
-    SpriteGenerator.drawTexture(scene, 'skeleton', w, h, (g) => {
-      drawFromMatrix(g, SKELETON_MATRIX, SKELETON_PALETTE, pxSize);
-    });
+    const w = SKELETON_IDLE[0].length * pxSize;
+    const h = SKELETON_IDLE.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'skeleton', w, h, (g) =>
+      drawFromMatrix(g, SKELETON_IDLE, SKELETON_PALETTE, pxSize),
+    );
+    SpriteGenerator.drawTexture(scene, 'skeleton_walk', w, h, (g) =>
+      drawFromMatrix(g, SKELETON_WALK, SKELETON_PALETTE, pxSize),
+    );
   }
 
-  private static generateZombie(scene: Phaser.Scene): void {
+  private static generateZombieFrames(scene: Phaser.Scene): void {
     const pxSize = 4;
-    const w = ZOMBIE_MATRIX[0].length * pxSize;
-    const h = ZOMBIE_MATRIX.length * pxSize;
-    SpriteGenerator.drawTexture(scene, 'zombie', w, h, (g) => {
-      drawFromMatrix(g, ZOMBIE_MATRIX, ZOMBIE_PALETTE, pxSize);
-    });
+    const w = ZOMBIE_IDLE[0].length * pxSize;
+    const h = ZOMBIE_IDLE.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'zombie', w, h, (g) =>
+      drawFromMatrix(g, ZOMBIE_IDLE, ZOMBIE_PALETTE, pxSize),
+    );
+    SpriteGenerator.drawTexture(scene, 'zombie_walk', w, h, (g) =>
+      drawFromMatrix(g, ZOMBIE_WALK, ZOMBIE_PALETTE, pxSize),
+    );
   }
 
   private static generateProjectile(scene: Phaser.Scene): void {
-    SpriteGenerator.drawTexture(scene, 'projectile_foam', 8, 8, (g) => {
+    SpriteGenerator.drawTexture(scene, 'projectile_foam', 10, 10, (g) => {
       g.fillStyle(0xffffff, 1);
-      g.fillCircle(4, 4, 4);
+      g.fillCircle(5, 5, 5);
       g.fillStyle(0xddeeff, 1);
-      g.fillCircle(3, 3, 2);
+      g.fillCircle(4, 4, 3);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(3, 3, 1);
     });
   }
 
@@ -193,12 +273,15 @@ export class SpriteGenerator {
     });
   }
 
-  private static generateCoin(scene: Phaser.Scene): void {
+  private static generateCoinFrames(scene: Phaser.Scene): void {
     const pxSize = 2;
-    const w = COIN_MATRIX[0].length * pxSize;
-    const h = COIN_MATRIX.length * pxSize;
-    SpriteGenerator.drawTexture(scene, 'coin', w, h, (g) => {
-      drawFromMatrix(g, COIN_MATRIX, COIN_PALETTE, pxSize);
+    COIN_FRAMES.forEach((frame, idx) => {
+      const w = frame[0].length * pxSize;
+      const h = frame.length * pxSize;
+      const key = idx === 0 ? 'coin' : `coin_${idx}`;
+      SpriteGenerator.drawTexture(scene, key, w, h, (g) =>
+        drawFromMatrix(g, frame, COIN_PALETTE, pxSize),
+      );
     });
   }
 
@@ -217,6 +300,8 @@ export class SpriteGenerator {
       g.fillRect(0, 0, 16, 16);
       g.fillStyle(0x5b8a52, 1);
       g.fillRect(0, 0, 16, 4);
+      g.fillStyle(0x7ab266, 1);
+      g.fillRect(0, 4, 16, 1);
       g.fillStyle(0x8a5a2b, 1);
       g.fillRect(2, 6, 3, 2);
       g.fillRect(8, 9, 4, 2);
@@ -232,11 +317,47 @@ export class SpriteGenerator {
       g.fillRect(0, 0, 16, 16);
       g.fillStyle(0x5b8a52, 1);
       g.fillRect(0, 0, 16, 5);
+      g.fillStyle(0x7ab266, 1);
+      g.fillRect(0, 5, 16, 1);
+      g.fillStyle(0x6b3e1d, 1);
+      g.fillRect(2, 8, 3, 1);
+      g.fillRect(8, 11, 4, 1);
       g.fillStyle(0x3d2a13, 1);
       g.fillRect(0, 0, 16, 1);
       g.fillRect(0, 15, 16, 1);
       g.fillRect(0, 0, 1, 16);
       g.fillRect(15, 0, 1, 16);
+    });
+  }
+
+  private static generateBackgroundDecor(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'cloud', 64, 24, (g) => {
+      g.fillStyle(0xffffff, 0.85);
+      g.fillCircle(16, 14, 12);
+      g.fillCircle(28, 10, 14);
+      g.fillCircle(44, 12, 12);
+      g.fillCircle(54, 16, 8);
+    });
+    SpriteGenerator.drawTexture(scene, 'bush', 32, 16, (g) => {
+      g.fillStyle(0x3a6e34, 1);
+      g.fillCircle(8, 10, 7);
+      g.fillCircle(16, 8, 8);
+      g.fillCircle(24, 10, 7);
+      g.fillStyle(0x5b8a52, 1);
+      g.fillCircle(7, 9, 4);
+      g.fillCircle(17, 7, 5);
+      g.fillCircle(23, 9, 4);
+    });
+    SpriteGenerator.drawTexture(scene, 'tree', 32, 56, (g) => {
+      g.fillStyle(0x6b3e1d, 1);
+      g.fillRect(13, 30, 6, 26);
+      g.fillStyle(0x3a6e34, 1);
+      g.fillCircle(16, 16, 14);
+      g.fillCircle(8, 22, 8);
+      g.fillCircle(24, 22, 8);
+      g.fillStyle(0x5b8a52, 1);
+      g.fillCircle(13, 12, 5);
+      g.fillCircle(20, 16, 4);
     });
   }
 }

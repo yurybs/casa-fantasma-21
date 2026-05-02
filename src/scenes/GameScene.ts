@@ -16,6 +16,11 @@ import { FoamGun, Projectile as FoamProjectile } from '../weapons/FoamGun';
 import { InputSystem } from '../systems/InputSystem';
 import { HUDSystem } from '../systems/HUDSystem';
 import { SaveSystem } from '../systems/SaveSystem';
+import { SoundSystem, NullAudioEngine } from '../systems/SoundSystem';
+import { GameAudioBindings } from '../systems/GameAudioBindings';
+import { ParticleEffects } from '../systems/ParticleEffects';
+import { TouchControls } from '../ui/TouchControls';
+import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
 interface EnemyEntry {
   logic: SkeletonLogic | ZombieLogic;
@@ -49,9 +54,15 @@ export class GameScene extends Phaser.Scene {
   private inputs!: InputSystem;
   private hud!: HUDSystem;
   private save!: SaveSystem;
+  private gameSound!: SoundSystem;
+  private audio!: GameAudioBindings;
+  private particles!: ParticleEffects;
+  private touch?: TouchControls;
   private timeRemaining: number = 0;
   private gameEnded: boolean = false;
   private testHooks: Record<string, unknown> = {};
+  private animTimerMs: number = 0;
+  private playerLandSpeed: number = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -67,6 +78,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    fadeIn(this);
     this.cameras.main.setBackgroundColor(this.level.backgroundColor);
     this.physics.world.setBounds(
       0,
@@ -85,7 +97,13 @@ export class GameScene extends Phaser.Scene {
     this.foamGun = new FoamGun();
     this.inputs = new InputSystem(this);
     this.hud = new HUDSystem(this);
+    this.gameSound =
+      (this.registry.get('sound') as SoundSystem | undefined) ??
+      new SoundSystem(new NullAudioEngine());
+    this.audio = new GameAudioBindings(this.gameSound);
+    this.particles = new ParticleEffects(this);
 
+    this.drawBackground();
     this.buildPlatforms();
     this.spawnPlayer();
     this.spawnEnemies();
@@ -98,9 +116,34 @@ export class GameScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.playerSprite, true, 0.15, 0.15);
 
+    this.touch = new TouchControls(this, this.inputs);
+    this.touch.create();
+
+    void this.gameSound.resume().then(() => this.gameSound.playMusic('bgm_world1'));
+
     this.inputs.read();
 
     this.exposeTestHooks();
+  }
+
+  private drawBackground(): void {
+    const w = this.level.widthInTiles * TILE_SIZE;
+    const groundY = (this.level.heightInTiles - 1) * TILE_SIZE;
+    const positions = [80, 280, 460, 660, 880, 1080, 1240];
+    for (const x of positions) {
+      if (x > w) break;
+      this.add.image(x, 80 + (x % 60), 'cloud').setAlpha(0.7).setScrollFactor(0.3);
+    }
+    const treePositions = [120, 400, 760, 1100, 1320];
+    for (const x of treePositions) {
+      if (x > w) break;
+      this.add.image(x, groundY - 28, 'tree').setScrollFactor(0.7).setDepth(0);
+    }
+    const bushPositions = [60, 200, 360, 540, 700, 860, 1020, 1180, 1340];
+    for (const x of bushPositions) {
+      if (x > w) break;
+      this.add.image(x, groundY + 8, 'bush').setScrollFactor(0.85).setDepth(0);
+    }
   }
 
   private buildPlatforms(): void {
@@ -136,6 +179,13 @@ export class GameScene extends Phaser.Scene {
           this.respawnPlayer();
         }
       },
+      onDamage: () => {
+        this.audio.emit('player.hit');
+        this.particles.damageFlash(this.playerSprite);
+      },
+      onDeath: () => this.audio.emit('player.die'),
+      onCoinCollected: () => this.audio.emit('player.coin'),
+      onExtraLife: () => this.audio.emit('player.power_up'),
     });
 
     this.playerSprite = this.physics.add.sprite(
@@ -206,6 +256,7 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.playerSprite, this.coinSprites, (_p, coin) => {
       const coinSprite = coin as Phaser.Physics.Arcade.Sprite;
+      this.particles.coinSparkle(coinSprite.x, coinSprite.y);
       this.playerLogic.collectCoin();
       coinSprite.destroy();
       this.coinSprites = this.coinSprites.filter((c) => c !== coinSprite);
@@ -230,6 +281,7 @@ export class GameScene extends Phaser.Scene {
     sprite.setVelocity(data.vx, data.vy);
     (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     this.projectiles.push({ sprite, data });
+    this.audio.emit('player.shoot');
   }
 
   update(_time: number, delta: number): void {
@@ -263,6 +315,11 @@ export class GameScene extends Phaser.Scene {
     this.playerLogic.setFacing(this.playerLogic.facing);
     this.playerSprite.setFlipX(this.playerLogic.facing === Direction.Left);
 
+    this.animTimerMs += delta;
+    this.updatePlayerAnimation();
+    this.updateEnemyAnimations();
+    this.updateCoinAnimation();
+
     if (this.playerLogic.isInvincible) {
       const blink = Math.floor(this.time.now / 100) % 2 === 0;
       this.playerSprite.setAlpha(blink ? 0.4 : 1);
@@ -276,8 +333,15 @@ export class GameScene extends Phaser.Scene {
     const onGround = body.blocked.down || body.touching.down;
     if (onGround && !this.playerLogic.isOnGround) {
       this.playerLogic.landOnGround();
+      if (this.playerLandSpeed > 280) {
+        this.particles.landingDust(this.playerSprite.x, this.playerSprite.y + 22);
+      }
+      this.playerLandSpeed = 0;
     } else if (!onGround && this.playerLogic.isOnGround) {
       this.playerLogic.leaveGround();
+    }
+    if (!onGround) {
+      this.playerLandSpeed = Math.max(this.playerLandSpeed, body.velocity.y);
     }
 
     let dir: Direction | 0 = 0;
@@ -291,6 +355,7 @@ export class GameScene extends Phaser.Scene {
       const jumped = this.playerLogic.startJump();
       if (jumped) {
         this.playerSprite.setVelocityY(this.playerLogic.vy);
+        this.audio.emit('player.jump');
       }
     }
     if (inp.jumpDown) {
@@ -363,6 +428,10 @@ export class GameScene extends Phaser.Scene {
             )
           ) {
             e.logic.takeDamage(p.data.damage);
+            if (e.logic.isDead) {
+              this.particles.enemyDeath(e.sprite.x, e.sprite.y);
+              this.audio.emit('enemy.die');
+            }
             dead = true;
             break;
           }
@@ -372,6 +441,8 @@ export class GameScene extends Phaser.Scene {
       if (dead) {
         p.sprite.destroy();
         this.projectiles.splice(i, 1);
+      } else if (this.projectiles[i]) {
+        this.particles.projectileTrail(p.sprite.x, p.sprite.y);
       }
     }
 
@@ -416,6 +487,10 @@ export class GameScene extends Phaser.Scene {
         if (wasJumpingDown) {
           e.logic.takeDamage(99);
           this.playerSprite.setVelocityY(-300);
+          if (e.logic.isDead) {
+            this.particles.enemyDeath(e.sprite.x, e.sprite.y);
+            this.audio.emit('enemy.die');
+          }
         } else {
           this.playerLogic.takeDamage(e.logic.damage);
         }
@@ -426,18 +501,46 @@ export class GameScene extends Phaser.Scene {
   private endGame(reason: 'victory' | 'gameover'): void {
     if (this.gameEnded) return;
     this.gameEnded = true;
+    this.gameSound.stopMusic();
     if (reason === 'victory') {
+      this.audio.emit('level.complete');
       const data = this.save.markLevelComplete(this.level.id - 1);
       data.coins = this.playerLogic.coins;
       this.save.save(data);
-      this.scene.start('LevelCompleteScene', {
+      fadeToScene(this, 'LevelCompleteScene', {
         levelId: this.level.id,
         coins: this.playerLogic.coins,
         timeBonus: Math.floor(this.timeRemaining),
       });
     } else {
-      this.scene.start('GameOverScene', { coins: this.playerLogic.coins });
+      fadeToScene(this, 'GameOverScene', { coins: this.playerLogic.coins });
     }
+  }
+
+  private updatePlayerAnimation(): void {
+    if (!this.playerLogic.isOnGround) {
+      this.playerSprite.setTexture('player_jump');
+    } else if (Math.abs(this.playerLogic.vx) > 30) {
+      const useRun = Math.floor(this.animTimerMs / 120) % 2 === 0;
+      this.playerSprite.setTexture(useRun ? 'player_run' : 'player');
+    } else {
+      this.playerSprite.setTexture('player');
+    }
+  }
+
+  private updateEnemyAnimations(): void {
+    const flip = Math.floor(this.animTimerMs / 200) % 2 === 0;
+    for (const e of this.enemies) {
+      const moving = Math.abs(e.logic.vx) > 5;
+      const base = e.type === 'skeleton' ? 'skeleton' : 'zombie';
+      const walk = `${base}_walk`;
+      e.sprite.setTexture(moving && flip ? walk : base);
+    }
+  }
+
+  private updateCoinAnimation(): void {
+    const frame = Math.floor(this.animTimerMs / 180) % 2 === 0 ? 'coin' : 'coin_1';
+    for (const c of this.coinSprites) c.setTexture(frame);
   }
 
   private exposeTestHooks(): void {
@@ -465,6 +568,15 @@ export class GameScene extends Phaser.Scene {
         const active = this.scene.manager.getScenes(true);
         return active.length > 0 ? active[active.length - 1].scene.key : '';
       },
+      getSoundEvents: () => this.gameSound.drainEventLog(),
+      getMusicVolume: () => this.gameSound.musicVolume,
+      getSfxVolume: () => this.gameSound.sfxVolume,
+      getMuted: () => this.gameSound.muted,
+      pressVirtualKey: (code: string) => this.inputs.virtualKeyDown(code),
+      releaseVirtualKey: (code: string) => this.inputs.virtualKeyUp(code),
+      isTouchEnabled: () => this.touch?.enabled ?? false,
+      getDelta: () => this.game.loop.delta,
+      getFps: () => this.game.loop.actualFps,
     };
     (window as unknown as { __game: Record<string, unknown> }).__game = this.testHooks;
   }
