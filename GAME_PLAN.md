@@ -90,10 +90,10 @@ toy-blaster-kid/
 │   └── types/
 │       └── GameTypes.ts
 ├── assets/
-│   ├── sprites/                   # Adicionados a partir do Sprint 2
-│   ├── tilesets/                  # Um por mundo
+│   ├── sprites/                   # Adicionados a partir do Sprint 2 (pixel art final)
+│   ├── tilesets/                  # Um por mundo (mundos 2–4 a partir do Sprint 4)
 │   ├── tilemaps/                  # level_01.json … level_21.json
-│   └── audio/                     # Adicionado no Sprint 9
+│   └── audio/                     # Adicionado no Sprint 2 (Nível 1), expandido nos seguintes
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -267,10 +267,10 @@ interface SaveData {
 
 ---
 
-## SPRINT 1 — MVP Jogável: Nível 1 com todas as mecânicas
+## SPRINT 1 — MVP Jogável: Nível 1 com todas as mecânicas ✅ CONCLUÍDO
 
 **Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
+**Status:** ✅ **CONCLUÍDO** — 111 testes passando (unit + integration + E2E)
 
 ### Objetivo
 Primeira fase completamente jogável com todas as mecânicas centrais funcionando. Sprites gerados programaticamente (sem dependência de arquivos de imagem externos).
@@ -413,272 +413,59 @@ tests/e2e/sprint1.spec.ts
 ```
 
 ### Critério de Conclusão do Sprint 1
-- [ ] `npm run test:unit` → 100% passando
-- [ ] `npm run test:integration` → 100% passando
-- [ ] `npm run test:e2e` → 100% passando
-- [ ] `npm run build` → sem erros de TypeScript
-- [ ] Jogo jogável manualmente pelo responsável
+- [x] `npm run test:unit` → 100% passando
+- [x] `npm run test:integration` → 100% passando
+- [x] `npm run test:e2e` → 100% passando
+- [x] `npm run build` → sem erros de TypeScript
+- [x] Jogo jogável manualmente pelo responsável
 
 ---
 
-## SPRINT 2 — Mundo 1 Completo (Níveis 1–3 + Boss Fantasma)
-
-**Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Mundo 1 completo com mapa de mundo navegável, batalha de boss (Fantasma), sistema de save com checkpoints e carta estilo Pokédex antes do boss.
-
-### Entregável
-> O jogador pode abrir o mapa do Mundo 1, selecionar qualquer nível já desbloqueado, jogar os Níveis 1, 2 (boss Fantasma) e 3, salvar progresso entre sessões, e passar pelos checkpoints em níveis longos.
-
-### Escopo Técnico
-- `WorldMapScene`: nós conectados estilo Mario World, nível desbloqueado acende
-- `BossIntroScene`: carta com silhueta + nome + tipo estilo Pokédex (2s antes do boss)
-- Nível 2: arena fechada para boss
-- `GhostBoss`: flutua, dash attack, invoca 2 mini-fantasmas a 50% HP, fraqueza à água
-- `MiniGhost`: versão pequena com comportamento simplificado
-- Nível 3: tilemap com `SpiderGhost` (flutua, desce em teia)
-- `WaterGun`: power-up no Nível 2, dano duplo em fantasmas
-- Bandeiras de checkpoint dentro de níveis
-- `SaveSystem` completo: checkpoints + nível completado + estado do mapa
-
-### Testes do Sprint 2
-**Unit:** `GhostBoss` (fases, spawn de minis, fraqueza), `SpiderGhost`, `WaterGun`, checkpoint save/load
-**Integration:** boss fight fluxo completo, WaterGun + GhostBoss dano duplo, checkpoint persistido após morte
-**E2E:** completar nível 1 → mapa → entrar nível 2 → ver carta Pokédex → derrotar Fantasma → nível 3 desbloqueado → save persiste no reload
-
-### Critério de Conclusão
-- [ ] Todos os testes passando
-- [ ] Mundo 1 jogável do início ao fim
-- [ ] Save persiste entre sessões do browser
-
----
-
-## SPRINT 3 — Mundo 2 (Níveis 4–6 + Palhaço + Espantalho)
-
-**Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Mundo 2 (Caverna Assombrada) com tileset de caverna, 2 novos bosses e inimigos, power-ups de Estrela e Coração Extra.
-
-### Entregável
-> O jogador pode acessar e completar o Mundo 2 com seus 3 níveis, enfrentar o Palhaço (com efeito de confusão de tela) e o Espantalho (com corvos e braços giratórios).
-
-### Escopo Técnico
-- Tileset `world2_cave.png` aplicado aos níveis 4–6
-- `ClownBoss`: bolas de malabarismo, 2 fases (confusão visual na Fase 2)
-- `ScarecrowBoss`: extensão de braços 3 tiles, corvos, rotação 360° na Fase 2
-- `FireGhost`: patrulha deixando rastro de fogo
-- Mini Palhaço, Mini Espantalho, Corvo como inimigos
-- Power-ups: Estrela (invencibilidade 10s), Coração Extra
-- Efeito de distorção/confusão de tela (shader ou filter Phaser)
-
-### Testes do Sprint 3
-**Unit:** `ClownBoss` (2 fases, efeito confusão), `ScarecrowBoss` (alcance braços, spawn corvos), `FireGhost`
-**Integration:** confusão de tela ativa e desativa corretamente, corvos seguem padrão senoidal, Estrela cancela dano
-**E2E:** Mundo 2 completo, ambos os bosses derrotados, efeito de confusão visível na Fase 2 do Palhaço
-
----
-
-## SPRINT 4 — Mundo 3 Parte 1 (Níveis 7–9 + T-Rex)
-
-**Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Início do Mundo 3 (Cidade Abandonada) com tileset urbano, T-Rex com 3 fases e sistema de camera shake.
-
-### Entregável
-> O jogador pode jogar os níveis 7, 8 e 9, enfrentar o T-Rex com suas 3 fases (caminhada pesada, investida, onda de choque) e sentir o tremor de câmera no rugido.
-
-### Escopo Técnico
-- Tileset `world3_city.png` aplicado aos níveis 7–9
-- `CameraSystem`: camera shake configurável (intensidade, duração)
-- `TRexBoss`: 3 fases completas, hitbox grande, rugido = shake
-- Fase 3: shockwave no chão (hitbox rastejante)
-- `NerfRifle` power-up: projéteis mais rápidos, +1 dano, 30s
-- Mini T-Rex como inimigo comum
-
-### Testes do Sprint 4
-**Unit:** `TRexBoss` (3 fases, shockwave), `CameraSystem` (shake parametrizado), `NerfRifle`
-**Integration:** câmera shake dispara ao rugir, shockwave causa dano ao jogador no chão, fase 2 investida percorre arena inteira
-**E2E:** T-Rex 3 fases se comportam corretamente em sequência, NerfRifle aumenta velocidade do projétil visível
-
----
-
-## SPRINT 5 — Mundo 3 Parte 2 (Níveis 10–12 + Vampiro)
-
-**Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Encerrar o Mundo 3 com o Vampiro, mecânica de lifesteal visível no HUD e counter via Pistola de Água.
-
-### Entregável
-> O jogador pode completar os níveis 10, 11 (boss Vampiro) e 12. O Vampiro rouba vida e se transforma em morcego gigante. A Pistola de Água cancela o lifesteal.
-
-### Escopo Técnico
-- `VampireBoss`: 2 fases, morcegos teleguiados, lifesteal 5 HP a cada 3 hits
-- Barra de HP do Vampiro mostra recuperação (lifesteal animado)
-- Fase 2: sprite de morcego gigante, velocidade ×3
-- `Bat`: inimigo morcego teleguiado
-- Mini Vampiro como inimigo comum
-- WaterGun obtida antes do boss cancela lifesteal por 5s
-- Indicador visual de lifesteal na HUD do boss
-
-### Testes do Sprint 5
-**Unit:** `VampireBoss` (lifesteal, transformação), `Bat` (pathfinding teleguiado)
-**Integration:** lifesteal recupera HP do boss, WaterGun cancela lifesteal, fase 2 transição visual
-**E2E:** barra de HP do Vampiro sobe durante lifesteal, WaterGun para lifesteal visivelmente
-
----
-
-## SPRINT 6 — Mundo 4 Parte 1 (Níveis 13–15 + Bola de Fogo + Polvo)
+## SPRINT 2 — Nível 1 Polido: Prévia da Qualidade Final do Jogo
 
 **Duração estimada:** 1,5 semanas
 **Gate:** Aguardando autorização para iniciar
 
 ### Objetivo
-Início do Mundo 4 (Castelo do Robô) com tileset metálico, dois novos bosses e a mecânica de tinta (escurecimento de tela).
+Transformar o Nível 1 em uma vitrine da qualidade final do jogo completo: áudio, controles mobile, efeitos visuais, partículas, transições suaves, CI/CD e deploy no GitHub Pages — tudo restrito ao Nível 1. O cliente verá exatamente como será o produto final, mas com um único nível.
 
 ### Entregável
-> O jogador entra no Mundo 4, enfrenta a Bola de Fogo (com rastro de fogo e divisão) e o Polvo (com tinta que escurece a tela e múltiplos tentáculos).
-
-### Escopo Técnico
-- Tileset `world4_castle.png` aplicado aos níveis 13–15
-- `FireballBoss`: rastro de fogo (hitbox persistente 3s), explosão em área, divisão em 2 bolas na Fase 2
-- `OctopusBoss`: 4 tentáculos iniciais → 6 na Fase 2; tinta = overlay escuro 30% por 4s
-- Efeito de tinta: Phaser overlay semi-transparente com timer
-- Mini Bola de Fogo, Mini Polvo como inimigos
-
-### Testes do Sprint 6
-**Unit:** `FireballBoss` (divisão, rastro), `OctopusBoss` (tentáculos, tinta timer), efeito ink overlay
-**Integration:** rastro de fogo causa dano por contato, tinta escurece tela e dura 4s, divisão cria 2 projéteis
-**E2E:** tela escurece visivelmente durante tinta, Bola de Fogo se divide, Polvo tem 6 tentáculos na Fase 2
-
----
-
-## SPRINT 7 — Mundo 4 Parte 2 (Níveis 16–19 + Escorpião)
-
-**Duração estimada:** 1,5 semanas
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Concluir o caminho para o boss final com o Escorpião (veneno DoT + armadura frontal), todos os mini-inimigos e gauntlet dos níveis 17–18.
-
-### Entregável
-> O jogador enfrenta o Escorpião sabendo que a frente é invulnerável e que a cauda é o ponto fraco. O envenenamento é visível no HUD. Níveis 17 e 18 funcionam como gauntlet de mini-inimigos.
-
-### Escopo Técnico
-- `DotSystem`: engine de dano por tempo (DoT), suporta múltiplos efeitos simultâneos
-- `ScorpionBoss`: armadura frontal (projéteis rebatidos), ponto fraco = cauda, veneno DoT 1/2s por 8s
-- `PoisonIndicator`: ícone no HUD que pisca enquanto envenenado
-- Níveis 17–18: tilemaps com spawn de minis de todos os bosses anteriores
-- Mini Escorpião, Mini Robô Aranha como inimigos novos
-- Fase 2 veneno 1/1s, Fase 3 frenesi de pinças
-
-### Testes do Sprint 7
-**Unit:** `DotSystem` (tick rate, expiração, stack de efeitos), `ScorpionBoss` (armadura frontal, weak point cauda, 3 fases)
-**Integration:** projétil na frente é rebatido, projétil na cauda causa dano, DoT tick visível no HUD
-**E2E:** PoisonIndicator aparece ao ser envenenado, desaparece ao fim do DoT, Escorpião 3 fases completas
-
----
-
-## SPRINT 8 — Boss Final + Fim de Jogo (Níveis 20–21)
-
-**Duração estimada:** 2 semanas
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Nível 20 como gauntlet final e Nível 21 com o Robô do Mal (4 fases), cutscene de vitória pixel-art e tela de créditos.
-
-### Entregável
-> O jogador pode completar o jogo inteiro de ponta a ponta: 21 níveis, 9 bosses, tela de vitória com explosão pixel-art e créditos. O mapa do mundo exibe todos os 21 níveis como completos.
-
-### Escopo Técnico
-- `RobotBoss`: 4 fases completas
-  - Fase 1: mísseis teleguiados + laser horizontal
-  - Fase 2: laser vertical varrendo
-  - Fase 3: escudo de energia (bloqueia projéteis) + 3 mini-robôs aranha
-  - Fase 4: todas as habilidades simultâneas
-- `ShieldSystem`: escudo que bloqueia projéteis e expira após X acertos
-- Cutscene de vitória: explosão do Robô em partículas de pixel (Phaser particles)
-- `VictoryScene`: animação + mensagem + botão para créditos
-- `CreditsScene`: lista de créditos em scroll
-- Nível 20: gauntlet com Mini Robô Aranha e todos os minis anteriores
-
-### Testes do Sprint 8
-**Unit:** `RobotBoss` (4 fases), `ShieldSystem` (bloqueia projéteis, expira), laser hitbox
-**Integration:** escudo bloqueia projétil e decrementa, Fase 3 spawna mini-robôs, Fase 4 todas as habilidades ativas
-**E2E:** jogar nível 21 completo, 4 fases do boss se sucedem, cutscene de explosão aparece, VictoryScene exibe, créditos rolam
-
-### Critério de Conclusão
-- [ ] Jogo completo jogável de ponta a ponta (nível 1 ao 21)
-- [ ] Todos os testes passando
-- [ ] Cutscene de vitória exibe corretamente
-
----
-
-## SPRINT 9 — Áudio + Mobile + Polish Visual
-
-**Duração estimada:** 1,5 semanas
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Jogo soa e parece completo. Áudio em todos os eventos, controles touch funcionando em tablet, efeitos visuais de partículas e transições de cena.
-
-### Entregável
-> O jogo funciona bem em tablet com D-pad virtual. Sons tocam em todos os eventos importantes. Transições entre cenas são suaves. Partículas e feedback visual deixam o jogo mais vivo.
+> URL pública funcionando. O Nível 1 tem sons em todos os eventos, funciona perfeitamente em tablet com D-pad virtual, tem partículas, flash de dano, transições suaves entre cenas, e roda com 60fps estáveis. Push em `main` faz deploy automático via GitHub Actions.
 
 ### Escopo Técnico
 
-**Áudio (SoundSystem):**
-- BGM por mundo em loop (.ogg + .mp3 fallback)
-- SFX: jump, shoot, hit, coin, die, boss_intro, level_clear, boss_die, power_up, poison_tick
-- Controle de volume master e categorias (music/sfx)
-- Menu de configurações simples (volume slider)
+**Áudio (`SoundSystem`) — restrito ao Nível 1:**
+- BGM do Mundo 1 em loop (`.ogg` + `.mp3` fallback)
+- SFX para todos os eventos do Nível 1: `jump`, `shoot`, `hit`, `coin`, `die`, `level_clear`, `power_up`
+- Controle de volume master e categorias (music/sfx) no menu de pausa
+- Web Audio API — iniciado no primeiro input do usuário (política dos browsers)
 
-**Mobile (TouchControls):**
-- D-pad virtual: ←↑↓→
-- Botão A (pulo), Botão B (atirar), Botão Pause
-- Posicionado no canto inferior (não obscurece ação)
-- Detecta touch vs mouse, exibe controles apenas em touch
+**Mobile (`TouchControls`) — Nível 1:**
+- D-pad virtual: ←↑→ + botão A (pulo) + botão B (atirar) + botão Pause
+- Detecta touch vs mouse: controles touch só aparecem em tela sensível ao toque
+- Posicionado no canto inferior sem obscurecer a ação
+- Responsivo: 375px (phone) a 1024px (tablet)
 
-**Efeitos Visuais:**
-- Partículas de moeda coletada (faíscas douradas)
-- Flash branco no personagem ao tomar dano
-- Poeira ao pousar de pulo alto
-- Trail de projétil
-- Explosão de partículas ao matar inimigo
-- Transições de cena: fade in/out 300ms
-- Animação de entrada da carta Pokédex (slide)
+**Efeitos Visuais — Nível 1:**
+- Partículas de moeda coletada (faíscas douradas via Phaser.Particles)
+- Flash branco no personagem ao tomar dano (tint animation)
+- Poeira ao pousar de pulo alto (puff de partículas)
+- Trail no projétil de espuma
+- Explosão de partículas ao matar inimigo (burst colorido)
+- Transições de cena: fade in/out 300ms em todas as transições
+- Animação de entrada da `MenuScene` (slide + fade)
 
-**Pause Menu:**
-- Opções: Retomar / Reiniciar Nível / Sair para o Menu
+**Sprites Pixel-Art desenhados (substituindo `Phaser.Graphics`):**
+- Player: spritesheet com frames idle, run (4f), jump, shoot, hurt, die em PNG 16-bit pixel art estilo Minecraft
+- Skeleton, Zombie: spritesheet walk + attack + die
+- Tiles do Mundo 1: ground, platform, background, sky em 16×16px
+- Moeda animada (4 frames de rotação), Bandeira (hasteada 3 frames)
+- HUD: ícones de coração, moeda, vidas em pixel art
 
-### Testes do Sprint 9
-**Unit:** `SoundSystem` (play/stop/volume com AudioContext mockado), `TouchControls` (mapeia touch para ações iguais ao teclado)
-**Integration:** SFX dispara em eventos corretos (collectCoin → coin.ogg, jump → jump.ogg), TouchControls geram mesmos eventos que teclado
-**E2E:** viewport 768px (tablet) → D-pad visível → pular, mover, atirar funcionam via touch; sons iniciam no primeiro input do usuário
+**Pause Menu completo:**
+- Retomar / Reiniciar Nível / Sair para o Menu / Volume Music / Volume SFX
 
----
-
-## SPRINT 10 — CI/CD + Deploy + QA Final
-
-**Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
-
-### Objetivo
-Jogo em produção no GitHub Pages, pipeline de CI completo, performance validada em 60fps, documentação básica para jogadores.
-
-### Entregável
-> URL pública do jogo funcionando. Push em `main` faz deploy automático. Todos os testes rodam no CI. O jogo mantém 60fps em dispositivo de médio desempenho.
-
-### Escopo Técnico
-
-**CI/CD (.github/workflows/ci.yml):**
+**CI/CD (`.github/workflows/ci.yml`):**
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -704,27 +491,273 @@ jobs:
           publish_dir: ./dist
 ```
 
-**Performance:**
+**Performance — Nível 1:**
 - Object pooling para projéteis e partículas (sem GC spikes)
-- Física desativada para objetos fora da câmera
-- Tilemaps carregados lazy por mundo
-- Audit com Phaser Debug (`game.loop.delta` < 16ms target)
+- Sprites fora da câmera têm física desativada
+- Audit: `game.loop.delta` < 16ms target
 
 **Acessibilidade infantil:**
 - Fonte mínima 16px no HUD
 - Botões ≥ 44×44px no mobile
 - Contraste AA nas cores do HUD
 
-**Regressão Final:**
-- Rodar suite completa dos Sprints 1–9 sem falha
-- Testar nos 3 browsers: Chromium, Firefox, WebKit (Playwright)
+### Testes do Sprint 2
 
-**README.md:**
-- Como jogar (controles)
-- Como rodar localmente (`npm install && npm run dev`)
-- Screenshot do jogo
+**Unit Tests (Vitest):**
+```
+tests/unit/systems/SoundSystem.test.ts
+  ✓ play() agenda áudio pelo key correto
+  ✓ setMusicVolume() ajusta gain node
+  ✓ setSfxVolume() ajusta gain node
+  ✓ mute/unmute preserva volumes anteriores
+  ✓ não lança erro se AudioContext não disponível
+
+tests/unit/ui/TouchControls.test.ts
+  ✓ mapeia touchstart em D-pad ← para ação moveLeft
+  ✓ mapeia touchstart em D-pad → para ação moveRight
+  ✓ mapeia touchstart em botão A para ação jump
+  ✓ mapeia touchstart em botão B para ação shoot
+  ✓ touchend limpa a ação correspondente
+  ✓ não interfere com teclado quando touch não ativo
+```
+
+**Integration Tests (Vitest):**
+```
+tests/integration/AudioEvents.test.ts
+  ✓ collectCoin dispara SFX 'coin'
+  ✓ takeDamage dispara SFX 'hit'
+  ✓ player jump dispara SFX 'jump'
+  ✓ player die dispara SFX 'die'
+  ✓ levelComplete dispara SFX 'level_clear'
+  ✓ shoot dispara SFX 'shoot'
+
+tests/integration/TouchInputEquivalence.test.ts
+  ✓ touch D-pad → gera mesmo InputState que tecla ArrowRight
+  ✓ touch botão A → gera mesmo InputState que tecla Space
+  ✓ touch botão B → gera mesmo InputState que tecla Z
+```
+
+**E2E Tests (Playwright):**
+```
+tests/e2e/sprint2.spec.ts
+  ✓ URL do GitHub Pages carrega o jogo
+  ✓ viewport 768px (tablet): D-pad virtual visível
+  ✓ toque no botão A faz o personagem pular
+  ✓ toque no D-pad → move o personagem para a direita
+  ✓ toque no botão B dispara projétil
+  ✓ coletar moeda dispara partículas douradas
+  ✓ tomar dano exibe flash branco no personagem
+  ✓ matar inimigo exibe burst de partículas
+  ✓ transição Menu → Jogo tem fade de 300ms
+  ✓ transição Jogo → Game Over tem fade de 300ms
+  ✓ pause exibe controles de volume
+  ✓ build de produção não tem erros de console
+  ✓ 60fps estável durante 5s de gameplay (delta < 20ms)
+```
+
+### Critério de Conclusão do Sprint 2
+- [ ] URL pública do GitHub Pages funcionando com o Nível 1
+- [ ] CI passando em `main` (unit + integration + E2E + build)
+- [ ] `npm run test:all` → 100% passando
+- [ ] D-pad funciona em viewport 375px e 768px
+- [ ] Sons tocam em todos os eventos do Nível 1
+- [ ] 60fps estável no Chrome
+- [ ] TypeScript sem erros (`npm run type-check`)
+- [ ] Jogo aprovado visualmente pelo responsável
+
+---
+
+## SPRINT 3 — Mundo 1 Completo (Níveis 1–3 + Boss Fantasma)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar (após Sprint 2)
+
+### Objetivo
+Mundo 1 completo com mapa de mundo navegável, batalha de boss (Fantasma), sistema de save com checkpoints e carta estilo Pokédex antes do boss.
+
+### Entregável
+> O jogador pode abrir o mapa do Mundo 1, selecionar qualquer nível já desbloqueado, jogar os Níveis 1, 2 (boss Fantasma) e 3, salvar progresso entre sessões, e passar pelos checkpoints em níveis longos.
+
+### Escopo Técnico
+- `WorldMapScene`: nós conectados estilo Mario World, nível desbloqueado acende
+- `BossIntroScene`: carta com silhueta + nome + tipo estilo Pokédex (2s antes do boss)
+- Nível 2: arena fechada para boss
+- `GhostBoss`: flutua, dash attack, invoca 2 mini-fantasmas a 50% HP, fraqueza à água
+- `MiniGhost`: versão pequena com comportamento simplificado
+- Nível 3: tilemap com `SpiderGhost` (flutua, desce em teia)
+- `WaterGun`: power-up no Nível 2, dano duplo em fantasmas
+- Bandeiras de checkpoint dentro de níveis
+- `SaveSystem` completo: checkpoints + nível completado + estado do mapa
+
+### Testes do Sprint 3
+**Unit:** `GhostBoss` (fases, spawn de minis, fraqueza), `SpiderGhost`, `WaterGun`, checkpoint save/load
+**Integration:** boss fight fluxo completo, WaterGun + GhostBoss dano duplo, checkpoint persistido após morte
+**E2E:** completar nível 1 → mapa → entrar nível 2 → ver carta Pokédex → derrotar Fantasma → nível 3 desbloqueado → save persiste no reload
+
+### Critério de Conclusão
+- [ ] Todos os testes passando
+- [ ] Mundo 1 jogável do início ao fim
+- [ ] Save persiste entre sessões do browser
+
+---
+
+## SPRINT 5 — Mundo 2 (Níveis 4–6 + Palhaço + Espantalho)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Mundo 2 (Caverna Assombrada) com tileset de caverna, 2 novos bosses e inimigos, power-ups de Estrela e Coração Extra.
+
+### Entregável
+> O jogador pode acessar e completar o Mundo 2 com seus 3 níveis, enfrentar o Palhaço (com efeito de confusão de tela) e o Espantalho (com corvos e braços giratórios).
+
+### Escopo Técnico
+- Tileset `world2_cave.png` aplicado aos níveis 4–6
+- `ClownBoss`: bolas de malabarismo, 2 fases (confusão visual na Fase 2)
+- `ScarecrowBoss`: extensão de braços 3 tiles, corvos, rotação 360° na Fase 2
+- `FireGhost`: patrulha deixando rastro de fogo
+- Mini Palhaço, Mini Espantalho, Corvo como inimigos
+- Power-ups: Estrela (invencibilidade 10s), Coração Extra
+- Efeito de distorção/confusão de tela (shader ou filter Phaser)
+
+### Testes do Sprint 5
+**Unit:** `ClownBoss` (2 fases, efeito confusão), `ScarecrowBoss` (alcance braços, spawn corvos), `FireGhost`
+**Integration:** confusão de tela ativa e desativa corretamente, corvos seguem padrão senoidal, Estrela cancela dano
+**E2E:** Mundo 2 completo, ambos os bosses derrotados, efeito de confusão visível na Fase 2 do Palhaço
+
+---
+
+## SPRINT 6 — Mundo 3 Parte 1 (Níveis 7–9 + T-Rex)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar (após Sprint 5)
+
+### Objetivo
+Início do Mundo 3 (Cidade Abandonada) com tileset urbano, T-Rex com 3 fases e sistema de camera shake.
+
+### Entregável
+> O jogador pode jogar os níveis 7, 8 e 9, enfrentar o T-Rex com suas 3 fases (caminhada pesada, investida, onda de choque) e sentir o tremor de câmera no rugido.
+
+### Escopo Técnico
+- Tileset `world3_city.png` aplicado aos níveis 7–9
+- `CameraSystem`: camera shake configurável (intensidade, duração)
+- `TRexBoss`: 3 fases completas, hitbox grande, rugido = shake
+- Fase 3: shockwave no chão (hitbox rastejante)
+- `NerfRifle` power-up: projéteis mais rápidos, +1 dano, 30s
+- Mini T-Rex como inimigo comum
+
+### Testes do Sprint 6
+**Unit:** `TRexBoss` (3 fases, shockwave), `CameraSystem` (shake parametrizado), `NerfRifle`
+**Integration:** câmera shake dispara ao rugir, shockwave causa dano ao jogador no chão, fase 2 investida percorre arena inteira
+**E2E:** T-Rex 3 fases se comportam corretamente em sequência, NerfRifle aumenta velocidade do projétil visível
+
+---
+
+## SPRINT 7 — Mundo 3 Parte 2 (Níveis 10–12 + Vampiro)
+
+**Duração estimada:** 1 semana
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Encerrar o Mundo 3 com o Vampiro, mecânica de lifesteal visível no HUD e counter via Pistola de Água.
+
+### Entregável
+> O jogador pode completar os níveis 10, 11 (boss Vampiro) e 12. O Vampiro rouba vida e se transforma em morcego gigante. A Pistola de Água cancela o lifesteal.
+
+### Escopo Técnico
+- `VampireBoss`: 2 fases, morcegos teleguiados, lifesteal 5 HP a cada 3 hits
+- Barra de HP do Vampiro mostra recuperação (lifesteal animado)
+- Fase 2: sprite de morcego gigante, velocidade ×3
+- `Bat`: inimigo morcego teleguiado
+- Mini Vampiro como inimigo comum
+- WaterGun obtida antes do boss cancela lifesteal por 5s
+- Indicador visual de lifesteal na HUD do boss
+
+### Testes do Sprint 7
+**Unit:** `VampireBoss` (lifesteal, transformação), `Bat` (pathfinding teleguiado)
+**Integration:** lifesteal recupera HP do boss, WaterGun cancela lifesteal, fase 2 transição visual
+**E2E:** barra de HP do Vampiro sobe durante lifesteal, WaterGun para lifesteal visivelmente
+
+---
+
+## SPRINT 8 — Mundo 4 Parte 1 (Níveis 13–15 + Bola de Fogo + Polvo)
+
+**Duração estimada:** 1,5 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Início do Mundo 4 (Castelo do Robô) com tileset metálico, dois novos bosses e a mecânica de tinta (escurecimento de tela).
+
+### Entregável
+> O jogador entra no Mundo 4, enfrenta a Bola de Fogo (com rastro de fogo e divisão) e o Polvo (com tinta que escurece a tela e múltiplos tentáculos).
+
+### Escopo Técnico
+- Tileset `world4_castle.png` aplicado aos níveis 13–15
+- `FireballBoss`: rastro de fogo (hitbox persistente 3s), explosão em área, divisão em 2 bolas na Fase 2
+- `OctopusBoss`: 4 tentáculos iniciais → 6 na Fase 2; tinta = overlay escuro 30% por 4s
+- Efeito de tinta: Phaser overlay semi-transparente com timer
+- Mini Bola de Fogo, Mini Polvo como inimigos
+
+### Testes do Sprint 8
+**Unit:** `FireballBoss` (divisão, rastro), `OctopusBoss` (tentáculos, tinta timer), efeito ink overlay
+**Integration:** rastro de fogo causa dano por contato, tinta escurece tela e dura 4s, divisão cria 2 projéteis
+**E2E:** tela escurece visivelmente durante tinta, Bola de Fogo se divide, Polvo tem 6 tentáculos na Fase 2
+
+---
+
+## SPRINT 9 — Mundo 4 Parte 2 (Níveis 16–19 + Escorpião)
+
+**Duração estimada:** 1,5 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Concluir o caminho para o boss final com o Escorpião (veneno DoT + armadura frontal), todos os mini-inimigos e gauntlet dos níveis 17–18.
+
+### Entregável
+> O jogador enfrenta o Escorpião sabendo que a frente é invulnerável e que a cauda é o ponto fraco. O envenenamento é visível no HUD. Níveis 17 e 18 funcionam como gauntlet de mini-inimigos.
+
+### Escopo Técnico
+- `DotSystem`: engine de dano por tempo (DoT), suporta múltiplos efeitos simultâneos
+- `ScorpionBoss`: armadura frontal (projéteis rebatidos), ponto fraco = cauda, veneno DoT 1/2s por 8s
+- `PoisonIndicator`: ícone no HUD que pisca enquanto envenenado
+- Níveis 17–18: tilemaps com spawn de minis de todos os bosses anteriores
+- Mini Escorpião, Mini Robô Aranha como inimigos novos
+- Fase 2 veneno 1/1s, Fase 3 frenesi de pinças
+
+### Testes do Sprint 9
+**Unit:** `DotSystem` (tick rate, expiração, stack de efeitos), `ScorpionBoss` (armadura frontal, weak point cauda, 3 fases)
+**Integration:** projétil na frente é rebatido, projétil na cauda causa dano, DoT tick visível no HUD
+**E2E:** PoisonIndicator aparece ao ser envenenado, desaparece ao fim do DoT, Escorpião 3 fases completas
+
+---
+
+## SPRINT 10 — Boss Final + Fim de Jogo Completo (Níveis 20–21)
+
+**Duração estimada:** 2 semanas
+**Gate:** Aguardando autorização para iniciar
+
+### Objetivo
+Nível 20 como gauntlet final e Nível 21 com o Robô do Mal (4 fases), cutscene de vitória pixel-art e tela de créditos.
+
+### Entregável
+> O jogador pode completar o jogo inteiro de ponta a ponta: 21 níveis, 9 bosses, tela de vitória com explosão pixel-art e créditos. O mapa do mundo exibe todos os 21 níveis como completos.
+
+### Escopo Técnico
+- `RobotBoss`: 4 fases completas
+  - Fase 1: mísseis teleguiados + laser horizontal
+  - Fase 2: laser vertical varrendo
+  - Fase 3: escudo de energia (bloqueia projéteis) + 3 mini-robôs aranha
+  - Fase 4: todas as habilidades simultâneas
+- `ShieldSystem`: escudo que bloqueia projéteis e expira após X acertos
+- Cutscene de vitória: explosão do Robô em partículas de pixel (Phaser particles)
+- `VictoryScene`: animação + mensagem + botão para créditos
+- `CreditsScene`: lista de créditos em scroll
+- Nível 20: gauntlet com Mini Robô Aranha e todos os minis anteriores
 
 ### Testes do Sprint 10
+**Unit:** `RobotBoss` (4 fases), `ShieldSystem` (bloqueia projéteis, expira), laser hitbox
+**Integration:** escudo bloqueia projétil e decrementa, Fase 3 spawna mini-robôs, Fase 4 todas as habilidades ativas
 **E2E Regressão Completa:**
 ```
 tests/e2e/regression.spec.ts
@@ -743,11 +776,11 @@ tests/e2e/regression.spec.ts
 ```
 
 ### Critério de Conclusão Final
-- [ ] URL pública do GitHub Pages funcionando
-- [ ] CI passando em `main`
+- [ ] Jogo completo jogável de ponta a ponta (nível 1 ao 21)
+- [ ] Todos os testes passando
+- [ ] Cutscene de vitória exibe corretamente
 - [ ] `npm run test:all` → 100% passando (unit + integration + e2e)
 - [ ] TypeScript sem erros (`npm run type-check`)
-- [ ] 60fps estável no Chrome
 
 ---
 
@@ -755,16 +788,15 @@ tests/e2e/regression.spec.ts
 
 | Sprint | Entregável de Valor | Níveis | Bosses | Status |
 |---|---|---|---|---|
-| **1** | MVP jogável: Nível 1 com todas as mecânicas | 1 | — | Aguardando autorização |
-| **2** | Mundo 1 completo + Boss Fantasma + Mapa de Mundo | 1–3 | Fantasma | Aguardando Sprint 1 |
-| **3** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | Aguardando Sprint 2 |
-| **4** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | Aguardando Sprint 3 |
-| **5** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | Aguardando Sprint 4 |
-| **6** | Mundo 4 início + Bola de Fogo + Polvo + Tinta | 1–15 | Bola de Fogo, Polvo | Aguardando Sprint 5 |
-| **7** | Mundo 4 parte 2 + Escorpião + DoT + Armadura | 1–19 | Escorpião | Aguardando Sprint 6 |
-| **8** | Jogo completo + Robô Final 4 fases + Cutscene | 1–21 | Robô do Mal | Aguardando Sprint 7 |
-| **9** | Áudio + Mobile + Partículas + Polish | 1–21 | Todos | Aguardando Sprint 8 |
-| **10** | Deploy GitHub Pages + CI/CD + QA Final | 1–21 | Todos | Aguardando Sprint 9 |
+| **1** | MVP jogável: Nível 1 com todas as mecânicas | 1 | — | ✅ **CONCLUÍDO** (111 testes) |
+| **2** | Nível 1 polido + Áudio + Mobile + CI/CD + GitHub Pages | 1 | — | Aguardando autorização |
+| **3** | Mundo 1 completo + Boss Fantasma + Mapa de Mundo | 1–3 | Fantasma | Aguardando Sprint 2 |
+| **4** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | Aguardando Sprint 3 |
+| **5** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | Aguardando Sprint 4 |
+| **6** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | Aguardando Sprint 5 |
+| **7** | Mundo 4 início + Bola de Fogo + Polvo + Tinta | 1–15 | Bola de Fogo, Polvo | Aguardando Sprint 6 |
+| **8** | Mundo 4 parte 2 + Escorpião + DoT + Armadura | 1–19 | Escorpião | Aguardando Sprint 7 |
+| **9** | Jogo completo + Robô Final 4 fases + Cutscene + QA | 1–21 | Robô do Mal | Aguardando Sprint 8 |
 
 ---
 
