@@ -1,4 +1,10 @@
-import { SaveData, SAVE_KEY, DEFAULT_PLAYER_STATS } from '../types/GameTypes';
+import {
+  SaveData,
+  SAVE_KEY,
+  DEFAULT_PLAYER_STATS,
+  CheckpointState,
+  PowerUpsState,
+} from '../types/GameTypes';
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -8,6 +14,10 @@ export interface StorageLike {
 
 const TOTAL_LEVELS = 21;
 
+export function defaultPowerUps(): PowerUpsState {
+  return { waterGun: false };
+}
+
 export function defaultSave(): SaveData {
   return {
     currentLevel: 1,
@@ -15,21 +25,60 @@ export function defaultSave(): SaveData {
     coins: 0,
     levelsCompleted: new Array(TOTAL_LEVELS).fill(false),
     highScore: 0,
+    checkpoint: null,
+    powerUps: defaultPowerUps(),
   };
 }
 
-function isValidSave(value: unknown): value is SaveData {
-  if (typeof value !== 'object' || value === null) return false;
-  const s = value as Partial<SaveData>;
-  return (
-    typeof s.currentLevel === 'number' &&
-    typeof s.lives === 'number' &&
-    typeof s.coins === 'number' &&
-    Array.isArray(s.levelsCompleted) &&
-    s.levelsCompleted.length === TOTAL_LEVELS &&
-    s.levelsCompleted.every((b) => typeof b === 'boolean') &&
-    typeof s.highScore === 'number'
-  );
+/**
+ * Lenient parser: accepts any JSON object with the legacy required fields and
+ * fills missing Sprint 3+ fields with defaults. Older saves remain readable.
+ */
+function parseSave(value: unknown): SaveData | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const s = value as Partial<SaveData> & Record<string, unknown>;
+  if (
+    typeof s.currentLevel !== 'number' ||
+    typeof s.lives !== 'number' ||
+    typeof s.coins !== 'number' ||
+    !Array.isArray(s.levelsCompleted) ||
+    s.levelsCompleted.length !== TOTAL_LEVELS ||
+    !s.levelsCompleted.every((b) => typeof b === 'boolean') ||
+    typeof s.highScore !== 'number'
+  ) {
+    return null;
+  }
+  const checkpoint = parseCheckpoint(s.checkpoint);
+  const powerUps = parsePowerUps(s.powerUps);
+  return {
+    currentLevel: s.currentLevel,
+    lives: s.lives,
+    coins: s.coins,
+    levelsCompleted: s.levelsCompleted as boolean[],
+    highScore: s.highScore,
+    checkpoint,
+    powerUps,
+  };
+}
+
+function parseCheckpoint(value: unknown): CheckpointState | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'object') return null;
+  const c = value as Partial<CheckpointState>;
+  if (
+    typeof c.levelIndex !== 'number' ||
+    typeof c.x !== 'number' ||
+    typeof c.y !== 'number'
+  ) {
+    return null;
+  }
+  return { levelIndex: c.levelIndex, x: c.x, y: c.y };
+}
+
+function parsePowerUps(value: unknown): PowerUpsState {
+  if (typeof value !== 'object' || value === null) return defaultPowerUps();
+  const p = value as Partial<PowerUpsState>;
+  return { waterGun: typeof p.waterGun === 'boolean' ? p.waterGun : false };
 }
 
 export class SaveSystem {
@@ -40,7 +89,10 @@ export class SaveSystem {
   }
 
   private getDefaultStorage(): StorageLike {
-    if (typeof globalThis !== 'undefined' && (globalThis as { localStorage?: StorageLike }).localStorage) {
+    if (
+      typeof globalThis !== 'undefined' &&
+      (globalThis as { localStorage?: StorageLike }).localStorage
+    ) {
       return (globalThis as { localStorage: StorageLike }).localStorage;
     }
     const memory = new Map<string, string>();
@@ -55,8 +107,8 @@ export class SaveSystem {
     try {
       const raw = this.storage.getItem(SAVE_KEY);
       if (!raw) return defaultSave();
-      const parsed = JSON.parse(raw);
-      if (!isValidSave(parsed)) return defaultSave();
+      const parsed = parseSave(JSON.parse(raw));
+      if (!parsed) return defaultSave();
       return parsed;
     } catch {
       return defaultSave();
@@ -71,6 +123,10 @@ export class SaveSystem {
     this.storage.removeItem(SAVE_KEY);
   }
 
+  /**
+   * Marks a level complete. Unlocks the next level via currentLevel and
+   * clears any active checkpoint (player has finished the level).
+   */
   markLevelComplete(levelIndex: number): SaveData {
     const data = this.load();
     if (levelIndex >= 0 && levelIndex < data.levelsCompleted.length) {
@@ -78,6 +134,7 @@ export class SaveSystem {
       if (levelIndex + 1 < data.levelsCompleted.length) {
         data.currentLevel = Math.max(data.currentLevel, levelIndex + 2);
       }
+      data.checkpoint = null;
     }
     this.save(data);
     return data;
@@ -89,5 +146,37 @@ export class SaveSystem {
     data.coins = coins;
     this.save(data);
     return data;
+  }
+
+  setCheckpoint(levelIndex: number, x: number, y: number): SaveData {
+    const data = this.load();
+    data.checkpoint = { levelIndex, x, y };
+    this.save(data);
+    return data;
+  }
+
+  clearCheckpoint(): SaveData {
+    const data = this.load();
+    data.checkpoint = null;
+    this.save(data);
+    return data;
+  }
+
+  getCheckpoint(): CheckpointState | null {
+    return this.load().checkpoint;
+  }
+
+  setPowerUp<K extends keyof PowerUpsState>(key: K, value: PowerUpsState[K]): SaveData {
+    const data = this.load();
+    data.powerUps[key] = value;
+    this.save(data);
+    return data;
+  }
+
+  isLevelUnlocked(levelIndex: number): boolean {
+    const data = this.load();
+    if (levelIndex <= 0) return true;
+    if (levelIndex >= data.levelsCompleted.length) return false;
+    return data.currentLevel - 1 >= levelIndex || data.levelsCompleted[levelIndex];
   }
 }
