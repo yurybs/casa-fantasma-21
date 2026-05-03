@@ -102,7 +102,8 @@ export class GhostBoss extends BaseEnemy {
       if (this.dashCooldownMs <= 0) {
         this.startDash(playerX, playerY);
       }
-    } else if (this.state === 'dash') {
+    }
+    if (this.state === 'dash') {
       this.vx = this.dashTargetVx;
       this.vy = this.dashTargetVy;
       if (this.stateTimerMs >= DASH_DURATION_MS) {

@@ -89,7 +89,11 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await page.waitForTimeout(800);
     await page.keyboard.press('m');
     await page.waitForFunction(() => !!window.__map, null, { timeout: 6000 });
-    await page.evaluate(() => window.__map!.moveCursor(1));
+    await page.waitForFunction(
+      () => window.__map!.getCursorLevelIndex() === 2,
+      null,
+      { timeout: 3000 },
+    );
     await page.evaluate(() => window.__map!.enterSelectedLevel());
     await page.waitForFunction(() => !!window.__bossIntro, null, { timeout: 6000 });
     const bossType = await page.evaluate(() => window.__bossIntro!.getBossType());
@@ -108,7 +112,11 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await page.waitForTimeout(800);
     await page.keyboard.press('m');
     await page.waitForFunction(() => !!window.__map, null, { timeout: 6000 });
-    await page.evaluate(() => window.__map!.moveCursor(1));
+    await page.waitForFunction(
+      () => window.__map!.getCursorLevelIndex() === 2,
+      null,
+      { timeout: 3000 },
+    );
     await page.evaluate(() => window.__map!.enterSelectedLevel());
     await page.waitForFunction(() => !!window.__bossIntro, null, { timeout: 6000 });
     await page.evaluate(() => window.__bossIntro!.advance());
