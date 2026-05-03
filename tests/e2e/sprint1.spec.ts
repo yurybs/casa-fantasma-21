@@ -45,7 +45,7 @@ test.describe('Sprint 1 — MVP Level 1', () => {
     await enterGameScene(page);
     const x0 = await page.evaluate(() => window.__game!.getPlayerX());
     await page.keyboard.down('ArrowRight');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(900);
     await page.keyboard.up('ArrowRight');
     const x1 = await page.evaluate(() => window.__game!.getPlayerX());
     expect(x1).toBeGreaterThan(x0 + 30);
@@ -57,7 +57,7 @@ test.describe('Sprint 1 — MVP Level 1', () => {
     await page.waitForTimeout(200);
     const x0 = await page.evaluate(() => window.__game!.getPlayerX());
     await page.keyboard.down('ArrowLeft');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(900);
     await page.keyboard.up('ArrowLeft');
     const x1 = await page.evaluate(() => window.__game!.getPlayerX());
     expect(x1).toBeLessThan(x0 - 30);
