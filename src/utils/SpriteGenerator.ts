@@ -185,6 +185,98 @@ const FLAG_PALETTE: Record<number, number> = {
   2: 0xff3344,
 };
 
+const CHECKPOINT_FLAG_PALETTE: Record<number, number> = {
+  1: 0x6b3e1d,
+  2: 0x55aaff,
+};
+
+// 1=outline 2=body 3=eye
+const GHOST_BOSS_IDLE: number[][] = [
+  [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+  [0, 0, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 3, 2, 2, 3, 2, 2, 1, 0],
+  [0, 1, 2, 2, 3, 2, 2, 3, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+  [1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1],
+  [1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1],
+];
+const GHOST_BOSS_PHASE2: number[][] = [
+  [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+  [0, 0, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 3, 3, 2, 2, 3, 3, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+  [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+  [1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1],
+  [1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1],
+];
+const GHOST_BOSS_PALETTE: Record<number, number> = {
+  1: 0x222244,
+  2: 0xddddff,
+  3: 0x441144,
+};
+const GHOST_BOSS_PHASE2_PALETTE: Record<number, number> = {
+  1: 0x441122,
+  2: 0xffaadd,
+  3: 0xff2266,
+};
+
+const MINI_GHOST_FRAME: number[][] = [
+  [0, 1, 1, 1, 1, 0],
+  [1, 2, 2, 2, 2, 1],
+  [1, 2, 3, 2, 3, 1],
+  [1, 2, 2, 2, 2, 1],
+  [1, 2, 2, 2, 2, 1],
+  [1, 1, 0, 1, 0, 1],
+];
+const MINI_GHOST_PALETTE: Record<number, number> = {
+  1: 0x222244,
+  2: 0xccccff,
+  3: 0x441144,
+};
+
+// Spider ghost: skull-spider hybrid. 1=outline 2=body 3=eye 4=leg
+const SPIDER_GHOST_FRAME: number[][] = [
+  [4, 0, 4, 0, 0, 0, 0, 4, 0, 4],
+  [0, 4, 0, 1, 1, 1, 1, 0, 4, 0],
+  [0, 0, 1, 2, 2, 2, 2, 1, 0, 0],
+  [0, 0, 1, 2, 3, 3, 2, 1, 0, 0],
+  [0, 0, 1, 2, 2, 2, 2, 1, 0, 0],
+  [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+];
+const SPIDER_GHOST_PALETTE: Record<number, number> = {
+  1: 0x111133,
+  2: 0xbbbbdd,
+  3: 0xff3366,
+  4: 0x222244,
+};
+
+// Water-gun pickup icon
+const WATER_GUN_FRAME: number[][] = [
+  [0, 0, 1, 1, 1, 1, 0, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [1, 2, 3, 3, 3, 3, 2, 1],
+  [1, 2, 3, 4, 4, 3, 2, 1],
+  [1, 2, 3, 3, 3, 3, 2, 1],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 0, 1, 1, 1, 1, 0, 0],
+];
+const WATER_GUN_PALETTE: Record<number, number> = {
+  1: 0x113366,
+  2: 0x66bbff,
+  3: 0xaaddff,
+  4: 0xffffff,
+};
+
 export class SpriteGenerator {
   static generate(scene: Phaser.Scene): void {
     SpriteGenerator.generatePlayerFrames(scene);
@@ -194,8 +286,14 @@ export class SpriteGenerator {
     SpriteGenerator.generateBone(scene);
     SpriteGenerator.generateCoinFrames(scene);
     SpriteGenerator.generateFlag(scene);
+    SpriteGenerator.generateCheckpointFlag(scene);
     SpriteGenerator.generateTiles(scene);
     SpriteGenerator.generateBackgroundDecor(scene);
+    SpriteGenerator.generateGhostBossFrames(scene);
+    SpriteGenerator.generateMiniGhost(scene);
+    SpriteGenerator.generateSpiderGhost(scene);
+    SpriteGenerator.generateWaterGun(scene);
+    SpriteGenerator.generateWaterProjectile(scene);
   }
 
   private static drawTexture(
@@ -327,6 +425,68 @@ export class SpriteGenerator {
       g.fillRect(0, 15, 16, 1);
       g.fillRect(0, 0, 1, 16);
       g.fillRect(15, 0, 1, 16);
+    });
+  }
+
+  private static generateCheckpointFlag(scene: Phaser.Scene): void {
+    const pxSize = 4;
+    const w = FLAG_MATRIX[0].length * pxSize;
+    const h = FLAG_MATRIX.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'checkpoint_flag', w, h, (g) => {
+      drawFromMatrix(g, FLAG_MATRIX, CHECKPOINT_FLAG_PALETTE, pxSize);
+    });
+    SpriteGenerator.drawTexture(scene, 'checkpoint_flag_active', w, h, (g) => {
+      drawFromMatrix(g, FLAG_MATRIX, { 1: 0x6b3e1d, 2: 0x66ff66 }, pxSize);
+    });
+  }
+
+  private static generateGhostBossFrames(scene: Phaser.Scene): void {
+    const pxSize = 5;
+    const w = GHOST_BOSS_IDLE[0].length * pxSize;
+    const h = GHOST_BOSS_IDLE.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'ghost_boss', w, h, (g) =>
+      drawFromMatrix(g, GHOST_BOSS_IDLE, GHOST_BOSS_PALETTE, pxSize),
+    );
+    SpriteGenerator.drawTexture(scene, 'ghost_boss_phase2', w, h, (g) =>
+      drawFromMatrix(g, GHOST_BOSS_PHASE2, GHOST_BOSS_PHASE2_PALETTE, pxSize),
+    );
+  }
+
+  private static generateMiniGhost(scene: Phaser.Scene): void {
+    const pxSize = 4;
+    const w = MINI_GHOST_FRAME[0].length * pxSize;
+    const h = MINI_GHOST_FRAME.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'mini_ghost', w, h, (g) =>
+      drawFromMatrix(g, MINI_GHOST_FRAME, MINI_GHOST_PALETTE, pxSize),
+    );
+  }
+
+  private static generateSpiderGhost(scene: Phaser.Scene): void {
+    const pxSize = 4;
+    const w = SPIDER_GHOST_FRAME[0].length * pxSize;
+    const h = SPIDER_GHOST_FRAME.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'spider_ghost', w, h, (g) =>
+      drawFromMatrix(g, SPIDER_GHOST_FRAME, SPIDER_GHOST_PALETTE, pxSize),
+    );
+  }
+
+  private static generateWaterGun(scene: Phaser.Scene): void {
+    const pxSize = 4;
+    const w = WATER_GUN_FRAME[0].length * pxSize;
+    const h = WATER_GUN_FRAME.length * pxSize;
+    SpriteGenerator.drawTexture(scene, 'water_gun_pickup', w, h, (g) =>
+      drawFromMatrix(g, WATER_GUN_FRAME, WATER_GUN_PALETTE, pxSize),
+    );
+  }
+
+  private static generateWaterProjectile(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'projectile_water', 12, 12, (g) => {
+      g.fillStyle(0x66bbff, 1);
+      g.fillCircle(6, 6, 6);
+      g.fillStyle(0xaaddff, 1);
+      g.fillCircle(5, 5, 4);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(4, 4, 1.5);
     });
   }
 

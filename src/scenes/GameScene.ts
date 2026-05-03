@@ -6,13 +6,17 @@ import {
   ENEMY_SIZE,
   Direction,
   GAME_WIDTH,
-  GAME_HEIGHT,
+  EnemyTag,
 } from '../types/GameTypes';
-import { LEVEL_1, LevelData } from '../config/LevelConfig';
+import { LevelData, getLevelByIndex } from '../config/LevelConfig';
 import { Player as PlayerLogic } from '../entities/Player';
 import { Skeleton as SkeletonLogic, SkeletonProjectile } from '../entities/enemies/Skeleton';
 import { Zombie as ZombieLogic } from '../entities/enemies/Zombie';
+import { GhostBoss } from '../entities/enemies/GhostBoss';
+import { MiniGhost } from '../entities/enemies/MiniGhost';
+import { SpiderGhost } from '../entities/enemies/SpiderGhost';
 import { FoamGun, Projectile as FoamProjectile } from '../weapons/FoamGun';
+import { WaterGun, WaterProjectile } from '../weapons/WaterGun';
 import { InputSystem } from '../systems/InputSystem';
 import { HUDSystem } from '../systems/HUDSystem';
 import { SaveSystem } from '../systems/SaveSystem';
@@ -22,15 +26,25 @@ import { ParticleEffects } from '../systems/ParticleEffects';
 import { TouchControls } from '../ui/TouchControls';
 import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
+type EnemyLogic = SkeletonLogic | ZombieLogic | SpiderGhost | MiniGhost;
+
 interface EnemyEntry {
-  logic: SkeletonLogic | ZombieLogic;
+  logic: EnemyLogic;
   sprite: Phaser.Physics.Arcade.Sprite;
-  type: 'skeleton' | 'zombie';
+  type: 'skeleton' | 'zombie' | 'spider_ghost' | 'mini_ghost';
+  tag: EnemyTag;
+  hasGravity: boolean;
+}
+
+interface BossEntry {
+  logic: GhostBoss;
+  sprite: Phaser.Physics.Arcade.Sprite;
 }
 
 interface ProjectileSprite {
   sprite: Phaser.Physics.Arcade.Sprite;
-  data: FoamProjectile;
+  data: FoamProjectile | WaterProjectile;
+  isWater: boolean;
 }
 
 interface BoneSprite {
@@ -39,18 +53,39 @@ interface BoneSprite {
   damage: number;
 }
 
+interface CheckpointSprite {
+  sprite: Phaser.Physics.Arcade.Sprite;
+  x: number;
+  y: number;
+  active: boolean;
+}
+
+interface PowerUpSprite {
+  sprite: Phaser.Physics.Arcade.Sprite;
+  type: 'water_gun';
+}
+
+interface GameSceneInitData {
+  levelIndex?: number;
+}
+
 export class GameScene extends Phaser.Scene {
   private level!: LevelData;
+  private levelIndex: number = 1;
   private playerLogic!: PlayerLogic;
   private playerSprite!: Phaser.Physics.Arcade.Sprite;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private platformsPassthrough!: Phaser.Physics.Arcade.StaticGroup;
   private enemies: EnemyEntry[] = [];
+  private boss?: BossEntry;
   private foamGun!: FoamGun;
+  private waterGun!: WaterGun;
   private projectiles: ProjectileSprite[] = [];
   private bones: BoneSprite[] = [];
   private coinSprites: Phaser.Physics.Arcade.Sprite[] = [];
-  private flagSprite!: Phaser.Physics.Arcade.Sprite;
+  private flagSprite?: Phaser.Physics.Arcade.Sprite;
+  private checkpoints: CheckpointSprite[] = [];
+  private powerUps: PowerUpSprite[] = [];
   private inputs!: InputSystem;
   private hud!: HUDSystem;
   private save!: SaveSystem;
@@ -63,18 +98,25 @@ export class GameScene extends Phaser.Scene {
   private testHooks: Record<string, unknown> = {};
   private animTimerMs: number = 0;
   private playerLandSpeed: number = 0;
+  private hasWaterGun: boolean = false;
+  private respawnX: number = 0;
+  private respawnY: number = 0;
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
-  init(_data: { levelIndex?: number }): void {
-    this.level = LEVEL_1;
+  init(data: GameSceneInitData): void {
+    this.levelIndex = data?.levelIndex ?? 1;
+    this.level = getLevelByIndex(this.levelIndex);
     this.gameEnded = false;
     this.enemies = [];
+    this.boss = undefined;
     this.projectiles = [];
     this.bones = [];
     this.coinSprites = [];
+    this.checkpoints = [];
+    this.powerUps = [];
   }
 
   create(): void {
@@ -94,7 +136,11 @@ export class GameScene extends Phaser.Scene {
     );
 
     this.save = new SaveSystem();
+    const saveData = this.save.load();
+    this.hasWaterGun = saveData.powerUps.waterGun;
+
     this.foamGun = new FoamGun();
+    this.waterGun = new WaterGun();
     this.inputs = new InputSystem(this);
     this.hud = new HUDSystem(this);
     this.gameSound =
@@ -107,8 +153,11 @@ export class GameScene extends Phaser.Scene {
     this.buildPlatforms();
     this.spawnPlayer();
     this.spawnEnemies();
+    this.spawnBoss();
     this.spawnCoins();
     this.spawnFlag();
+    this.spawnCheckpoints();
+    this.spawnPowerUps();
     this.setupCollisions();
     this.hud.create();
 
@@ -171,6 +220,14 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private resolveSpawn(): { x: number; y: number } {
+    const cp = this.save.getCheckpoint();
+    if (cp && cp.levelIndex === this.levelIndex) {
+      return { x: cp.x, y: cp.y };
+    }
+    return this.level.playerSpawn;
+  }
+
   private spawnPlayer(): void {
     this.playerLogic = new PlayerLogic({
       onGameOver: () => this.endGame('gameover'),
@@ -188,11 +245,11 @@ export class GameScene extends Phaser.Scene {
       onExtraLife: () => this.audio.emit('player.power_up'),
     });
 
-    this.playerSprite = this.physics.add.sprite(
-      this.level.playerSpawn.x,
-      this.level.playerSpawn.y,
-      'player',
-    );
+    const spawn = this.resolveSpawn();
+    this.respawnX = spawn.x;
+    this.respawnY = spawn.y;
+
+    this.playerSprite = this.physics.add.sprite(spawn.x, spawn.y, 'player');
     this.playerSprite.setDisplaySize(PLAYER_WIDTH, PLAYER_HEIGHT);
     this.playerSprite.setCollideWorldBounds(true);
     this.playerSprite.setMaxVelocity(this.playerLogic.getStats().moveSpeed, 600);
@@ -201,7 +258,7 @@ export class GameScene extends Phaser.Scene {
 
   private respawnPlayer(): void {
     this.playerLogic.respawn();
-    this.playerSprite.setPosition(this.level.playerSpawn.x, this.level.playerSpawn.y);
+    this.playerSprite.setPosition(this.respawnX, this.respawnY);
     this.playerSprite.setVelocity(0, 0);
   }
 
@@ -217,17 +274,56 @@ export class GameScene extends Phaser.Scene {
         sprite.setCollideWorldBounds(true);
         sprite.setMaxVelocity(80, 600);
         logic.setPosition(e.x, e.y);
-        this.enemies.push({ logic, sprite, type: 'skeleton' });
-      } else {
+        this.enemies.push({ logic, sprite, type: 'skeleton', tag: 'normal', hasGravity: true });
+      } else if (e.type === 'zombie') {
         const logic = new ZombieLogic();
         const sprite = this.physics.add.sprite(e.x, e.y, 'zombie');
         sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
         sprite.setCollideWorldBounds(true);
         sprite.setMaxVelocity(60, 600);
         logic.setPosition(e.x, e.y);
-        this.enemies.push({ logic, sprite, type: 'zombie' });
+        this.enemies.push({ logic, sprite, type: 'zombie', tag: 'normal', hasGravity: true });
+      } else if (e.type === 'spider_ghost') {
+        const logic = new SpiderGhost(e.y);
+        const sprite = this.physics.add.sprite(e.x, e.y, 'spider_ghost');
+        sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
+        (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'spider_ghost', tag: 'ghost', hasGravity: false });
+      } else if (e.type === 'mini_ghost') {
+        const logic = new MiniGhost();
+        const sprite = this.physics.add.sprite(e.x, e.y, 'mini_ghost');
+        sprite.setDisplaySize(24, 24);
+        (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_ghost', tag: 'ghost', hasGravity: false });
       }
     }
+  }
+
+  private spawnBoss(): void {
+    if (!this.level.boss) return;
+    if (this.level.boss.type === 'ghost') {
+      const logic = new GhostBoss(this.level.boss.x, this.level.boss.y, {
+        onSpawnMinis: (spawns) => {
+          for (const s of spawns) this.spawnMiniGhost(s.x, s.y);
+        },
+      });
+      const sprite = this.physics.add.sprite(this.level.boss.x, this.level.boss.y, 'ghost_boss');
+      sprite.setDisplaySize(60, 60);
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      logic.setPosition(this.level.boss.x, this.level.boss.y);
+      this.boss = { logic, sprite };
+    }
+  }
+
+  private spawnMiniGhost(x: number, y: number): void {
+    const logic = new MiniGhost();
+    logic.setPosition(x, y);
+    const sprite = this.physics.add.sprite(x, y, 'mini_ghost');
+    sprite.setDisplaySize(24, 24);
+    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+    this.enemies.push({ logic, sprite, type: 'mini_ghost', tag: 'ghost', hasGravity: false });
   }
 
   private spawnCoins(): void {
@@ -240,9 +336,36 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnFlag(): void {
+    if (!this.level.flagPos) return;
     this.flagSprite = this.physics.add.sprite(this.level.flagPos.x, this.level.flagPos.y, 'flag');
     this.flagSprite.setDisplaySize(24, 36);
     (this.flagSprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+  }
+
+  private spawnCheckpoints(): void {
+    const activeCp = this.save.getCheckpoint();
+    for (const cp of this.level.checkpoints) {
+      const isActive =
+        !!activeCp &&
+        activeCp.levelIndex === this.levelIndex &&
+        Math.abs(activeCp.x - cp.x) < 1 &&
+        Math.abs(activeCp.y - cp.y) < 1;
+      const tex = isActive ? 'checkpoint_flag_active' : 'checkpoint_flag';
+      const sprite = this.physics.add.sprite(cp.x, cp.y, tex);
+      sprite.setDisplaySize(24, 36);
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      this.checkpoints.push({ sprite, x: cp.x, y: cp.y, active: isActive });
+    }
+  }
+
+  private spawnPowerUps(): void {
+    for (const p of this.level.powerUps) {
+      if (p.type === 'water_gun' && this.hasWaterGun) continue;
+      const sprite = this.physics.add.sprite(p.x, p.y, 'water_gun_pickup');
+      sprite.setDisplaySize(28, 24);
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      this.powerUps.push({ sprite, type: p.type });
+    }
   }
 
   private setupCollisions(): void {
@@ -250,6 +373,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.playerSprite, this.platformsPassthrough);
 
     this.enemies.forEach((e) => {
+      if (!e.hasGravity) return;
       this.physics.add.collider(e.sprite, this.platforms);
       this.physics.add.collider(e.sprite, this.platformsPassthrough);
     });
@@ -262,7 +386,9 @@ export class GameScene extends Phaser.Scene {
       this.coinSprites = this.coinSprites.filter((c) => c !== coinSprite);
     });
 
-    this.physics.add.overlap(this.playerSprite, this.flagSprite, () => this.endGame('victory'));
+    if (this.flagSprite) {
+      this.physics.add.overlap(this.playerSprite, this.flagSprite, () => this.endGame('victory'));
+    }
   }
 
   private spawnBone(proj: SkeletonProjectile): void {
@@ -274,14 +400,25 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnFoamProjectile(x: number, y: number, facing: Direction): void {
-    const data = this.foamGun.fire(x, y, facing);
-    if (!data) return;
-    const sprite = this.physics.add.sprite(x, y, 'projectile_foam');
-    sprite.setDisplaySize(10, 10);
-    sprite.setVelocity(data.vx, data.vy);
-    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-    this.projectiles.push({ sprite, data });
-    this.audio.emit('player.shoot');
+    if (this.hasWaterGun) {
+      const data = this.waterGun.fire(x, y, facing);
+      if (!data) return;
+      const sprite = this.physics.add.sprite(x, y, 'projectile_water');
+      sprite.setDisplaySize(12, 12);
+      sprite.setVelocity(data.vx, data.vy);
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      this.projectiles.push({ sprite, data, isWater: true });
+      this.audio.emit('player.shoot');
+    } else {
+      const data = this.foamGun.fire(x, y, facing);
+      if (!data) return;
+      const sprite = this.physics.add.sprite(x, y, 'projectile_foam');
+      sprite.setDisplaySize(10, 10);
+      sprite.setVelocity(data.vx, data.vy);
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      this.projectiles.push({ sprite, data, isWater: false });
+      this.audio.emit('player.shoot');
+    }
   }
 
   update(_time: number, delta: number): void {
@@ -296,8 +433,12 @@ export class GameScene extends Phaser.Scene {
 
     this.handlePlayer(inp, delta);
     this.handleEnemies(delta);
+    this.handleBoss(delta);
     this.handleProjectiles(delta);
     this.handleEnemyContacts();
+    this.handleBossContact();
+    this.handleCheckpointContacts();
+    this.handlePowerUpContacts();
 
     this.timeRemaining = Math.max(0, this.timeRemaining - delta / 1000);
     if (this.timeRemaining <= 0 && !this.gameEnded) {
@@ -318,6 +459,7 @@ export class GameScene extends Phaser.Scene {
     this.animTimerMs += delta;
     this.updatePlayerAnimation();
     this.updateEnemyAnimations();
+    this.updateBossAnimation();
     this.updateCoinAnimation();
 
     if (this.playerLogic.isInvincible) {
@@ -383,7 +525,9 @@ export class GameScene extends Phaser.Scene {
       e.logic.x = e.sprite.x;
       e.logic.y = e.sprite.y;
       const body = e.sprite.body as Phaser.Physics.Arcade.Body;
-      e.logic.isOnGround = body.blocked.down || body.touching.down;
+      if (e.hasGravity) {
+        e.logic.isOnGround = body.blocked.down || body.touching.down;
+      }
       e.logic.update(delta, this.playerSprite.x, this.playerSprite.y);
 
       if (e.type === 'skeleton') {
@@ -396,6 +540,9 @@ export class GameScene extends Phaser.Scene {
       }
 
       e.sprite.setVelocityX(e.logic.vx);
+      if (!e.hasGravity) {
+        e.sprite.setVelocityY(e.logic.vy);
+      }
       e.sprite.setFlipX(e.logic.facing === Direction.Left);
 
       if (e.logic.isDead) {
@@ -405,8 +552,26 @@ export class GameScene extends Phaser.Scene {
     this.enemies = this.enemies.filter((e) => !e.logic.isDead);
   }
 
+  private handleBoss(delta: number): void {
+    if (!this.boss) return;
+    const b = this.boss;
+    b.logic.x = b.sprite.x;
+    b.logic.y = b.sprite.y;
+    b.logic.update(delta, this.playerSprite.x, this.playerSprite.y);
+    b.sprite.setVelocity(b.logic.vx, b.logic.vy);
+    b.sprite.setFlipX(b.logic.facing === Direction.Left);
+    if (b.logic.isDead) {
+      this.particles.enemyDeath(b.sprite.x, b.sprite.y);
+      this.audio.emit('enemy.die');
+      b.sprite.destroy();
+      this.boss = undefined;
+      this.endGame('victory');
+    }
+  }
+
   private handleProjectiles(delta: number): void {
     this.foamGun.update(delta);
+    this.waterGun.update(delta);
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       p.data.x = p.sprite.x;
@@ -427,7 +592,8 @@ export class GameScene extends Phaser.Scene {
               e.sprite.getBounds(),
             )
           ) {
-            e.logic.takeDamage(p.data.damage);
+            const dmg = this.computeDamage(p, e.tag);
+            e.logic.takeDamage(dmg);
             if (e.logic.isDead) {
               this.particles.enemyDeath(e.sprite.x, e.sprite.y);
               this.audio.emit('enemy.die');
@@ -435,6 +601,19 @@ export class GameScene extends Phaser.Scene {
             dead = true;
             break;
           }
+        }
+      }
+
+      if (!dead && this.boss) {
+        if (
+          Phaser.Geom.Intersects.RectangleToRectangle(
+            p.sprite.getBounds(),
+            this.boss.sprite.getBounds(),
+          )
+        ) {
+          const dmg = this.computeDamage(p, 'ghost');
+          this.boss.logic.takeDamage(dmg);
+          dead = true;
         }
       }
 
@@ -471,6 +650,13 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private computeDamage(p: ProjectileSprite, tag: EnemyTag): number {
+    if (p.isWater) {
+      return WaterGun.damageFor(p.data as WaterProjectile, tag);
+    }
+    return p.data.damage;
+  }
+
   private handleEnemyContacts(): void {
     for (const e of this.enemies) {
       if (
@@ -484,7 +670,7 @@ export class GameScene extends Phaser.Scene {
           playerBody.velocity.y > 0 &&
           this.playerSprite.y < e.sprite.y - 8 &&
           !this.playerLogic.isInvincible;
-        if (wasJumpingDown) {
+        if (wasJumpingDown && e.tag === 'normal') {
           e.logic.takeDamage(99);
           this.playerSprite.setVelocityY(-300);
           if (e.logic.isDead) {
@@ -494,6 +680,58 @@ export class GameScene extends Phaser.Scene {
         } else {
           this.playerLogic.takeDamage(e.logic.damage);
         }
+      }
+    }
+  }
+
+  private handleBossContact(): void {
+    if (!this.boss) return;
+    if (
+      Phaser.Geom.Intersects.RectangleToRectangle(
+        this.playerSprite.getBounds(),
+        this.boss.sprite.getBounds(),
+      )
+    ) {
+      this.playerLogic.takeDamage(this.boss.logic.damage);
+    }
+  }
+
+  private handleCheckpointContacts(): void {
+    for (const cp of this.checkpoints) {
+      if (cp.active) continue;
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          this.playerSprite.getBounds(),
+          cp.sprite.getBounds(),
+        )
+      ) {
+        cp.active = true;
+        cp.sprite.setTexture('checkpoint_flag_active');
+        this.respawnX = cp.x;
+        this.respawnY = cp.y;
+        this.save.setCheckpoint(this.levelIndex, cp.x, cp.y);
+        this.audio.emit('player.power_up');
+      }
+    }
+  }
+
+  private handlePowerUpContacts(): void {
+    for (let i = this.powerUps.length - 1; i >= 0; i--) {
+      const p = this.powerUps[i];
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          this.playerSprite.getBounds(),
+          p.sprite.getBounds(),
+        )
+      ) {
+        if (p.type === 'water_gun') {
+          this.hasWaterGun = true;
+          this.save.setPowerUp('waterGun', true);
+        }
+        this.audio.emit('player.power_up');
+        this.particles.coinSparkle(p.sprite.x, p.sprite.y);
+        p.sprite.destroy();
+        this.powerUps.splice(i, 1);
       }
     }
   }
@@ -509,6 +747,7 @@ export class GameScene extends Phaser.Scene {
       this.save.save(data);
       fadeToScene(this, 'LevelCompleteScene', {
         levelId: this.level.id,
+        levelIndex: this.levelIndex,
         coins: this.playerLogic.coins,
         timeBonus: Math.floor(this.timeRemaining),
       });
@@ -531,11 +770,20 @@ export class GameScene extends Phaser.Scene {
   private updateEnemyAnimations(): void {
     const flip = Math.floor(this.animTimerMs / 200) % 2 === 0;
     for (const e of this.enemies) {
+      if (e.type === 'spider_ghost' || e.type === 'mini_ghost') continue;
       const moving = Math.abs(e.logic.vx) > 5;
       const base = e.type === 'skeleton' ? 'skeleton' : 'zombie';
       const walk = `${base}_walk`;
       e.sprite.setTexture(moving && flip ? walk : base);
     }
+  }
+
+  private updateBossAnimation(): void {
+    if (!this.boss) return;
+    const tex = this.boss.logic.phase === 'phase2' ? 'ghost_boss_phase2' : 'ghost_boss';
+    this.boss.sprite.setTexture(tex);
+    const bob = Math.sin(this.animTimerMs / 220) * 2;
+    this.boss.sprite.setOffset?.(0, bob);
   }
 
   private updateCoinAnimation(): void {
@@ -577,6 +825,32 @@ export class GameScene extends Phaser.Scene {
       isTouchEnabled: () => this.touch?.enabled ?? false,
       getDelta: () => this.game.loop.delta,
       getFps: () => this.game.loop.actualFps,
+      getLevelIndex: () => this.levelIndex,
+      getLevelId: () => this.level.id,
+      hasBoss: () => !!this.boss,
+      getBossHp: () => this.boss?.logic.hp ?? 0,
+      getBossPhase: () => this.boss?.logic.phase ?? 'none',
+      damageBoss: (n: number) => this.boss?.logic.takeDamage(n),
+      getMiniGhostCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_ghost').length,
+      hasWaterGun: () => this.hasWaterGun,
+      grantWaterGun: () => {
+        this.hasWaterGun = true;
+        this.save.setPowerUp('waterGun', true);
+      },
+      getPowerUpCount: () => this.powerUps.length,
+      getCheckpointCount: () => this.checkpoints.length,
+      getActiveCheckpointCount: () =>
+        this.checkpoints.filter((c) => c.active).length,
+      getRespawnX: () => this.respawnX,
+      getRespawnY: () => this.respawnY,
+      getSavedCheckpoint: () => this.save.getCheckpoint(),
+      forceFireProjectile: () =>
+        this.spawnFoamProjectile(
+          this.playerSprite.x + (this.playerLogic.facing === Direction.Right ? 16 : -16),
+          this.playerSprite.y,
+          this.playerLogic.facing,
+        ),
     };
     (window as unknown as { __game: Record<string, unknown> }).__game = this.testHooks;
   }

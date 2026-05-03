@@ -3,6 +3,8 @@ import { GAME_WIDTH, GAME_HEIGHT, PHYSICS } from '../types/GameTypes';
 import { BootScene } from '../scenes/BootScene';
 import { PreloadScene } from '../scenes/PreloadScene';
 import { MenuScene } from '../scenes/MenuScene';
+import { WorldMapScene } from '../scenes/WorldMapScene';
+import { BossIntroScene } from '../scenes/BossIntroScene';
 import { GameScene } from '../scenes/GameScene';
 import { GameOverScene } from '../scenes/GameOverScene';
 import { LevelCompleteScene } from '../scenes/LevelCompleteScene';
@@ -31,6 +33,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     BootScene,
     PreloadScene,
     MenuScene,
+    WorldMapScene,
+    BossIntroScene,
     GameScene,
     GameOverScene,
     LevelCompleteScene,

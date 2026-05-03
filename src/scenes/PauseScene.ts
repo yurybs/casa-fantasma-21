@@ -117,9 +117,11 @@ export class PauseScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
     restart.on('pointerdown', () => {
+      const levelIndex =
+        (this.scene.get(this.fromKey) as unknown as { levelIndex?: number })?.levelIndex ?? 1;
       this.scene.stop(this.fromKey);
       this.scene.stop();
-      fadeToScene(this, 'GameScene', { levelIndex: 1 });
+      fadeToScene(this, 'GameScene', { levelIndex });
     });
 
     const quit = this.add
