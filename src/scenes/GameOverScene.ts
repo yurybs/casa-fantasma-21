@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../types/GameTypes';
+import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
 interface GameOverData {
   coins: number;
@@ -11,6 +12,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data: GameOverData): void {
+    fadeIn(this);
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
     this.cameras.main.setBackgroundColor('#1a0010');
@@ -42,7 +44,7 @@ export class GameOverScene extends Phaser.Scene {
       .setStroke('#000000', 4)
       .setInteractive({ useHandCursor: true });
 
-    retry.on('pointerdown', () => this.scene.start('GameScene', { levelIndex: 1 }));
+    retry.on('pointerdown', () => fadeToScene(this, 'GameScene', { levelIndex: 1 }));
 
     const menu = this.add
       .text(cx, cy + 130, 'voltar ao menu', {
@@ -53,10 +55,10 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    menu.on('pointerdown', () => this.scene.start('MenuScene'));
+    menu.on('pointerdown', () => fadeToScene(this, 'MenuScene'));
 
     this.input.keyboard?.once('keydown-ENTER', () =>
-      this.scene.start('GameScene', { levelIndex: 1 }),
+      fadeToScene(this, 'GameScene', { levelIndex: 1 }),
     );
   }
 }

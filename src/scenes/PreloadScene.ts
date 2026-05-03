@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SpriteGenerator } from '../utils/SpriteGenerator';
 import { GAME_WIDTH, GAME_HEIGHT } from '../types/GameTypes';
+import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -32,6 +33,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('MenuScene');
+    fadeIn(this);
+    fadeToScene(this, 'MenuScene');
   }
 }

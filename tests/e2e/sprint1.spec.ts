@@ -1,28 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-
-declare global {
-  interface Window {
-    __game?: {
-      getPlayerHp: () => number;
-      getPlayerLives: () => number;
-      getCoins: () => number;
-      getEnemyCount: () => number;
-      getProjectileCount: () => number;
-      getPlayerX: () => number;
-      getPlayerY: () => number;
-      getPlayerVx: () => number;
-      getPlayerVy: () => number;
-      isPlayerOnGround: () => boolean;
-      teleportPlayer: (x: number, y: number) => void;
-      damagePlayer: (n: number) => void;
-      getTimeRemaining: () => number;
-      isGameEnded: () => boolean;
-      forceGameOver: () => void;
-      forceVictory: () => void;
-      getActiveSceneKey: () => string;
-    };
-  }
-}
+import './gameHooks';
 
 const isCriticalError = (msg: string): boolean => {
   if (msg.includes('Framebuffer status')) return false;

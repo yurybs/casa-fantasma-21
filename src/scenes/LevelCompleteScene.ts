@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../types/GameTypes';
+import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
 interface LevelCompleteData {
   levelId: number;
@@ -13,6 +14,7 @@ export class LevelCompleteScene extends Phaser.Scene {
   }
 
   create(data: LevelCompleteData): void {
+    fadeIn(this);
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
     this.cameras.main.setBackgroundColor('#143a6b');
@@ -60,7 +62,7 @@ export class LevelCompleteScene extends Phaser.Scene {
       .setStroke('#000000', 4)
       .setInteractive({ useHandCursor: true });
 
-    back.on('pointerdown', () => this.scene.start('MenuScene'));
-    this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('MenuScene'));
+    back.on('pointerdown', () => fadeToScene(this, 'MenuScene'));
+    this.input.keyboard?.once('keydown-ENTER', () => fadeToScene(this, 'MenuScene'));
   }
 }
