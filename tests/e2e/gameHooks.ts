@@ -48,6 +48,20 @@ export interface GameHooks {
   getRespawnY: () => number;
   getSavedCheckpoint: () => CheckpointHook | null;
   forceFireProjectile: () => void;
+  // Sprint 4 additions
+  getPlayerMaxHp: () => number;
+  getEnemyKinds: () => string[];
+  getJuggleBallCount: () => number;
+  getFireTrailCount: () => number;
+  getLevelTheme: () => 'forest' | 'cave';
+  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'none';
+  getMiniClownCount: () => number;
+  getCrowCount: () => number;
+  isConfusionActive: () => boolean;
+  hasStar: () => boolean;
+  getStarRemaining: () => number;
+  activateStar: () => void;
+  addExtraHeart: () => void;
 }
 
 export interface MapHooks {
@@ -64,10 +78,18 @@ export interface BossIntroHooks {
   getLevelIndex: () => number;
 }
 
+export interface PauseHooks {
+  resume: () => void;
+  quitToMap: () => void;
+  quitToMenu: () => void;
+  restart: () => void;
+}
+
 declare global {
   interface Window {
     __game?: GameHooks;
     __map?: MapHooks;
     __bossIntro?: BossIntroHooks;
+    __pause?: PauseHooks;
   }
 }

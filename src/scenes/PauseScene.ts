@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../types/GameTypes';
 import { SoundSystem } from '../systems/SoundSystem';
-import { fadeToScene } from '../utils/SceneTransition';
 
 interface PauseData {
   from: string;
@@ -42,6 +41,27 @@ export class PauseScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-ESC', () => this.resumeGame());
     this.input.keyboard?.once('keydown-P', () => this.resumeGame());
     this.input.keyboard?.once('keydown-ENTER', () => this.resumeGame());
+
+    this.exposeTestHooks();
+  }
+
+  private exposeTestHooks(): void {
+    interface PauseHooks {
+      resume: () => void;
+      quitToMap: () => void;
+      quitToMenu: () => void;
+      restart: () => void;
+    }
+    const hooks: PauseHooks = {
+      resume: () => this.resumeGame(),
+      quitToMap: () => this.quitTo('WorldMapScene'),
+      quitToMenu: () => this.quitTo('MenuScene'),
+      restart: () => this.restartLevel(),
+    };
+    (window as unknown as { __pause?: PauseHooks }).__pause = hooks;
+    this.events.once('shutdown', () => {
+      delete (window as unknown as { __pause?: PauseHooks }).__pause;
+    });
   }
 
   private buildSliders(cx: number, cy: number): void {
@@ -116,27 +136,48 @@ export class PauseScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    restart.on('pointerdown', () => {
-      const levelIndex =
-        (this.scene.get(this.fromKey) as unknown as { levelIndex?: number })?.levelIndex ?? 1;
-      this.scene.stop(this.fromKey);
-      this.scene.stop();
-      fadeToScene(this, 'GameScene', { levelIndex });
-    });
+    restart.on('pointerdown', () => this.restartLevel());
 
-    const quit = this.add
-      .text(cx, cy + 165, 'Sair para o Menu', {
+    const map = this.add
+      .text(cx, cy + 165, 'Voltar ao Mapa', {
         fontFamily: 'monospace',
         fontSize: '18px',
+        color: '#88ddff',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    map.setData('testid', 'pause-quit-to-map');
+    map.on('pointerdown', () => this.quitTo('WorldMapScene'));
+
+    const menu = this.add
+      .text(cx, cy + 195, 'Menu Principal', {
+        fontFamily: 'monospace',
+        fontSize: '16px',
         color: '#bbbbff',
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    quit.on('pointerdown', () => {
-      this.scene.stop(this.fromKey);
-      this.scene.stop();
-      fadeToScene(this, 'MenuScene');
-    });
+    menu.setData('testid', 'pause-quit-to-menu');
+    menu.on('pointerdown', () => this.quitTo('MenuScene'));
+  }
+
+  /**
+   * Stop the paused source scene and start the target scene immediately.
+   *
+   * Note: we deliberately do *not* use fadeToScene here. PauseScene runs as
+   * an overlay scene on top of a paused GameScene, and the camera fade-out
+   * callback (FADE_OUT_COMPLETE) does not reliably fire in this overlay mode,
+   * leaving the user stuck on the pause screen. Direct scene.start works.
+   */
+  private quitTo(targetKey: string, data?: Record<string, unknown>): void {
+    this.scene.stop(this.fromKey);
+    this.scene.start(targetKey, data);
+  }
+
+  private restartLevel(): void {
+    const levelIndex =
+      (this.scene.get(this.fromKey) as unknown as { levelIndex?: number })?.levelIndex ?? 1;
+    this.quitTo('GameScene', { levelIndex });
   }
 
   private toggleMute(): void {

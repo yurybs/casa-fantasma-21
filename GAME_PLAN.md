@@ -791,7 +791,7 @@ tests/e2e/regression.spec.ts
 | **1** | MVP jogável: Nível 1 com todas as mecânicas | 1 | — | ✅ **CONCLUÍDO** (111 testes) |
 | **2** | Nível 1 polido + Áudio + Mobile + CI/CD + GitHub Pages | 1 | — | ✅ **CONCLUÍDO** (170 testes) |
 | **3** | Mundo 1 completo + Boss Fantasma + Mapa de Mundo | 1–3 | Fantasma | ✅ **CONCLUÍDO** (247 testes) |
-| **4** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | Aguardando Sprint 3 |
+| **4** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | ✅ **CONCLUÍDO** (Sprint 4) |
 | **5** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | Aguardando Sprint 4 |
 | **6** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | Aguardando Sprint 5 |
 | **7** | Mundo 4 início + Bola de Fogo + Polvo + Tinta | 1–15 | Bola de Fogo, Polvo | Aguardando Sprint 6 |

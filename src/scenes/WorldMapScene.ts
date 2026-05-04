@@ -11,12 +11,18 @@ interface MapNode {
   y: number;
   name: string;
   isBoss: boolean;
+  world: number;
 }
 
 const NODES: MapNode[] = [
-  { levelIndex: 1, x: 180, y: 360, name: 'Floresta — Início', isBoss: false },
-  { levelIndex: 2, x: 400, y: 240, name: 'Arena do Fantasma', isBoss: true },
-  { levelIndex: 3, x: 620, y: 360, name: 'Caminho dos Espíritos', isBoss: false },
+  // Mundo 1 — Floresta Encantada (left side)
+  { levelIndex: 1, x: 90, y: 380, name: 'Floresta — Início', isBoss: false, world: 1 },
+  { levelIndex: 2, x: 200, y: 290, name: 'Arena do Fantasma', isBoss: true, world: 1 },
+  { levelIndex: 3, x: 310, y: 380, name: 'Caminho dos Espíritos', isBoss: false, world: 1 },
+  // Mundo 2 — Caverna Assombrada (right side)
+  { levelIndex: 4, x: 470, y: 290, name: 'Arena do Palhaço', isBoss: true, world: 2 },
+  { levelIndex: 5, x: 600, y: 380, name: 'Galeria das Tochas', isBoss: false, world: 2 },
+  { levelIndex: 6, x: 710, y: 290, name: 'Arena do Espantalho', isBoss: true, world: 2 },
 ];
 
 interface NodeVisuals {
@@ -74,27 +80,46 @@ export class WorldMapScene extends Phaser.Scene {
 
   private drawBackdrop(): void {
     this.add
-      .text(GAME_WIDTH / 2, 50, 'MUNDO 1 — Floresta Encantada', {
+      .text(GAME_WIDTH / 2, 38, 'MAPA DOS MUNDOS', {
         fontFamily: 'monospace',
-        fontSize: '32px',
+        fontSize: '28px',
         color: '#ffe600',
       })
       .setOrigin(0.5)
       .setStroke('#000000', 4);
 
-    for (let i = 0; i < 14; i++) {
-      const x = 60 + i * 56;
-      const y = GAME_HEIGHT - 80 + ((i % 2) * 8 - 4);
-      this.add.image(x, y, 'tree').setScale(0.6).setAlpha(0.8);
+    // Mundo 1 backdrop (left half) — green forest
+    this.add.rectangle(190, 240, 380, 380, 0x1a3a2a, 1).setOrigin(0.5);
+    this.add
+      .text(190, 90, 'Mundo 1 · Floresta Encantada', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#88ff88',
+      })
+      .setOrigin(0.5);
+    for (let i = 0; i < 5; i++) {
+      const x = 30 + i * 80;
+      const y = GAME_HEIGHT - 80;
+      this.add.image(x, y, 'tree').setScale(0.5).setAlpha(0.8);
     }
+    this.add.image(120, 130, 'cloud').setAlpha(0.6);
 
+    // Mundo 2 backdrop (right half) — purple cave
+    this.add.rectangle(610, 240, 380, 380, 0x2a1a40, 1).setOrigin(0.5);
     this.add
-      .image(120, 120, 'cloud')
-      .setAlpha(0.6);
-    this.add
-      .image(680, 90, 'cloud')
-      .setAlpha(0.5)
-      .setScale(0.8);
+      .text(610, 90, 'Mundo 2 · Caverna Assombrada', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#cc88ff',
+      })
+      .setOrigin(0.5);
+    if (this.textures.exists('stalactite')) {
+      for (let i = 0; i < 5; i++) {
+        const x = 440 + i * 70;
+        this.add.image(x, 110, 'stalactite').setAlpha(0.7);
+      }
+    }
+    this.add.image(680, 150, 'cloud').setAlpha(0.4).setTint(0x884488);
   }
 
   private drawPaths(): void {

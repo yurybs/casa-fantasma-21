@@ -122,7 +122,7 @@ describe('SaveSystem', () => {
 
   describe('Sprint 3 — power-ups', () => {
     it('defaultSave inicia com powerUps zerados', () => {
-      expect(defaultSave().powerUps).toEqual({ waterGun: false });
+      expect(defaultSave().powerUps).toEqual({ waterGun: false, extraHearts: 0 });
     });
 
     it('setPowerUp persiste flag', () => {
@@ -141,7 +141,7 @@ describe('SaveSystem', () => {
       legacy.levelsCompleted[0] = true;
       storage.setItem(SAVE_KEY, JSON.stringify(legacy));
       const data = save.load();
-      expect(data.powerUps).toEqual({ waterGun: false });
+      expect(data.powerUps).toEqual({ waterGun: false, extraHearts: 0 });
       expect(data.checkpoint).toBeNull();
       expect(data.coins).toBe(50);
     });

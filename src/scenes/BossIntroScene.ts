@@ -24,9 +24,29 @@ const BOSS_INFO: Record<BossKind, BossInfo> = {
     weakness: 'Água',
     spriteKey: 'ghost_boss',
   },
+  clown: {
+    number: '#002',
+    name: 'PALHAÇO',
+    type: 'Caótico',
+    weakness: 'Estrela',
+    spriteKey: 'clown_boss',
+  },
+  scarecrow: {
+    number: '#003',
+    name: 'ESPANTALHO',
+    type: 'Sombrio',
+    weakness: 'Combo aéreo',
+    spriteKey: 'scarecrow_boss',
+  },
 };
 
 const INTRO_DURATION_MS = 2000;
+/**
+ * Ignore advance input during the first INPUT_GRACE_MS so a residual
+ * Enter/Space from the previous scene (LevelCompleteScene, WorldMap)
+ * does not auto-skip the boss card.
+ */
+const INPUT_GRACE_MS = 250;
 
 /**
  * Pokédex-style intro card shown before each boss fight. Displays the boss
@@ -38,6 +58,7 @@ export class BossIntroScene extends Phaser.Scene {
   private bossType: BossKind = 'ghost';
   private hasAdvanced: boolean = false;
   private autoAdvanceTimer?: Phaser.Time.TimerEvent;
+  private inputUnlockedAt: number = 0;
 
   constructor() {
     super({ key: 'BossIntroScene' });
@@ -56,14 +77,15 @@ export class BossIntroScene extends Phaser.Scene {
 
     // Card background
     this.add
-      .rectangle(cx, cy, 520, 360, 0x111122, 1)
+      .rectangle(cx, cy, 520, 400, 0x111122, 1)
       .setStrokeStyle(4, 0xffe600, 1);
-    this.add
-      .rectangle(cx, cy - 130, 480, 60, 0x1a1a3a, 1)
-      .setStrokeStyle(2, 0xffe600, 0.8);
 
+    // Title bar at the very top of the card
     this.add
-      .text(cx, cy - 130, `BOSS ${info.number}`, {
+      .rectangle(cx, cy - 160, 480, 44, 0x1a1a3a, 1)
+      .setStrokeStyle(2, 0xffe600, 0.8);
+    this.add
+      .text(cx, cy - 160, `BOSS ${info.number}`, {
         fontFamily: 'monospace',
         fontSize: '24px',
         color: '#ffe600',
@@ -71,23 +93,25 @@ export class BossIntroScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setStroke('#000000', 4);
 
-    const sprite = this.add.image(cx, cy - 30, info.spriteKey);
-    sprite.setScale(3);
+    // Sprite in its own area, sized explicitly to fit comfortably below title.
+    const sprite = this.add.image(cx, cy - 50, info.spriteKey);
+    sprite.setDisplaySize(120, 120);
     sprite.setTintFill(0x000000); // silhouette
 
     this.tweens.add({
       targets: sprite,
-      scaleX: 4,
-      scaleY: 4,
-      duration: 1000,
+      displayWidth: 140,
+      displayHeight: 140,
+      duration: 900,
       ease: 'Sine.easeInOut',
     });
     this.time.delayedCall(900, () => {
       sprite.clearTint();
     });
 
+    // Name + type + weakness below the sprite
     this.add
-      .text(cx, cy + 70, info.name, {
+      .text(cx, cy + 50, info.name, {
         fontFamily: 'monospace',
         fontSize: '36px',
         color: '#ffffff',
@@ -96,7 +120,7 @@ export class BossIntroScene extends Phaser.Scene {
       .setStroke('#000000', 5);
 
     this.add
-      .text(cx, cy + 110, `Tipo: ${info.type}`, {
+      .text(cx, cy + 100, `Tipo: ${info.type}`, {
         fontFamily: 'monospace',
         fontSize: '18px',
         color: '#bbbbff',
@@ -104,7 +128,7 @@ export class BossIntroScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(cx, cy + 138, `Fraqueza: ${info.weakness}`, {
+      .text(cx, cy + 130, `Fraqueza: ${info.weakness}`, {
         fontFamily: 'monospace',
         fontSize: '18px',
         color: '#88ddff',
@@ -119,11 +143,27 @@ export class BossIntroScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.input.keyboard?.once('keydown-ENTER', () => this.advance());
-    this.input.keyboard?.once('keydown-SPACE', () => this.advance());
+    this.inputUnlockedAt = this.time.now + INPUT_GRACE_MS;
+    // Use `on` (not `once`) so a key held across the scene transition doesn't
+    // consume the listener silently. The grace period + hasAdvanced flag
+    // prevent double-fire and accidental skip from a residual press.
+    this.input.keyboard?.on('keydown-ENTER', this.tryAdvanceFromInput, this);
+    this.input.keyboard?.on('keydown-SPACE', this.tryAdvanceFromInput, this);
+    this.input.on(Phaser.Input.Events.POINTER_DOWN, this.tryAdvanceFromInput, this);
     this.autoAdvanceTimer = this.time.delayedCall(INTRO_DURATION_MS, () => this.advance());
 
+    this.events.once('shutdown', () => {
+      this.input.keyboard?.off('keydown-ENTER', this.tryAdvanceFromInput, this);
+      this.input.keyboard?.off('keydown-SPACE', this.tryAdvanceFromInput, this);
+      this.input.off(Phaser.Input.Events.POINTER_DOWN, this.tryAdvanceFromInput, this);
+    });
+
     this.exposeTestHooks();
+  }
+
+  private tryAdvanceFromInput(): void {
+    if (this.time.now < this.inputUnlockedAt) return;
+    this.advance();
   }
 
   private advance(): void {
