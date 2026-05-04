@@ -74,6 +74,7 @@ export interface MapHooks {
 
 export interface BossIntroHooks {
   advance: () => void;
+  cancel: () => void;
   getBossType: () => string;
   getLevelIndex: () => number;
 }

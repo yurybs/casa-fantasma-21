@@ -201,6 +201,108 @@ test.describe('Navigation — entradas e saídas entre cenas', () => {
     expect(errors).toEqual([]);
   });
 
+  test('REGRESSION: Menu Enter (save L4) → BossIntro Palhaço → Enter avança (sem grace, sem hold)', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`);
+    });
+
+    await reloadWithSave(
+      page,
+      seedSave({
+        currentLevel: 4,
+        levelsCompleted: [true, true, true, ...new Array(18).fill(false)],
+        powerUps: { waterGun: true, extraHearts: 0 },
+      }),
+    );
+    // Press Enter on Menu — sends to BossIntroScene (clown).
+    await page.keyboard.press('Enter');
+    await waitForBossIntro(page);
+    expect(await page.evaluate(() => window.__bossIntro!.getBossType())).toBe('clown');
+
+    // Now press Enter to advance. Even if the press lands inside the input grace
+    // window, the queued-press logic must still trigger advance shortly after.
+    await page.waitForTimeout(400);
+    await page.keyboard.press('Enter');
+
+    await page.waitForFunction(
+      () => !!window.__game && window.__game.hasBoss(),
+      null,
+      { timeout: 4000 },
+    );
+    expect(await page.evaluate(() => window.__game!.getBossKind())).toBe('clown');
+    expect(errors).toEqual([]);
+  });
+
+  test('REGRESSION: BossIntro Enter pressionado DURANTE o grace period é enfileirado e dispara depois', async ({
+    page,
+  }) => {
+    await reloadWithSave(
+      page,
+      seedSave({
+        currentLevel: 4,
+        levelsCompleted: [true, true, true, ...new Array(18).fill(false)],
+        powerUps: { waterGun: true, extraHearts: 0 },
+      }),
+    );
+    await page.keyboard.press('Enter');
+    await waitForBossIntro(page);
+
+    // Press immediately (inside grace) — the press must NOT be lost.
+    await page.keyboard.press('Enter');
+
+    // Within ~400ms (grace 250 + frame slack), advance must have fired.
+    await page.waitForFunction(
+      () => !!window.__game && window.__game.hasBoss(),
+      null,
+      { timeout: 2000 },
+    );
+    expect(await page.evaluate(() => window.__game!.getBossKind())).toBe('clown');
+  });
+
+  test('REGRESSION: BossIntro Esc cancela e volta ao WorldMap', async ({ page }) => {
+    await reloadWithSave(
+      page,
+      seedSave({
+        currentLevel: 4,
+        levelsCompleted: [true, true, true, ...new Array(18).fill(false)],
+        powerUps: { waterGun: true, extraHearts: 0 },
+      }),
+    );
+    await page.keyboard.press('Enter');
+    await waitForBossIntro(page);
+    await page.waitForTimeout(400);
+    await page.keyboard.press('Escape');
+    await waitForMap(page);
+    expect(await page.evaluate(() => !!window.__map)).toBe(true);
+    expect(await page.evaluate(() => !window.__bossIntro)).toBe(true);
+  });
+
+  test('REGRESSION: BossIntro Espantalho (Level 6) — Enter avança via teclado', async ({ page }) => {
+    await reloadWithSave(
+      page,
+      seedSave({
+        currentLevel: 6,
+        levelsCompleted: [true, true, true, true, true, ...new Array(16).fill(false)],
+        powerUps: { waterGun: true, extraHearts: 1 },
+      }),
+    );
+    await page.keyboard.press('Enter');
+    await waitForBossIntro(page);
+    expect(await page.evaluate(() => window.__bossIntro!.getBossType())).toBe('scarecrow');
+    await page.waitForTimeout(400);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(
+      () => !!window.__game && window.__game.hasBoss(),
+      null,
+      { timeout: 4000 },
+    );
+    expect(await page.evaluate(() => window.__game!.getBossKind())).toBe('scarecrow');
+  });
+
   test('BossIntro: auto-advance ocorre após 2s sem input', async ({ page }) => {
     await reloadWithSave(
       page,
