@@ -30,10 +30,10 @@ export class MenuScene extends Phaser.Scene {
       .setStroke('#000000', 6);
 
     this.add
-      .text(cx, 185, 'Sprint 3 — Mundo 1 Completo', {
+      .text(cx, 185, 'Sprint 4 — Mundo 2: Caverna Assombrada', {
         fontFamily: 'monospace',
-        fontSize: '20px',
-        color: '#aabbff',
+        fontSize: '18px',
+        color: '#cc88ff',
       })
       .setOrigin(0.5);
 

@@ -4,6 +4,7 @@ import {
   DEFAULT_PLAYER_STATS,
   CheckpointState,
   PowerUpsState,
+  MAX_EXTRA_HEARTS,
 } from '../types/GameTypes';
 
 export interface StorageLike {
@@ -15,7 +16,7 @@ export interface StorageLike {
 const TOTAL_LEVELS = 21;
 
 export function defaultPowerUps(): PowerUpsState {
-  return { waterGun: false };
+  return { waterGun: false, extraHearts: 0 };
 }
 
 export function defaultSave(): SaveData {
@@ -78,7 +79,14 @@ function parseCheckpoint(value: unknown): CheckpointState | null {
 function parsePowerUps(value: unknown): PowerUpsState {
   if (typeof value !== 'object' || value === null) return defaultPowerUps();
   const p = value as Partial<PowerUpsState>;
-  return { waterGun: typeof p.waterGun === 'boolean' ? p.waterGun : false };
+  const extraHearts =
+    typeof p.extraHearts === 'number'
+      ? Math.max(0, Math.min(MAX_EXTRA_HEARTS, Math.floor(p.extraHearts)))
+      : 0;
+  return {
+    waterGun: typeof p.waterGun === 'boolean' ? p.waterGun : false,
+    extraHearts,
+  };
 }
 
 export class SaveSystem {
@@ -169,6 +177,14 @@ export class SaveSystem {
   setPowerUp<K extends keyof PowerUpsState>(key: K, value: PowerUpsState[K]): SaveData {
     const data = this.load();
     data.powerUps[key] = value;
+    this.save(data);
+    return data;
+  }
+
+  /** Increments extraHearts by 1 (capped at MAX_EXTRA_HEARTS); returns new total. */
+  addExtraHeart(): SaveData {
+    const data = this.load();
+    data.powerUps.extraHearts = Math.min(MAX_EXTRA_HEARTS, data.powerUps.extraHearts + 1);
     this.save(data);
     return data;
   }

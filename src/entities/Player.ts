@@ -1,4 +1,11 @@
-import { DEFAULT_PLAYER_STATS, Direction, PlayerStats, PHYSICS } from '../types/GameTypes';
+import {
+  DEFAULT_PLAYER_STATS,
+  Direction,
+  PlayerStats,
+  PHYSICS,
+  STAR_DURATION_MS,
+  HP_PER_HEART,
+} from '../types/GameTypes';
 
 export interface PlayerEvents {
   onDamage?: (hpRemaining: number) => void;
@@ -7,6 +14,9 @@ export interface PlayerEvents {
   onGameOver?: () => void;
   onCoinCollected?: (totalCoins: number) => void;
   onExtraLife?: (livesRemaining: number) => void;
+  onStarStart?: () => void;
+  onStarEnd?: () => void;
+  onMaxHpIncreased?: (maxHp: number) => void;
 }
 
 export class Player {
@@ -23,6 +33,7 @@ export class Player {
   isHoldingJump: boolean = false;
   shootCooldownRemaining: number = 0;
   invincibilityRemaining: number = 0;
+  starRemaining: number = 0;
 
   vx: number = 0;
   vy: number = 0;
@@ -40,8 +51,13 @@ export class Player {
     this.coins = 0;
   }
 
+  /** True while the Star power-up is active (full damage immunity + contact damage). */
+  get hasStar(): boolean {
+    return this.starRemaining > 0;
+  }
+
   takeDamage(damage: number): boolean {
-    if (this.isInvincible || this.isDead) return false;
+    if (this.isInvincible || this.isDead || this.hasStar) return false;
     if (damage <= 0) return false;
 
     this.hp = Math.max(0, this.hp - damage);
@@ -155,6 +171,24 @@ export class Player {
     return true;
   }
 
+  /** Activates the Star power-up. Refreshes timer if already active. */
+  activateStar(durationMs: number = STAR_DURATION_MS): void {
+    const wasActive = this.starRemaining > 0;
+    this.starRemaining = durationMs;
+    if (!wasActive) this.events.onStarStart?.();
+  }
+
+  /**
+   * Increases maxHp by HP_PER_HEART (one extra heart). Also fully heals.
+   * Returns true if the increase was applied.
+   */
+  addExtraHeart(): boolean {
+    this.maxHp += HP_PER_HEART;
+    this.hp = this.maxHp;
+    this.events.onMaxHpIncreased?.(this.maxHp);
+    return true;
+  }
+
   update(deltaMs: number): void {
     if (this.shootCooldownRemaining > 0) {
       this.shootCooldownRemaining = Math.max(0, this.shootCooldownRemaining - deltaMs);
@@ -163,6 +197,12 @@ export class Player {
       this.invincibilityRemaining = Math.max(0, this.invincibilityRemaining - deltaMs);
       if (this.invincibilityRemaining === 0) {
         this.isInvincible = false;
+      }
+    }
+    if (this.starRemaining > 0) {
+      this.starRemaining = Math.max(0, this.starRemaining - deltaMs);
+      if (this.starRemaining === 0) {
+        this.events.onStarEnd?.();
       }
     }
   }

@@ -206,4 +206,82 @@ describe('Player', () => {
     expect(p.takeDamage(0)).toBe(false);
     expect(p.hp).toBe(6);
   });
+
+  describe('Sprint 4 — Star power-up', () => {
+    it('hasStar é falso por padrão', () => {
+      const p = new Player();
+      expect(p.hasStar).toBe(false);
+    });
+
+    it('activateStar liga a flag e dispara onStarStart', () => {
+      const onStarStart = vi.fn();
+      const p = new Player({ onStarStart });
+      p.activateStar(5000);
+      expect(p.hasStar).toBe(true);
+      expect(p.starRemaining).toBe(5000);
+      expect(onStarStart).toHaveBeenCalled();
+    });
+
+    it('reativar Star refresca o timer mas não dispara onStarStart de novo', () => {
+      const onStarStart = vi.fn();
+      const p = new Player({ onStarStart });
+      p.activateStar(2000);
+      p.activateStar(5000);
+      expect(p.starRemaining).toBe(5000);
+      expect(onStarStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('takeDamage é ignorado enquanto Star está ativa', () => {
+      const p = new Player();
+      p.activateStar(1000);
+      const result = p.takeDamage(2);
+      expect(result).toBe(false);
+      expect(p.hp).toBe(p.maxHp);
+    });
+
+    it('Star expira após o tempo configurado e dispara onStarEnd', () => {
+      const onStarEnd = vi.fn();
+      const p = new Player({ onStarEnd });
+      p.activateStar(500);
+      p.update(300);
+      expect(p.hasStar).toBe(true);
+      p.update(300);
+      expect(p.hasStar).toBe(false);
+      expect(onStarEnd).toHaveBeenCalled();
+    });
+
+    it('após Star expirar, takeDamage funciona normalmente', () => {
+      const p = new Player();
+      p.activateStar(100);
+      p.update(150);
+      expect(p.takeDamage(2)).toBe(true);
+      expect(p.hp).toBe(p.maxHp - 2);
+    });
+  });
+
+  describe('Sprint 4 — Extra Heart', () => {
+    it('addExtraHeart aumenta maxHp em 2 e cura ao máximo', () => {
+      const p = new Player();
+      p.takeDamage(2);
+      expect(p.hp).toBe(4);
+      p.addExtraHeart();
+      expect(p.maxHp).toBe(8);
+      expect(p.hp).toBe(8);
+    });
+
+    it('onMaxHpIncreased é chamado com o novo maxHp', () => {
+      const onMaxHpIncreased = vi.fn();
+      const p = new Player({ onMaxHpIncreased });
+      p.addExtraHeart();
+      expect(onMaxHpIncreased).toHaveBeenCalledWith(8);
+    });
+
+    it('múltiplos extraHearts acumulam', () => {
+      const p = new Player();
+      p.addExtraHeart();
+      p.addExtraHeart();
+      expect(p.maxHp).toBe(10);
+      expect(p.hp).toBe(10);
+    });
+  });
 });

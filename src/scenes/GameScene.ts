@@ -15,6 +15,12 @@ import { Zombie as ZombieLogic } from '../entities/enemies/Zombie';
 import { GhostBoss } from '../entities/enemies/GhostBoss';
 import { MiniGhost } from '../entities/enemies/MiniGhost';
 import { SpiderGhost } from '../entities/enemies/SpiderGhost';
+import { FireGhost } from '../entities/enemies/FireGhost';
+import { Crow } from '../entities/enemies/Crow';
+import { ClownBoss } from '../entities/enemies/ClownBoss';
+import { ScarecrowBoss } from '../entities/enemies/ScarecrowBoss';
+import { MiniClown } from '../entities/enemies/MiniClown';
+import { MiniScarecrow } from '../entities/enemies/MiniScarecrow';
 import { FoamGun, Projectile as FoamProjectile } from '../weapons/FoamGun';
 import { WaterGun, WaterProjectile } from '../weapons/WaterGun';
 import { InputSystem } from '../systems/InputSystem';
@@ -23,22 +29,45 @@ import { SaveSystem } from '../systems/SaveSystem';
 import { SoundSystem, NullAudioEngine } from '../systems/SoundSystem';
 import { GameAudioBindings } from '../systems/GameAudioBindings';
 import { ParticleEffects } from '../systems/ParticleEffects';
+import { ScreenConfusion } from '../systems/ScreenConfusion';
 import { TouchControls } from '../ui/TouchControls';
 import { fadeIn, fadeToScene } from '../utils/SceneTransition';
 
-type EnemyLogic = SkeletonLogic | ZombieLogic | SpiderGhost | MiniGhost;
+type EnemyKind =
+  | 'skeleton'
+  | 'zombie'
+  | 'spider_ghost'
+  | 'mini_ghost'
+  | 'fire_ghost'
+  | 'crow'
+  | 'mini_clown'
+  | 'mini_scarecrow';
+
+type EnemyLogic =
+  | SkeletonLogic
+  | ZombieLogic
+  | SpiderGhost
+  | MiniGhost
+  | FireGhost
+  | Crow
+  | MiniClown
+  | MiniScarecrow;
 
 interface EnemyEntry {
   logic: EnemyLogic;
   sprite: Phaser.Physics.Arcade.Sprite;
-  type: 'skeleton' | 'zombie' | 'spider_ghost' | 'mini_ghost';
+  type: EnemyKind;
   tag: EnemyTag;
   hasGravity: boolean;
 }
 
+type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss;
+type BossKind = 'ghost' | 'clown' | 'scarecrow';
+
 interface BossEntry {
-  logic: GhostBoss;
+  logic: BossLogic;
   sprite: Phaser.Physics.Arcade.Sprite;
+  kind: BossKind;
 }
 
 interface ProjectileSprite {
@@ -53,6 +82,19 @@ interface BoneSprite {
   damage: number;
 }
 
+interface JuggleBallSprite {
+  sprite: Phaser.Physics.Arcade.Sprite;
+  ttlMs: number;
+  damage: number;
+}
+
+interface FireTrailSprite {
+  sprite: Phaser.GameObjects.Image;
+  ttlMs: number;
+  x: number;
+  y: number;
+}
+
 interface CheckpointSprite {
   sprite: Phaser.Physics.Arcade.Sprite;
   x: number;
@@ -60,14 +102,20 @@ interface CheckpointSprite {
   active: boolean;
 }
 
+type PowerUpKind = 'water_gun' | 'star' | 'extra_heart';
+
 interface PowerUpSprite {
   sprite: Phaser.Physics.Arcade.Sprite;
-  type: 'water_gun';
+  type: PowerUpKind;
 }
 
 interface GameSceneInitData {
   levelIndex?: number;
 }
+
+const FIRE_TRAIL_TTL_MS = 1500;
+const JUGGLE_BALL_TTL_MS = 3000;
+const JUGGLE_BALL_GRAVITY = 800;
 
 export class GameScene extends Phaser.Scene {
   private level!: LevelData;
@@ -82,6 +130,8 @@ export class GameScene extends Phaser.Scene {
   private waterGun!: WaterGun;
   private projectiles: ProjectileSprite[] = [];
   private bones: BoneSprite[] = [];
+  private juggleBalls: JuggleBallSprite[] = [];
+  private fireTrails: FireTrailSprite[] = [];
   private coinSprites: Phaser.Physics.Arcade.Sprite[] = [];
   private flagSprite?: Phaser.Physics.Arcade.Sprite;
   private checkpoints: CheckpointSprite[] = [];
@@ -92,6 +142,7 @@ export class GameScene extends Phaser.Scene {
   private gameSound!: SoundSystem;
   private audio!: GameAudioBindings;
   private particles!: ParticleEffects;
+  private confusion!: ScreenConfusion;
   private touch?: TouchControls;
   private timeRemaining: number = 0;
   private gameEnded: boolean = false;
@@ -101,6 +152,7 @@ export class GameScene extends Phaser.Scene {
   private hasWaterGun: boolean = false;
   private respawnX: number = 0;
   private respawnY: number = 0;
+  private armHitbox?: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -114,6 +166,8 @@ export class GameScene extends Phaser.Scene {
     this.boss = undefined;
     this.projectiles = [];
     this.bones = [];
+    this.juggleBalls = [];
+    this.fireTrails = [];
     this.coinSprites = [];
     this.checkpoints = [];
     this.powerUps = [];
@@ -148,10 +202,11 @@ export class GameScene extends Phaser.Scene {
       new SoundSystem(new NullAudioEngine());
     this.audio = new GameAudioBindings(this.gameSound);
     this.particles = new ParticleEffects(this);
+    this.confusion = new ScreenConfusion(this);
 
     this.drawBackground();
     this.buildPlatforms();
-    this.spawnPlayer();
+    this.spawnPlayer(saveData.powerUps.extraHearts);
     this.spawnEnemies();
     this.spawnBoss();
     this.spawnCoins();
@@ -172,12 +227,24 @@ export class GameScene extends Phaser.Scene {
 
     this.inputs.read();
 
+    this.events.once('shutdown', () => this.confusion.stop());
     this.exposeTestHooks();
   }
 
   private drawBackground(): void {
     const w = this.level.widthInTiles * TILE_SIZE;
     const groundY = (this.level.heightInTiles - 1) * TILE_SIZE;
+    if (this.level.theme === 'cave') {
+      const stalactiteCount = Math.floor(w / 80);
+      for (let i = 0; i < stalactiteCount; i++) {
+        const x = 40 + i * 80 + ((i * 13) % 30);
+        if (this.textures.exists('stalactite')) {
+          this.add.image(x, 18, 'stalactite').setAlpha(0.85).setScrollFactor(0.5).setDepth(0);
+        }
+      }
+      return;
+    }
+
     const positions = [80, 280, 460, 660, 880, 1080, 1240];
     for (const x of positions) {
       if (x > w) break;
@@ -198,13 +265,15 @@ export class GameScene extends Phaser.Scene {
   private buildPlatforms(): void {
     this.platforms = this.physics.add.staticGroup();
     this.platformsPassthrough = this.physics.add.staticGroup();
+    const groundKey = this.level.theme === 'cave' ? 'tile_cave_ground' : 'tile_ground';
+    const platKey = this.level.theme === 'cave' ? 'tile_cave_platform' : 'tile_platform';
     for (let y = 0; y < this.level.heightInTiles; y++) {
       for (let x = 0; x < this.level.widthInTiles; x++) {
         const tile = this.level.tiles[y][x];
         if (tile === 0) continue;
         const wx = x * TILE_SIZE + TILE_SIZE / 2;
         const wy = y * TILE_SIZE + TILE_SIZE / 2;
-        const key = tile === 1 ? 'tile_ground' : 'tile_platform';
+        const key = tile === 1 ? groundKey : platKey;
         const sprite = this.add.image(wx, wy, key);
         const group = tile === 1 ? this.platforms : this.platformsPassthrough;
         const body = group.create(wx, wy, key) as Phaser.Physics.Arcade.Sprite;
@@ -228,7 +297,7 @@ export class GameScene extends Phaser.Scene {
     return this.level.playerSpawn;
   }
 
-  private spawnPlayer(): void {
+  private spawnPlayer(savedExtraHearts: number): void {
     this.playerLogic = new PlayerLogic({
       onGameOver: () => this.endGame('gameover'),
       onLifeLost: (lives) => {
@@ -244,6 +313,8 @@ export class GameScene extends Phaser.Scene {
       onCoinCollected: () => this.audio.emit('player.coin'),
       onExtraLife: () => this.audio.emit('player.power_up'),
     });
+
+    for (let i = 0; i < savedExtraHearts; i++) this.playerLogic.addExtraHeart();
 
     const spawn = this.resolveSpawn();
     this.respawnX = spawn.x;
@@ -265,65 +336,139 @@ export class GameScene extends Phaser.Scene {
   private spawnEnemies(): void {
     for (const e of this.level.enemies) {
       if (e.type === 'skeleton') {
-        const logic = new SkeletonLogic({
-          onShoot: (proj) => this.spawnBone(proj),
-          onDeath: () => {},
-        });
-        const sprite = this.physics.add.sprite(e.x, e.y, 'skeleton');
-        sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
-        sprite.setCollideWorldBounds(true);
-        sprite.setMaxVelocity(80, 600);
+        const logic = new SkeletonLogic({ onShoot: (proj) => this.spawnBone(proj) });
+        const sprite = this.makeGroundSprite(e.x, e.y, 'skeleton', 80);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'skeleton', tag: 'normal', hasGravity: true });
       } else if (e.type === 'zombie') {
         const logic = new ZombieLogic();
-        const sprite = this.physics.add.sprite(e.x, e.y, 'zombie');
-        sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
-        sprite.setCollideWorldBounds(true);
-        sprite.setMaxVelocity(60, 600);
+        const sprite = this.makeGroundSprite(e.x, e.y, 'zombie', 60);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'zombie', tag: 'normal', hasGravity: true });
       } else if (e.type === 'spider_ghost') {
         const logic = new SpiderGhost(e.y);
-        const sprite = this.physics.add.sprite(e.x, e.y, 'spider_ghost');
-        sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
-        (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'spider_ghost', ENEMY_SIZE);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'spider_ghost', tag: 'ghost', hasGravity: false });
       } else if (e.type === 'mini_ghost') {
         const logic = new MiniGhost();
-        const sprite = this.physics.add.sprite(e.x, e.y, 'mini_ghost');
-        sprite.setDisplaySize(24, 24);
-        (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'mini_ghost', 24);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'mini_ghost', tag: 'ghost', hasGravity: false });
+      } else if (e.type === 'fire_ghost') {
+        const logic = new FireGhost(e.x, e.y, {
+          onDropTrail: (drop) => this.spawnFireTrail(drop.x, drop.y),
+        });
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'fire_ghost', ENEMY_SIZE);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'fire_ghost', tag: 'ghost', hasGravity: false });
+      } else if (e.type === 'crow') {
+        const logic = new Crow(e.x, e.y);
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'crow', 28);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'crow', tag: 'normal', hasGravity: false });
+      } else if (e.type === 'mini_clown') {
+        const logic = new MiniClown();
+        const sprite = this.makeGroundSprite(e.x, e.y, 'mini_clown', 100);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_clown', tag: 'normal', hasGravity: true });
+      } else if (e.type === 'mini_scarecrow') {
+        const logic = new MiniScarecrow();
+        const sprite = this.makeGroundSprite(e.x, e.y, 'mini_scarecrow', 60);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_scarecrow', tag: 'normal', hasGravity: true });
       }
     }
   }
 
+  private makeGroundSprite(x: number, y: number, key: string, maxSpeed: number): Phaser.Physics.Arcade.Sprite {
+    const sprite = this.physics.add.sprite(x, y, key);
+    sprite.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
+    sprite.setCollideWorldBounds(true);
+    sprite.setMaxVelocity(maxSpeed, 600);
+    return sprite;
+  }
+
+  private makeFlyingSprite(x: number, y: number, key: string, size: number): Phaser.Physics.Arcade.Sprite {
+    const sprite = this.physics.add.sprite(x, y, key);
+    sprite.setDisplaySize(size, size);
+    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+    return sprite;
+  }
+
   private spawnBoss(): void {
     if (!this.level.boss) return;
-    if (this.level.boss.type === 'ghost') {
-      const logic = new GhostBoss(this.level.boss.x, this.level.boss.y, {
-        onSpawnMinis: (spawns) => {
-          for (const s of spawns) this.spawnMiniGhost(s.x, s.y);
-        },
+    const b = this.level.boss;
+    if (b.type === 'ghost') {
+      const logic = new GhostBoss(b.x, b.y, {
+        onSpawnMinis: (spawns) => spawns.forEach((s) => this.spawnMiniGhost(s.x, s.y)),
       });
-      const sprite = this.physics.add.sprite(this.level.boss.x, this.level.boss.y, 'ghost_boss');
+      const sprite = this.makeFlyingSprite(b.x, b.y, 'ghost_boss', 60);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'ghost' };
+    } else if (b.type === 'clown') {
+      const logic = new ClownBoss(b.x, b.y, {
+        onJuggleThrow: (balls) =>
+          balls.forEach((ball) => this.spawnJuggleBall(ball.x, ball.y, ball.vx, ball.vy)),
+        onSpawnMiniClowns: (spawns) =>
+          spawns.forEach((s) => this.spawnMiniClown(s.x, s.y)),
+        onConfusionStart: () => this.confusion.start(),
+        onConfusionEnd: () => this.confusion.stop(),
+      });
+      const sprite = this.physics.add.sprite(b.x, b.y, 'clown_boss');
       sprite.setDisplaySize(60, 60);
-      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-      logic.setPosition(this.level.boss.x, this.level.boss.y);
-      this.boss = { logic, sprite };
+      sprite.setCollideWorldBounds(true);
+      sprite.setMaxVelocity(180, 600);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'clown' };
+    } else if (b.type === 'scarecrow') {
+      const logic = new ScarecrowBoss(b.x, b.y, {
+        onSpawnCrows: (spawns) =>
+          spawns.forEach((s) => this.spawnCrowEnemy(s.x, s.y, s.direction)),
+      });
+      const sprite = this.makeFlyingSprite(b.x, b.y, 'scarecrow_boss', 64);
+      sprite.setDepth(2);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'scarecrow' };
+      this.armHitbox = this.add.rectangle(b.x, b.y, 4, 14, 0xffaa44, 0.6).setDepth(2);
+      this.armHitbox.setVisible(false);
     }
   }
 
   private spawnMiniGhost(x: number, y: number): void {
     const logic = new MiniGhost();
     logic.setPosition(x, y);
-    const sprite = this.physics.add.sprite(x, y, 'mini_ghost');
-    sprite.setDisplaySize(24, 24);
-    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+    const sprite = this.makeFlyingSprite(x, y, 'mini_ghost', 24);
     this.enemies.push({ logic, sprite, type: 'mini_ghost', tag: 'ghost', hasGravity: false });
+  }
+
+  private spawnMiniClown(x: number, y: number): void {
+    const logic = new MiniClown();
+    logic.setPosition(x, y);
+    const sprite = this.makeGroundSprite(x, y, 'mini_clown', 110);
+    this.physics.add.collider(sprite, this.platforms);
+    this.physics.add.collider(sprite, this.platformsPassthrough);
+    this.enemies.push({ logic, sprite, type: 'mini_clown', tag: 'normal', hasGravity: true });
+  }
+
+  private spawnCrowEnemy(x: number, y: number, dir: Direction): void {
+    const logic = new Crow(x, y, dir);
+    const sprite = this.makeFlyingSprite(x, y, 'crow', 28);
+    this.enemies.push({ logic, sprite, type: 'crow', tag: 'normal', hasGravity: false });
+  }
+
+  private spawnJuggleBall(x: number, y: number, vx: number, vy: number): void {
+    const sprite = this.physics.add.sprite(x, y, 'juggle_ball');
+    sprite.setDisplaySize(14, 14);
+    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+    sprite.setVelocity(vx, vy);
+    this.juggleBalls.push({ sprite, ttlMs: JUGGLE_BALL_TTL_MS, damage: 1 });
+  }
+
+  private spawnFireTrail(x: number, y: number): void {
+    const sprite = this.add.image(x, y, 'fire_trail').setDepth(1);
+    sprite.setScale(1);
+    this.fireTrails.push({ sprite, ttlMs: FIRE_TRAIL_TTL_MS, x, y });
   }
 
   private spawnCoins(): void {
@@ -361,10 +506,15 @@ export class GameScene extends Phaser.Scene {
   private spawnPowerUps(): void {
     for (const p of this.level.powerUps) {
       if (p.type === 'water_gun' && this.hasWaterGun) continue;
-      const sprite = this.physics.add.sprite(p.x, p.y, 'water_gun_pickup');
-      sprite.setDisplaySize(28, 24);
+      const tex =
+        p.type === 'water_gun' ? 'water_gun_pickup'
+        : p.type === 'star' ? 'star_pickup'
+        : 'extra_heart_pickup';
+      const sprite = this.physics.add.sprite(p.x, p.y, tex);
+      const size = p.type === 'water_gun' ? 28 : p.type === 'star' ? 26 : 26;
+      sprite.setDisplaySize(size, size);
       (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-      this.powerUps.push({ sprite, type: p.type });
+      this.powerUps.push({ sprite, type: p.type as PowerUpKind });
     }
   }
 
@@ -377,6 +527,11 @@ export class GameScene extends Phaser.Scene {
       this.physics.add.collider(e.sprite, this.platforms);
       this.physics.add.collider(e.sprite, this.platformsPassthrough);
     });
+
+    if (this.boss?.kind === 'clown') {
+      this.physics.add.collider(this.boss.sprite, this.platforms);
+      this.physics.add.collider(this.boss.sprite, this.platformsPassthrough);
+    }
 
     this.physics.add.overlap(this.playerSprite, this.coinSprites, (_p, coin) => {
       const coinSprite = coin as Phaser.Physics.Arcade.Sprite;
@@ -435,6 +590,8 @@ export class GameScene extends Phaser.Scene {
     this.handleEnemies(delta);
     this.handleBoss(delta);
     this.handleProjectiles(delta);
+    this.handleJuggleBalls(delta);
+    this.handleFireTrails(delta);
     this.handleEnemyContacts();
     this.handleBossContact();
     this.handleCheckpointContacts();
@@ -461,11 +618,12 @@ export class GameScene extends Phaser.Scene {
     this.updateEnemyAnimations();
     this.updateBossAnimation();
     this.updateCoinAnimation();
+    this.updateStarVisual();
 
-    if (this.playerLogic.isInvincible) {
+    if (this.playerLogic.isInvincible && !this.playerLogic.hasStar) {
       const blink = Math.floor(this.time.now / 100) % 2 === 0;
       this.playerSprite.setAlpha(blink ? 0.4 : 1);
-    } else {
+    } else if (!this.playerLogic.hasStar) {
       this.playerSprite.setAlpha(1);
     }
   }
@@ -542,6 +700,10 @@ export class GameScene extends Phaser.Scene {
       e.sprite.setVelocityX(e.logic.vx);
       if (!e.hasGravity) {
         e.sprite.setVelocityY(e.logic.vy);
+      } else if (e.type === 'mini_clown' && e.logic.vy < 0) {
+        // Hop initiated this frame — pass it through to physics.
+        e.sprite.setVelocityY(e.logic.vy);
+        e.logic.vy = 0;
       }
       e.sprite.setFlipX(e.logic.facing === Direction.Left);
 
@@ -558,15 +720,46 @@ export class GameScene extends Phaser.Scene {
     b.logic.x = b.sprite.x;
     b.logic.y = b.sprite.y;
     b.logic.update(delta, this.playerSprite.x, this.playerSprite.y);
-    b.sprite.setVelocity(b.logic.vx, b.logic.vy);
+    if (b.kind === 'ghost' || b.kind === 'scarecrow') {
+      b.sprite.setVelocity(b.logic.vx, b.logic.vy);
+    } else if (b.kind === 'clown') {
+      // Clown uses gravity normally (it's a ground-based boss with hops).
+      b.sprite.setVelocityX(b.logic.vx);
+      if ((b.logic as ClownBoss).state === 'jumping' && b.logic.vy < 0) {
+        b.sprite.setVelocityY(b.logic.vy);
+      }
+    }
     b.sprite.setFlipX(b.logic.facing === Direction.Left);
+
+    if (b.kind === 'scarecrow') {
+      this.updateScarecrowArmHitbox(b.logic as ScarecrowBoss);
+    }
+
     if (b.logic.isDead) {
       this.particles.enemyDeath(b.sprite.x, b.sprite.y);
       this.audio.emit('enemy.die');
       b.sprite.destroy();
+      this.armHitbox?.destroy();
+      this.armHitbox = undefined;
+      this.confusion.stop();
       this.boss = undefined;
       this.endGame('victory');
     }
+  }
+
+  private updateScarecrowArmHitbox(boss: ScarecrowBoss): void {
+    if (!this.armHitbox) return;
+    const len = boss.getArmHitboxLength();
+    if (len <= 0) {
+      this.armHitbox.setVisible(false);
+      return;
+    }
+    const dirSign = boss.armDirection === Direction.Left ? -1 : 1;
+    this.armHitbox.setVisible(true);
+    this.armHitbox.width = len;
+    this.armHitbox.height = 14;
+    this.armHitbox.setSize(len, 14);
+    this.armHitbox.setPosition(boss.x + (dirSign * len) / 2, boss.y - 8);
   }
 
   private handleProjectiles(delta: number): void {
@@ -611,7 +804,8 @@ export class GameScene extends Phaser.Scene {
             this.boss.sprite.getBounds(),
           )
         ) {
-          const dmg = this.computeDamage(p, 'ghost');
+          const bossTag: EnemyTag = this.boss.kind === 'ghost' ? 'ghost' : 'normal';
+          const dmg = this.computeDamage(p, bossTag);
           this.boss.logic.takeDamage(dmg);
           dead = true;
         }
@@ -650,6 +844,50 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private handleJuggleBalls(delta: number): void {
+    const dt = delta / 1000;
+    for (let i = this.juggleBalls.length - 1; i >= 0; i--) {
+      const j = this.juggleBalls[i];
+      const body = j.sprite.body as Phaser.Physics.Arcade.Body;
+      body.velocity.y += JUGGLE_BALL_GRAVITY * dt;
+      j.ttlMs -= delta;
+      const onGround = j.sprite.y > (this.level.heightInTiles - 2) * TILE_SIZE;
+      if (j.ttlMs <= 0 || onGround) {
+        j.sprite.destroy();
+        this.juggleBalls.splice(i, 1);
+        continue;
+      }
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          j.sprite.getBounds(),
+          this.playerSprite.getBounds(),
+        )
+      ) {
+        this.playerLogic.takeDamage(j.damage);
+        j.sprite.destroy();
+        this.juggleBalls.splice(i, 1);
+      }
+    }
+  }
+
+  private handleFireTrails(delta: number): void {
+    for (let i = this.fireTrails.length - 1; i >= 0; i--) {
+      const f = this.fireTrails[i];
+      f.ttlMs -= delta;
+      f.sprite.setAlpha(Math.max(0, f.ttlMs / FIRE_TRAIL_TTL_MS));
+      if (f.ttlMs <= 0) {
+        f.sprite.destroy();
+        this.fireTrails.splice(i, 1);
+        continue;
+      }
+      const dx = this.playerSprite.x - f.x;
+      const dy = this.playerSprite.y - f.y;
+      if (dx * dx + dy * dy < 16 * 16) {
+        this.playerLogic.takeDamage(1);
+      }
+    }
+  }
+
   private computeDamage(p: ProjectileSprite, tag: EnemyTag): number {
     if (p.isWater) {
       return WaterGun.damageFor(p.data as WaterProjectile, tag);
@@ -665,6 +903,14 @@ export class GameScene extends Phaser.Scene {
           e.sprite.getBounds(),
         )
       ) {
+        if (this.playerLogic.hasStar) {
+          e.logic.takeDamage(99);
+          if (e.logic.isDead) {
+            this.particles.enemyDeath(e.sprite.x, e.sprite.y);
+            this.audio.emit('enemy.die');
+          }
+          continue;
+        }
         const playerBody = this.playerSprite.body as Phaser.Physics.Arcade.Body;
         const wasJumpingDown =
           playerBody.velocity.y > 0 &&
@@ -692,7 +938,19 @@ export class GameScene extends Phaser.Scene {
         this.boss.sprite.getBounds(),
       )
     ) {
-      this.playerLogic.takeDamage(this.boss.logic.damage);
+      if (this.playerLogic.hasStar) {
+        this.boss.logic.takeDamage(1);
+      } else {
+        this.playerLogic.takeDamage(this.boss.logic.damage);
+      }
+    }
+    if (this.armHitbox && this.armHitbox.visible) {
+      const armBounds = this.armHitbox.getBounds();
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(armBounds, this.playerSprite.getBounds())
+      ) {
+        this.playerLogic.takeDamage(1);
+      }
     }
   }
 
@@ -727,6 +985,11 @@ export class GameScene extends Phaser.Scene {
         if (p.type === 'water_gun') {
           this.hasWaterGun = true;
           this.save.setPowerUp('waterGun', true);
+        } else if (p.type === 'star') {
+          this.playerLogic.activateStar();
+        } else if (p.type === 'extra_heart') {
+          this.playerLogic.addExtraHeart();
+          this.save.addExtraHeart();
         }
         this.audio.emit('player.power_up');
         this.particles.coinSparkle(p.sprite.x, p.sprite.y);
@@ -740,6 +1003,7 @@ export class GameScene extends Phaser.Scene {
     if (this.gameEnded) return;
     this.gameEnded = true;
     this.gameSound.stopMusic();
+    this.confusion.stop();
     if (reason === 'victory') {
       this.audio.emit('level.complete');
       const data = this.save.markLevelComplete(this.level.id - 1);
@@ -767,23 +1031,48 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private updateStarVisual(): void {
+    if (this.playerLogic.hasStar) {
+      const cycle = Math.floor(this.animTimerMs / 80) % 6;
+      const tints = [0xffe600, 0xff66cc, 0x66ddff, 0x88ff88, 0xff8800, 0xffffff];
+      this.playerSprite.setTint(tints[cycle]);
+    } else {
+      this.playerSprite.clearTint();
+    }
+  }
+
   private updateEnemyAnimations(): void {
     const flip = Math.floor(this.animTimerMs / 200) % 2 === 0;
     for (const e of this.enemies) {
-      if (e.type === 'spider_ghost' || e.type === 'mini_ghost') continue;
+      if (e.type === 'spider_ghost' || e.type === 'mini_ghost' || e.type === 'fire_ghost' || e.type === 'crow') continue;
       const moving = Math.abs(e.logic.vx) > 5;
-      const base = e.type === 'skeleton' ? 'skeleton' : 'zombie';
-      const walk = `${base}_walk`;
-      e.sprite.setTexture(moving && flip ? walk : base);
+      if (e.type === 'skeleton' || e.type === 'zombie') {
+        const base = e.type;
+        const walk = `${base}_walk`;
+        e.sprite.setTexture(moving && flip ? walk : base);
+      }
     }
   }
 
   private updateBossAnimation(): void {
     if (!this.boss) return;
-    const tex = this.boss.logic.phase === 'phase2' ? 'ghost_boss_phase2' : 'ghost_boss';
-    this.boss.sprite.setTexture(tex);
-    const bob = Math.sin(this.animTimerMs / 220) * 2;
-    this.boss.sprite.setOffset?.(0, bob);
+    const b = this.boss;
+    if (b.kind === 'ghost') {
+      const tex = (b.logic as GhostBoss).phase === 'phase2' ? 'ghost_boss_phase2' : 'ghost_boss';
+      b.sprite.setTexture(tex);
+    } else if (b.kind === 'clown') {
+      const tex = (b.logic as ClownBoss).phase === 'phase2' ? 'clown_boss_phase2' : 'clown_boss';
+      b.sprite.setTexture(tex);
+    } else if (b.kind === 'scarecrow') {
+      const sb = b.logic as ScarecrowBoss;
+      const tex = sb.phase === 'phase2' ? 'scarecrow_boss_phase2' : 'scarecrow_boss';
+      b.sprite.setTexture(tex);
+      if (sb.isRotating) {
+        b.sprite.rotation += 0.18;
+      } else {
+        b.sprite.rotation = 0;
+      }
+    }
   }
 
   private updateCoinAnimation(): void {
@@ -794,10 +1083,14 @@ export class GameScene extends Phaser.Scene {
   private exposeTestHooks(): void {
     this.testHooks = {
       getPlayerHp: () => this.playerLogic.hp,
+      getPlayerMaxHp: () => this.playerLogic.maxHp,
       getPlayerLives: () => this.playerLogic.lives,
       getCoins: () => this.playerLogic.coins,
       getEnemyCount: () => this.enemies.length,
+      getEnemyKinds: () => this.enemies.map((e) => e.type),
       getProjectileCount: () => this.projectiles.length,
+      getJuggleBallCount: () => this.juggleBalls.length,
+      getFireTrailCount: () => this.fireTrails.length,
       getPlayerX: () => this.playerSprite.x,
       getPlayerY: () => this.playerSprite.y,
       getPlayerVx: () => this.playerLogic.vx,
@@ -827,16 +1120,33 @@ export class GameScene extends Phaser.Scene {
       getFps: () => this.game.loop.actualFps,
       getLevelIndex: () => this.levelIndex,
       getLevelId: () => this.level.id,
+      getLevelTheme: () => this.level.theme,
       hasBoss: () => !!this.boss,
+      getBossKind: () => this.boss?.kind ?? 'none',
       getBossHp: () => this.boss?.logic.hp ?? 0,
-      getBossPhase: () => this.boss?.logic.phase ?? 'none',
+      getBossPhase: () => {
+        if (!this.boss) return 'none';
+        const l = this.boss.logic as { phase?: string };
+        return l.phase ?? 'phase1';
+      },
       damageBoss: (n: number) => this.boss?.logic.takeDamage(n),
       getMiniGhostCount: () =>
         this.enemies.filter((e) => e.type === 'mini_ghost').length,
+      getMiniClownCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_clown').length,
+      getCrowCount: () => this.enemies.filter((e) => e.type === 'crow').length,
+      isConfusionActive: () => this.confusion.isActive,
       hasWaterGun: () => this.hasWaterGun,
       grantWaterGun: () => {
         this.hasWaterGun = true;
         this.save.setPowerUp('waterGun', true);
+      },
+      hasStar: () => this.playerLogic.hasStar,
+      getStarRemaining: () => this.playerLogic.starRemaining,
+      activateStar: () => this.playerLogic.activateStar(),
+      addExtraHeart: () => {
+        this.playerLogic.addExtraHeart();
+        this.save.addExtraHeart();
       },
       getPowerUpCount: () => this.powerUps.length,
       getCheckpointCount: () => this.checkpoints.length,
@@ -853,5 +1163,8 @@ export class GameScene extends Phaser.Scene {
         ),
     };
     (window as unknown as { __game: Record<string, unknown> }).__game = this.testHooks;
+    this.events.once('shutdown', () => {
+      delete (window as unknown as { __game?: Record<string, unknown> }).__game;
+    });
   }
 }

@@ -20,7 +20,13 @@ export interface CheckpointState {
 
 export interface PowerUpsState {
   waterGun: boolean;
+  /** 0..2 — each grants +1 heart (+2 max HP), max of 5 hearts (10 HP). */
+  extraHearts: number;
 }
+
+export const MAX_EXTRA_HEARTS = 2;
+export const HP_PER_HEART = 2;
+export const STAR_DURATION_MS = 10000;
 
 export interface SaveData {
   currentLevel: number;
@@ -77,14 +83,31 @@ export enum EntityType {
   GhostBoss = 'ghost_boss',
   MiniGhost = 'mini_ghost',
   SpiderGhost = 'spider_ghost',
+  FireGhost = 'fire_ghost',
+  Crow = 'crow',
+  ClownBoss = 'clown_boss',
+  ScarecrowBoss = 'scarecrow_boss',
+  MiniClown = 'mini_clown',
+  MiniScarecrow = 'mini_scarecrow',
   Projectile = 'projectile',
   Coin = 'coin',
   Flag = 'flag',
   Checkpoint = 'checkpoint',
   WaterGunPickup = 'water_gun_pickup',
+  StarPickup = 'star_pickup',
+  ExtraHeartPickup = 'extra_heart_pickup',
 }
 
-export type EnemyKind = 'skeleton' | 'zombie' | 'ghost_boss' | 'mini_ghost' | 'spider_ghost';
+export type EnemyKind =
+  | 'skeleton'
+  | 'zombie'
+  | 'ghost_boss'
+  | 'mini_ghost'
+  | 'spider_ghost'
+  | 'fire_ghost'
+  | 'crow'
+  | 'mini_clown'
+  | 'mini_scarecrow';
 
 /** Tag used for damage calculation: water-element shots deal 2x to ghost-tagged enemies. */
 export type EnemyTag = 'normal' | 'ghost';
