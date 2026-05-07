@@ -21,7 +21,7 @@ export class MenuScene extends Phaser.Scene {
     this.drawDecor();
 
     this.add
-      .text(cx, 130, 'TOY BLASTER KID', {
+      .text(cx, 130, 'CASA FANTASMA 2', {
         fontFamily: 'monospace',
         fontSize: '52px',
         color: '#ffffff',
@@ -30,7 +30,7 @@ export class MenuScene extends Phaser.Scene {
       .setStroke('#000000', 6);
 
     this.add
-      .text(cx, 185, 'Sprint 4 — Mundo 2: Caverna Assombrada', {
+      .text(cx, 185, 'A Caverna Assombrada', {
         fontFamily: 'monospace',
         fontSize: '18px',
         color: '#cc88ff',

@@ -40,7 +40,6 @@ const BOSS_INFO: Record<BossKind, BossInfo> = {
   },
 };
 
-const INTRO_DURATION_MS = 2000;
 /**
  * Ignore advance input during the first INPUT_GRACE_MS so a residual
  * Enter/Space from the previous scene (LevelCompleteScene, WorldMap)
@@ -70,7 +69,6 @@ export class BossIntroScene extends Phaser.Scene {
   private levelIndex: number = 2;
   private bossType: BossKind = 'ghost';
   private hasAdvanced: boolean = false;
-  private autoAdvanceTimer?: Phaser.Time.TimerEvent;
   private inputUnlockedAt: number = 0;
   private queuedAdvance: boolean = false;
   private enterKey?: Phaser.Input.Keyboard.Key;
@@ -169,8 +167,6 @@ export class BossIntroScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
-    this.autoAdvanceTimer = this.time.delayedCall(INTRO_DURATION_MS, () => this.advance());
-
     this.events.once('shutdown', () => {
       this.input.keyboard?.off('keydown-ENTER', this.tryAdvanceFromInput, this);
       this.input.keyboard?.off('keydown-SPACE', this.tryAdvanceFromInput, this);
@@ -212,14 +208,12 @@ export class BossIntroScene extends Phaser.Scene {
   private cancelToMap(): void {
     if (this.hasAdvanced) return;
     this.hasAdvanced = true;
-    this.autoAdvanceTimer?.remove(false);
     fadeToScene(this, 'WorldMapScene');
   }
 
   private advance(): void {
     if (this.hasAdvanced) return;
     this.hasAdvanced = true;
-    this.autoAdvanceTimer?.remove(false);
     fadeToScene(this, 'GameScene', { levelIndex: this.levelIndex });
   }
 

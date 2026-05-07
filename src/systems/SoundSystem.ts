@@ -8,7 +8,7 @@ export type SfxKey =
   | 'power_up'
   | 'enemy_die';
 
-export type MusicKey = 'bgm_world1' | 'bgm_menu';
+export type MusicKey = 'bgm_world1' | 'bgm_world2' | 'bgm_menu';
 
 export interface AudioEngine {
   playSfx(key: SfxKey, volume: number): void;
@@ -24,7 +24,7 @@ export interface SoundSystemOptions {
   muted?: boolean;
 }
 
-const STORAGE_KEY = 'toy-blaster-kid:sound';
+const STORAGE_KEY = 'casa-fantasma-2:sound';
 
 interface PersistedSoundConfig {
   musicVolume: number;

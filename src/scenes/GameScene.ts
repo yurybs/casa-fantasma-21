@@ -223,7 +223,8 @@ export class GameScene extends Phaser.Scene {
     this.touch = new TouchControls(this, this.inputs);
     this.touch.create();
 
-    void this.gameSound.resume().then(() => this.gameSound.playMusic('bgm_world1'));
+    const musicKey = this.level.world === 2 ? 'bgm_world2' : 'bgm_world1';
+    void this.gameSound.resume().then(() => this.gameSound.playMusic(musicKey));
 
     this.inputs.read();
 
@@ -678,6 +679,23 @@ export class GameScene extends Phaser.Scene {
     this.playerLogic.update(delta);
   }
 
+  /** Returns true when there is no solid ground directly under the probe point. */
+  private isPitAhead(sprite: Phaser.Physics.Arcade.Sprite, facing: Direction): boolean {
+    const halfW = ENEMY_SIZE / 2;
+    const halfH = ENEMY_SIZE / 2;
+    // Probe one tile-width beyond the leading edge, at foot level.
+    const probeX =
+      facing === Direction.Right
+        ? sprite.x + halfW + TILE_SIZE
+        : sprite.x - halfW - TILE_SIZE;
+    const probeY = sprite.y + halfH + 2; // just below feet
+    const tileX = Math.floor(probeX / TILE_SIZE);
+    const tileY = Math.floor(probeY / TILE_SIZE);
+    if (tileY < 0 || tileY >= this.level.heightInTiles) return true;
+    if (tileX < 0 || tileX >= this.level.widthInTiles) return true;
+    return (this.level.tiles[tileY]?.[tileX] ?? 0) === 0;
+  }
+
   private handleEnemies(delta: number): void {
     for (const e of this.enemies) {
       e.logic.x = e.sprite.x;
@@ -694,6 +712,18 @@ export class GameScene extends Phaser.Scene {
           (e.logic.facing === Direction.Right && body.blocked.right);
         if (blockedSide) {
           (e.logic as SkeletonLogic).reportEdge(true);
+        }
+        // Pit avoidance: flip and immediately reverse vx so the sprite
+        // doesn't step into the gap this frame.
+        if (e.logic.isOnGround && !blockedSide && this.isPitAhead(e.sprite, e.logic.facing)) {
+          (e.logic as SkeletonLogic).reportEdge(true);
+          e.logic.vx = -e.logic.vx;
+        }
+      }
+
+      if (e.type === 'zombie' && e.logic.isOnGround && e.logic.vx !== 0) {
+        if (this.isPitAhead(e.sprite, e.logic.facing)) {
+          e.logic.vx = 0;
         }
       }
 

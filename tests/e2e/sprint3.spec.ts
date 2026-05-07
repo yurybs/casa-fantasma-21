@@ -134,7 +134,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await page.evaluate(() => {
       const save = window.localStorage;
       save.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 2,
           lives: 3,
@@ -170,7 +170,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await enterGameScene(page);
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 2,
           lives: 3,
@@ -208,7 +208,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await enterGameScene(page);
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 2,
           lives: 3,
@@ -239,7 +239,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     const ended = await page.evaluate(() => !window.__game || window.__game.isGameEnded());
     expect(ended).toBe(true);
     const raw = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:save'),
+      window.localStorage.getItem('casa-fantasma-2:save'),
     );
     const data = JSON.parse(raw!);
     expect(data.levelsCompleted[1]).toBe(true);
@@ -255,7 +255,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     const after = await page.evaluate(() => window.__game!.hasWaterGun());
     expect(after).toBe(true);
     const raw = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:save'),
+      window.localStorage.getItem('casa-fantasma-2:save'),
     );
     const data = JSON.parse(raw!);
     expect(data.powerUps.waterGun).toBe(true);
@@ -265,7 +265,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await enterGameScene(page);
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 3,
           lives: 3,
@@ -302,7 +302,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await enterGameScene(page);
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 3,
           lives: 3,
@@ -332,7 +332,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await enterGameScene(page);
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 3,
           lives: 2,
@@ -351,7 +351,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await expect(page.locator('canvas')).toBeVisible({ timeout: 10000 });
     await page.waitForTimeout(800);
     const raw = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:save'),
+      window.localStorage.getItem('casa-fantasma-2:save'),
     );
     const data = JSON.parse(raw!);
     expect(data.currentLevel).toBe(3);
@@ -366,7 +366,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     await page.goto('/');
     await page.evaluate(() => {
       window.localStorage.setItem(
-        'toy-blaster-kid:save',
+        'casa-fantasma-2:save',
         JSON.stringify({
           currentLevel: 2,
           lives: 3,
