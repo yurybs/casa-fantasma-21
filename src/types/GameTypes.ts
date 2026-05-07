@@ -38,7 +38,7 @@ export interface SaveData {
   powerUps: PowerUpsState;
 }
 
-export const SAVE_KEY = 'toy-blaster-kid:save';
+export const SAVE_KEY = 'casa-fantasma-2:save';
 
 export interface PlayerStats {
   maxHp: number;

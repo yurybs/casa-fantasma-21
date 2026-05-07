@@ -56,7 +56,7 @@ describe('Sprint 4 — save progression: Mundo 2 unlock + extraHearts', () => {
 
   it('save antigo (sem extraHearts) carrega com 0', () => {
     storage.setItem(
-      'toy-blaster-kid:save',
+      'casa-fantasma-2:save',
       JSON.stringify({
         currentLevel: 4,
         lives: 2,

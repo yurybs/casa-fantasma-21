@@ -1,9 +1,9 @@
 {
-  "name": "toy-blaster-kid",
+  "name": "casa-fantasma-2",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A platform game inspired by Mario, with a boy carrying toy weapons",
+  "description": "Plataforma 2D de aventura e ação na Caverna Assombrada",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

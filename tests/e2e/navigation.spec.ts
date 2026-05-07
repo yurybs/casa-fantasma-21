@@ -18,7 +18,7 @@ const seedSave = (overrides: Record<string, unknown> = {}): string => {
 const reloadWithSave = async (page: Page, save: string): Promise<void> => {
   await page.goto('/');
   await page.evaluate(
-    (s) => window.localStorage.setItem('toy-blaster-kid:save', s),
+    (s) => window.localStorage.setItem('casa-fantasma-2:save', s),
     save,
   );
   await page.evaluate(() => {

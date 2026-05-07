@@ -24,7 +24,7 @@ const seedSave = (overrides: Record<string, unknown> = {}): string => {
 const gotoWithSave = async (page: Page, save: string): Promise<void> => {
   await page.goto('/');
   await page.evaluate(
-    (s) => window.localStorage.setItem('toy-blaster-kid:save', s),
+    (s) => window.localStorage.setItem('casa-fantasma-2:save', s),
     save,
   );
   await page.evaluate(() => {
@@ -158,7 +158,7 @@ test.describe('Sprint 4 — Mundo 2: Caverna Assombrada (Palhaço, Espantalho, F
     const max1 = await page.evaluate(() => window.__game!.getPlayerMaxHp());
     expect(max1).toBe(max0 + 2);
     const raw = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:save'),
+      window.localStorage.getItem('casa-fantasma-2:save'),
     );
     const data = JSON.parse(raw!);
     expect(data.powerUps.extraHearts).toBe(1);
@@ -230,7 +230,7 @@ test.describe('Sprint 4 — Mundo 2: Caverna Assombrada (Palhaço, Espantalho, F
     const ended = await page.evaluate(() => !window.__game || window.__game.isGameEnded());
     expect(ended).toBe(true);
     const raw = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:save'),
+      window.localStorage.getItem('casa-fantasma-2:save'),
     );
     const data = JSON.parse(raw!);
     expect(data.levelsCompleted[5]).toBe(true);

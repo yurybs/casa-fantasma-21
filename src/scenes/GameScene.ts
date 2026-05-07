@@ -223,7 +223,8 @@ export class GameScene extends Phaser.Scene {
     this.touch = new TouchControls(this, this.inputs);
     this.touch.create();
 
-    void this.gameSound.resume().then(() => this.gameSound.playMusic('bgm_world1'));
+    const musicKey = this.level.world === 2 ? 'bgm_world2' : 'bgm_world1';
+    void this.gameSound.resume().then(() => this.gameSound.playMusic(musicKey));
 
     this.inputs.read();
 

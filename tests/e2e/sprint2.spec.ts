@@ -162,7 +162,7 @@ test.describe('Sprint 2 — Polish: Audio, Touch, Particles, Transitions, Perfor
     });
     await page.waitForTimeout(50);
     const stored = await page.evaluate(() =>
-      window.localStorage.getItem('toy-blaster-kid:sound'),
+      window.localStorage.getItem('casa-fantasma-2:sound'),
     );
     expect(stored).toBeTruthy();
     expect(stored!).toContain('0.123');
