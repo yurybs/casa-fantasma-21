@@ -83,7 +83,7 @@ test.describe('Navigation — entradas e saídas entre cenas', () => {
     expect(kind).toBe('ghost');
   });
 
-  test('BossIntro: input dentro do grace period é ignorado (auto-advance só após 2s)', async ({
+  test('BossIntro: input dentro do grace period é ignorado', async ({
     page,
   }) => {
     await reloadWithSave(
@@ -303,7 +303,7 @@ test.describe('Navigation — entradas e saídas entre cenas', () => {
     expect(await page.evaluate(() => window.__game!.getBossKind())).toBe('scarecrow');
   });
 
-  test('BossIntro: auto-advance ocorre após 2s sem input', async ({ page }) => {
+  test('BossIntro: sem input, permanece na tela (não há auto-advance)', async ({ page }) => {
     await reloadWithSave(
       page,
       seedSave({
@@ -314,14 +314,10 @@ test.describe('Navigation — entradas e saídas entre cenas', () => {
     );
     await page.keyboard.press('Enter');
     await waitForBossIntro(page);
-    // Wait past INTRO_DURATION_MS (2s) without pressing anything.
-    await page.waitForTimeout(2500);
-    await page.waitForFunction(
-      () => !!window.__game && window.__game.hasBoss(),
-      null,
-      { timeout: 4000 },
-    );
-    expect(await page.evaluate(() => window.__game!.getBossKind())).toBe('clown');
+    // Wait well past the old 2s auto-advance duration — intro must remain.
+    await page.waitForTimeout(2800);
+    expect(await page.evaluate(() => !!window.__bossIntro)).toBe(true);
+    expect(await page.evaluate(() => !window.__game)).toBe(true);
   });
 
   test('Pause: ESC abre o menu de pausa expondo __pause', async ({ page }) => {
