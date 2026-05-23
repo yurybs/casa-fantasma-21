@@ -16,7 +16,7 @@ export interface CheckpointSpawn {
   y: number;
 }
 
-export type PowerUpKind = 'water_gun' | 'star' | 'extra_heart';
+export type PowerUpKind = 'water_gun' | 'star' | 'extra_heart' | 'nerf_rifle';
 
 export interface PowerUpSpawn {
   type: PowerUpKind;
@@ -24,7 +24,7 @@ export interface PowerUpSpawn {
   y: number;
 }
 
-export type BossKind = 'ghost' | 'clown' | 'scarecrow';
+export type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex';
 
 export interface BossSpawn {
   type: BossKind;
@@ -33,7 +33,7 @@ export interface BossSpawn {
 }
 
 /** Tile theme used by GameScene to pick the correct sprite keys. */
-export type LevelTheme = 'forest' | 'cave';
+export type LevelTheme = 'forest' | 'cave' | 'city';
 
 export interface LevelData {
   id: number;
@@ -393,12 +393,182 @@ const buildLevel6 = (): LevelData => {
   };
 };
 
+// =============================================================================
+// LEVEL 7 — Cidade Abandonada — Ruas Vazias (Sprint 5 introdução)
+// First level of Mundo 3 — urban tileset, normal enemies + NerfRifle pickup.
+// =============================================================================
+const buildLevel7 = (): LevelData => {
+  const W = 76;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+
+  carvePit(tiles, 19, 21);
+  carvePit(tiles, 40, 42);
+  carvePit(tiles, 58, 60);
+
+  placePlatform(tiles, 6, 10, H - 6);
+  placePlatform(tiles, 14, 17, H - 8);
+  placePlatform(tiles, 24, 28, H - 7);
+  placePlatform(tiles, 32, 36, H - 5);
+  placePlatform(tiles, 44, 48, H - 8);
+  placePlatform(tiles, 52, 56, H - 6);
+  placePlatform(tiles, 62, 66, H - 9);
+
+  return {
+    id: 7,
+    name: 'Cidade Abandonada — Ruas Vazias',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: { x: (W - 3) * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    enemies: [
+      { type: 'zombie', x: 12 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'skeleton', x: 26 * TILE_SIZE, y: (H - 9) * TILE_SIZE },
+      { type: 'zombie', x: 34 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'mini_trex', x: 48 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'skeleton', x: 54 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+      { type: 'zombie', x: 68 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+    ],
+    coins: [
+      ...[7, 8, 9].map((x) => ({ x: x * TILE_SIZE, y: (H - 7) * TILE_SIZE })),
+      ...[15, 16].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[25, 26, 27].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[33, 34].map((x) => ({ x: x * TILE_SIZE, y: (H - 6) * TILE_SIZE })),
+      ...[45, 46, 47].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[53, 54].map((x) => ({ x: x * TILE_SIZE, y: (H - 7) * TILE_SIZE })),
+      ...[63, 64, 65].map((x) => ({ x: x * TILE_SIZE, y: (H - 10) * TILE_SIZE })),
+    ],
+    checkpoints: [{ x: 38 * TILE_SIZE, y: (H - 4) * TILE_SIZE }],
+    powerUps: [{ type: 'nerf_rifle', x: 46 * TILE_SIZE, y: (H - 10) * TILE_SIZE }],
+    boss: null,
+    timeLimit: 420,
+    backgroundColor: '#1c1a26',
+    theme: 'city',
+    world: 3,
+  };
+};
+
+// =============================================================================
+// LEVEL 8 — Cidade Abandonada — Avenida em Ruínas (Sprint 5 progresso)
+// Mid-progression level — more mini T-Rex + verticality. ExtraHeart pickup.
+// =============================================================================
+const buildLevel8 = (): LevelData => {
+  const W = 80;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+
+  carvePit(tiles, 18, 20);
+  carvePit(tiles, 36, 39);
+  carvePit(tiles, 56, 58);
+  carvePit(tiles, 70, 72);
+
+  placePlatform(tiles, 5, 9, H - 6);
+  placePlatform(tiles, 12, 15, H - 9);
+  placePlatform(tiles, 22, 26, H - 7);
+  placePlatform(tiles, 28, 33, H - 11);
+  placePlatform(tiles, 42, 46, H - 6);
+  placePlatform(tiles, 48, 52, H - 10);
+  placePlatform(tiles, 60, 64, H - 7);
+  placePlatform(tiles, 66, 69, H - 11);
+  placePlatform(tiles, 74, 78, H - 8);
+
+  return {
+    id: 8,
+    name: 'Cidade Abandonada — Avenida em Ruínas',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: { x: (W - 3) * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    enemies: [
+      { type: 'skeleton', x: 8 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'mini_trex', x: 14 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+      { type: 'zombie', x: 24 * TILE_SIZE, y: (H - 9) * TILE_SIZE },
+      { type: 'mini_trex', x: 32 * TILE_SIZE, y: (H - 13) * TILE_SIZE },
+      { type: 'crow', x: 38 * TILE_SIZE, y: 6 * TILE_SIZE },
+      { type: 'skeleton', x: 44 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+      { type: 'mini_trex', x: 50 * TILE_SIZE, y: (H - 12) * TILE_SIZE },
+      { type: 'crow', x: 58 * TILE_SIZE, y: 6 * TILE_SIZE },
+      { type: 'zombie', x: 64 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'mini_trex', x: 76 * TILE_SIZE, y: (H - 10) * TILE_SIZE },
+    ],
+    coins: [
+      ...[6, 7, 8].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[13, 14].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+      ...[23, 24, 25].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[29, 30, 31, 32].map((x) => ({ x: x * TILE_SIZE, y: (H - 13) * TILE_SIZE })),
+      ...[43, 44, 45].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[49, 50, 51].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+      ...[61, 62, 63].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[67, 68].map((x) => ({ x: x * TILE_SIZE, y: (H - 13) * TILE_SIZE })),
+      ...[75, 76, 77].map((x) => ({ x: x * TILE_SIZE, y: (H - 10) * TILE_SIZE })),
+    ],
+    checkpoints: [{ x: 40 * TILE_SIZE, y: (H - 4) * TILE_SIZE }],
+    powerUps: [{ type: 'extra_heart', x: 30 * TILE_SIZE, y: (H - 14) * TILE_SIZE }],
+    boss: null,
+    timeLimit: 480,
+    backgroundColor: '#181520',
+    theme: 'city',
+    world: 3,
+  };
+};
+
+// =============================================================================
+// LEVEL 9 — Cidade Abandonada — Arena do T-Rex (Sprint 5 boss)
+// Wide closed arena for the 3-phase TRex fight. Two raised platforms allow
+// vertical play to dodge charges and shockwaves.
+// =============================================================================
+const buildLevel9 = (): LevelData => {
+  const W = 40;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+  placeWall(tiles, 0, 0, H - 1);
+  placeWall(tiles, W - 1, 0, H - 1);
+
+  placePlatform(tiles, 4, 10, H - 7);
+  placePlatform(tiles, 16, 23, H - 11);
+  placePlatform(tiles, 29, 35, H - 7);
+
+  return {
+    id: 9,
+    name: 'Cidade Abandonada — Arena do T-Rex',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: null,
+    enemies: [],
+    coins: [
+      ...[5, 6, 7].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[17, 18, 19, 20, 21].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+      ...[30, 31, 32].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+    ],
+    checkpoints: [],
+    powerUps: [
+      { type: 'star', x: 19 * TILE_SIZE, y: (H - 13) * TILE_SIZE },
+      { type: 'nerf_rifle', x: 8 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+    ],
+    boss: { type: 'trex', x: 28 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    timeLimit: 320,
+    backgroundColor: '#120e1a',
+    theme: 'city',
+    world: 3,
+  };
+};
+
 export const LEVEL_1: LevelData = buildLevel1();
 export const LEVEL_2: LevelData = buildLevel2();
 export const LEVEL_3: LevelData = buildLevel3();
 export const LEVEL_4: LevelData = buildLevel4();
 export const LEVEL_5: LevelData = buildLevel5();
 export const LEVEL_6: LevelData = buildLevel6();
+export const LEVEL_7: LevelData = buildLevel7();
+export const LEVEL_8: LevelData = buildLevel8();
+export const LEVEL_9: LevelData = buildLevel9();
 
 export const LEVELS: LevelData[] = [
   LEVEL_1,
@@ -407,6 +577,9 @@ export const LEVELS: LevelData[] = [
   LEVEL_4,
   LEVEL_5,
   LEVEL_6,
+  LEVEL_7,
+  LEVEL_8,
+  LEVEL_9,
 ];
 
 export function getLevelByIndex(levelIndex: number): LevelData {

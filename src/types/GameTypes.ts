@@ -27,6 +27,9 @@ export interface PowerUpsState {
 export const MAX_EXTRA_HEARTS = 2;
 export const HP_PER_HEART = 2;
 export const STAR_DURATION_MS = 10000;
+export const NERF_RIFLE_DURATION_MS = 30000;
+export const NERF_RIFLE_DAMAGE_BONUS = 1;
+export const NERF_RIFLE_SPEED_MULTIPLIER = 1.8;
 
 export interface SaveData {
   currentLevel: number;
@@ -89,6 +92,8 @@ export enum EntityType {
   ScarecrowBoss = 'scarecrow_boss',
   MiniClown = 'mini_clown',
   MiniScarecrow = 'mini_scarecrow',
+  TRexBoss = 'trex_boss',
+  MiniTRex = 'mini_trex',
   Projectile = 'projectile',
   Coin = 'coin',
   Flag = 'flag',
@@ -96,6 +101,7 @@ export enum EntityType {
   WaterGunPickup = 'water_gun_pickup',
   StarPickup = 'star_pickup',
   ExtraHeartPickup = 'extra_heart_pickup',
+  NerfRiflePickup = 'nerf_rifle_pickup',
 }
 
 export type EnemyKind =
@@ -107,7 +113,8 @@ export type EnemyKind =
   | 'fire_ghost'
   | 'crow'
   | 'mini_clown'
-  | 'mini_scarecrow';
+  | 'mini_scarecrow'
+  | 'mini_trex';
 
 /** Tag used for damage calculation: water-element shots deal 2x to ghost-tagged enemies. */
 export type EnemyTag = 'normal' | 'ghost';

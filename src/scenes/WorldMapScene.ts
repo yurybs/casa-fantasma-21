@@ -15,14 +15,18 @@ interface MapNode {
 }
 
 const NODES: MapNode[] = [
-  // Mundo 1 — Floresta Encantada (left side)
-  { levelIndex: 1, x: 90, y: 380, name: 'Floresta — Início', isBoss: false, world: 1 },
-  { levelIndex: 2, x: 200, y: 290, name: 'Arena do Fantasma', isBoss: true, world: 1 },
-  { levelIndex: 3, x: 310, y: 380, name: 'Caminho dos Espíritos', isBoss: false, world: 1 },
-  // Mundo 2 — Caverna Assombrada (right side)
-  { levelIndex: 4, x: 470, y: 290, name: 'Arena do Palhaço', isBoss: true, world: 2 },
-  { levelIndex: 5, x: 600, y: 380, name: 'Galeria das Tochas', isBoss: false, world: 2 },
-  { levelIndex: 6, x: 710, y: 290, name: 'Arena do Espantalho', isBoss: true, world: 2 },
+  // Mundo 1 — Floresta Encantada (top-left)
+  { levelIndex: 1, x: 70, y: 200, name: 'Floresta — Início', isBoss: false, world: 1 },
+  { levelIndex: 2, x: 160, y: 130, name: 'Arena do Fantasma', isBoss: true, world: 1 },
+  { levelIndex: 3, x: 250, y: 200, name: 'Caminho dos Espíritos', isBoss: false, world: 1 },
+  // Mundo 2 — Caverna Assombrada (top-right)
+  { levelIndex: 4, x: 380, y: 130, name: 'Arena do Palhaço', isBoss: true, world: 2 },
+  { levelIndex: 5, x: 480, y: 200, name: 'Galeria das Tochas', isBoss: false, world: 2 },
+  { levelIndex: 6, x: 580, y: 130, name: 'Arena do Espantalho', isBoss: true, world: 2 },
+  // Mundo 3 — Cidade Abandonada (bottom row)
+  { levelIndex: 7, x: 250, y: 410, name: 'Ruas Vazias', isBoss: false, world: 3 },
+  { levelIndex: 8, x: 400, y: 470, name: 'Avenida em Ruínas', isBoss: false, world: 3 },
+  { levelIndex: 9, x: 580, y: 410, name: 'Arena do T-Rex', isBoss: true, world: 3 },
 ];
 
 interface NodeVisuals {
@@ -80,46 +84,60 @@ export class WorldMapScene extends Phaser.Scene {
 
   private drawBackdrop(): void {
     this.add
-      .text(GAME_WIDTH / 2, 38, 'MAPA DOS MUNDOS', {
+      .text(GAME_WIDTH / 2, 28, 'MAPA DOS MUNDOS', {
         fontFamily: 'monospace',
-        fontSize: '28px',
+        fontSize: '24px',
         color: '#ffe600',
       })
       .setOrigin(0.5)
       .setStroke('#000000', 4);
 
-    // Mundo 1 backdrop (left half) — green forest
-    this.add.rectangle(190, 240, 380, 380, 0x1a3a2a, 1).setOrigin(0.5);
+    // Mundo 1 backdrop (top-left quadrant) — green forest
+    this.add.rectangle(165, 170, 320, 180, 0x1a3a2a, 1).setOrigin(0.5);
     this.add
-      .text(190, 90, 'Mundo 1 · Floresta Encantada', {
+      .text(165, 70, 'Mundo 1 · Floresta', {
         fontFamily: 'monospace',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#88ff88',
       })
       .setOrigin(0.5);
-    for (let i = 0; i < 5; i++) {
-      const x = 30 + i * 80;
-      const y = GAME_HEIGHT - 80;
-      this.add.image(x, y, 'tree').setScale(0.5).setAlpha(0.8);
-    }
-    this.add.image(120, 130, 'cloud').setAlpha(0.6);
+    this.add.image(60, 90, 'cloud').setAlpha(0.6).setScale(0.6);
 
-    // Mundo 2 backdrop (right half) — purple cave
-    this.add.rectangle(610, 240, 380, 380, 0x2a1a40, 1).setOrigin(0.5);
+    // Mundo 2 backdrop (top-right quadrant) — purple cave
+    this.add.rectangle(490, 170, 360, 180, 0x2a1a40, 1).setOrigin(0.5);
     this.add
-      .text(610, 90, 'Mundo 2 · Caverna Assombrada', {
+      .text(490, 70, 'Mundo 2 · Caverna', {
         fontFamily: 'monospace',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#cc88ff',
       })
       .setOrigin(0.5);
     if (this.textures.exists('stalactite')) {
-      for (let i = 0; i < 5; i++) {
-        const x = 440 + i * 70;
-        this.add.image(x, 110, 'stalactite').setAlpha(0.7);
+      for (let i = 0; i < 4; i++) {
+        const x = 340 + i * 90;
+        this.add.image(x, 85, 'stalactite').setAlpha(0.7).setScale(0.7);
       }
     }
-    this.add.image(680, 150, 'cloud').setAlpha(0.4).setTint(0x884488);
+
+    // Mundo 3 backdrop (bottom strip) — dark city
+    this.add.rectangle(GAME_WIDTH / 2, 440, GAME_WIDTH - 60, 180, 0x14141c, 1).setOrigin(0.5);
+    this.add
+      .text(GAME_WIDTH / 2, 360, 'Mundo 3 · Cidade Abandonada', {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#ff9966',
+      })
+      .setOrigin(0.5);
+    if (this.textures.exists('building')) {
+      for (let i = 0; i < 5; i++) {
+        const x = 80 + i * 140;
+        this.add.image(x, 510, 'building').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.7);
+      }
+    }
+    if (this.textures.exists('lamppost')) {
+      this.add.image(180, 510, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
+      this.add.image(620, 510, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
+    }
   }
 
   private drawPaths(): void {
@@ -142,20 +160,22 @@ export class WorldMapScene extends Phaser.Scene {
       const fillColor = completed ? 0x66ee66 : unlocked ? 0xffe600 : 0x555555;
       const strokeColor = node.isBoss ? 0xff3344 : 0x000000;
       const circle = this.add
-        .circle(node.x, node.y, 22, fillColor, 1)
-        .setStrokeStyle(4, strokeColor, 1);
+        .circle(node.x, node.y, 18, fillColor, 1)
+        .setStrokeStyle(3, strokeColor, 1)
+        .setDepth(15);
       let bossMark: Phaser.GameObjects.Arc | undefined;
       if (node.isBoss) {
-        bossMark = this.add.circle(node.x, node.y, 8, 0x000000, 1);
+        bossMark = this.add.circle(node.x, node.y, 6, 0x000000, 1).setDepth(16);
       }
       const label = this.add
-        .text(node.x, node.y + 38, node.name, {
+        .text(node.x, node.y + 28, node.name, {
           fontFamily: 'monospace',
-          fontSize: '14px',
+          fontSize: '11px',
           color: unlocked ? '#ffffff' : '#888888',
         })
         .setOrigin(0.5)
-        .setStroke('#000000', 3);
+        .setStroke('#000000', 3)
+        .setDepth(15);
       circle.setInteractive({ useHandCursor: unlocked });
       if (unlocked) {
         circle.on('pointerdown', () => {
@@ -170,18 +190,22 @@ export class WorldMapScene extends Phaser.Scene {
 
   private buildHud(): void {
     const data = this.save.load();
-    this.livesText = this.add.text(20, GAME_HEIGHT - 30, `Vidas: ${data.lives}    Moedas: ${data.coins}`, {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#ffffff',
-    });
-    this.titleText = this.add
-      .text(GAME_WIDTH / 2, 100, NODES[this.cursorIndex].name, {
+    this.livesText = this.add
+      .text(20, GAME_HEIGHT - 24, `Vidas: ${data.lives}    Moedas: ${data.coins}`, {
         fontFamily: 'monospace',
-        fontSize: '20px',
+        fontSize: '14px',
         color: '#ffffff',
       })
-      .setOrigin(0.5);
+      .setDepth(30);
+    this.titleText = this.add
+      .text(GAME_WIDTH / 2, 545, NODES[this.cursorIndex].name, {
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5)
+      .setDepth(30)
+      .setStroke('#000000', 4);
   }
 
   private findInitialCursorIndex(): number {
@@ -204,7 +228,7 @@ export class WorldMapScene extends Phaser.Scene {
 
   private refreshCursor(): void {
     const node = NODES[this.cursorIndex];
-    this.cursorMarker.setPosition(node.x, node.y - 36);
+    this.cursorMarker.setPosition(node.x, node.y - 28);
     this.titleText.setText(node.name);
     const unlocked = this.save.isLevelUnlocked(node.levelIndex - 1);
     this.titleText.setColor(unlocked ? '#ffffff' : '#888888');

@@ -58,6 +58,7 @@ const A5 = 880.00;
 const B5 = 987.77;
 const C6 = 1046.50;
 const Bb4 = 466.16;
+const D6 = 1174.66;
 const Eb5 = 622.25;
 const Ab4 = 415.30;
 
@@ -230,6 +231,87 @@ const TRACK_WORLD2: MusicTrack = {
   ],
 };
 
+// ─── bgm_world3 — Cidade Abandonada (Mundo 3) ────────────────────────────────
+// Driving rhythm, syncopated bass + sparse high melody — inspired by SNES Mega
+// Man X stage music: industrial pulse with sawtooth bass and triangle leads.
+// Key: D minor, BPM 124. trackGain 0.45 to leave room for boss roars/shockwaves.
+const TRACK_WORLD3: MusicTrack = {
+  bpm: 124,
+  waveType: 'triangle',
+  trackGain: 0.45,
+  notes: [
+    // ── Intro: pulsing bass groove (Dm root) ──────────────────────────────
+    { freq: D4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: D4, duration: 0.5, type: 'sawtooth', gain: 0.45 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: D4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: F4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: A4, duration: 2,   type: 'sawtooth', gain: 0.4  },
+
+    // ── A: driving melodic line ───────────────────────────────────────────
+    { freq: A5, duration: 0.5 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: A5, duration: 0.5 },
+    { freq: F5, duration: 1   },
+    { freq: D5, duration: 1   },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: C5, duration: 0.5 },
+    { freq: D5, duration: 2   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── A2: bass + lead alternation ───────────────────────────────────────
+    { freq: D4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: F4, duration: 0.5, type: 'sawtooth', gain: 0.45 },
+    { freq: A4, duration: 0.5, type: 'sawtooth', gain: 0.45 },
+    { freq: A5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: F5, duration: 0.5 },
+    { freq: A5, duration: 1.5 },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── B: tense climbing phrase ──────────────────────────────────────────
+    { freq: D5, duration: 0.5 },
+    { freq: E5, duration: 0.5 },
+    { freq: F5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: A5, duration: 1   },
+    { freq: Bb4, duration: 1  },
+    { freq: A5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: F5, duration: 1   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── B2: descending response ────────────────────────────────────────────
+    { freq: A5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: F5, duration: 0.5 },
+    { freq: E5, duration: 0.5 },
+    { freq: D5, duration: 1   },
+    { freq: C5, duration: 0.5 },
+    { freq: D5, duration: 0.5 },
+    { freq: A4, duration: 2   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── C: dramatic high climax ───────────────────────────────────────────
+    { freq: D6, duration: 0.5 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: D6, duration: 0.5 },
+    { freq: C6, duration: 0.5 },
+    { freq: A5, duration: 1   },
+    { freq: G5, duration: 1   },
+    { freq: F5, duration: 2   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── Bass close + loop bridge ──────────────────────────────────────────
+    { freq: A3, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: D4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: F4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: A4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: D5, duration: 2,   type: 'triangle' },
+    { freq: R,  duration: 2,   rest: true },
+  ],
+};
+
 // ─── bgm_menu — Tela de Título ────────────────────────────────────────────────
 // Gentle arpeggiated waltz (3/4 feel) — atmospheric, welcoming, SNES-map inspired.
 const TRACK_MENU: MusicTrack = {
@@ -291,6 +373,7 @@ const TRACK_MENU: MusicTrack = {
 const MUSIC_TRACKS: Record<MusicKey, MusicTrack> = {
   bgm_world1: TRACK_WORLD1,
   bgm_world2: TRACK_WORLD2,
+  bgm_world3: TRACK_WORLD3,
   bgm_menu: TRACK_MENU,
 };
 

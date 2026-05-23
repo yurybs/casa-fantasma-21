@@ -305,6 +305,14 @@ export class SpriteGenerator {
     SpriteGenerator.generateFireTrail(scene);
     SpriteGenerator.generateStarPickup(scene);
     SpriteGenerator.generateExtraHeartPickup(scene);
+    // Sprint 5 — Mundo 3 (Cidade Abandonada)
+    SpriteGenerator.generateCityTiles(scene);
+    SpriteGenerator.generateCityDecor(scene);
+    SpriteGenerator.generateTRexBossFrames(scene);
+    SpriteGenerator.generateMiniTRex(scene);
+    SpriteGenerator.generateShockwave(scene);
+    SpriteGenerator.generateNerfRiflePickup(scene);
+    SpriteGenerator.generateNerfProjectile(scene);
   }
 
   private static drawTexture(
@@ -832,6 +840,258 @@ export class SpriteGenerator {
       g.fillTriangle(3, 10, 21, 10, 12, 19);
       g.fillStyle(0xffaabb, 1);
       g.fillCircle(5, 6, 2);
+    });
+  }
+
+  // ===== Sprint 5 — Mundo 3 (Cidade Abandonada) =====
+
+  private static generateCityTiles(scene: Phaser.Scene): void {
+    // Concrete-block ground tile (gray with cracks)
+    SpriteGenerator.drawTexture(scene, 'tile_city_ground', 16, 16, (g) => {
+      g.fillStyle(0x4a4a52, 1);
+      g.fillRect(0, 0, 16, 16);
+      g.fillStyle(0x6a6a72, 1);
+      g.fillRect(0, 0, 16, 3);
+      g.fillStyle(0x7c7c84, 1);
+      g.fillRect(0, 3, 16, 1);
+      // Bricks pattern
+      g.fillStyle(0x2c2c34, 1);
+      g.fillRect(0, 7, 16, 1);
+      g.fillRect(7, 4, 1, 3);
+      g.fillRect(3, 8, 1, 4);
+      g.fillRect(11, 8, 1, 4);
+      g.fillRect(0, 12, 16, 1);
+      g.fillStyle(0x14141c, 1);
+      g.fillRect(0, 0, 16, 1);
+      g.fillRect(0, 15, 16, 1);
+      g.fillRect(0, 0, 1, 16);
+      g.fillRect(15, 0, 1, 16);
+    });
+    // Rusted-metal platform tile
+    SpriteGenerator.drawTexture(scene, 'tile_city_platform', 16, 16, (g) => {
+      g.fillStyle(0x5e504a, 1);
+      g.fillRect(0, 0, 16, 16);
+      g.fillStyle(0x7e6c5e, 1);
+      g.fillRect(0, 0, 16, 4);
+      g.fillStyle(0x9c8870, 1);
+      g.fillRect(0, 4, 16, 1);
+      // Rust streaks
+      g.fillStyle(0x8b3a1e, 1);
+      g.fillRect(2, 6, 1, 4);
+      g.fillRect(10, 7, 1, 5);
+      // Rivets
+      g.fillStyle(0x2c2014, 1);
+      g.fillRect(2, 2, 1, 1);
+      g.fillRect(13, 2, 1, 1);
+      g.fillStyle(0x14101c, 1);
+      g.fillRect(0, 0, 16, 1);
+      g.fillRect(0, 15, 16, 1);
+      g.fillRect(0, 0, 1, 16);
+      g.fillRect(15, 0, 1, 16);
+    });
+  }
+
+  private static generateCityDecor(scene: Phaser.Scene): void {
+    // Abandoned building silhouette
+    SpriteGenerator.drawTexture(scene, 'building', 64, 96, (g) => {
+      g.fillStyle(0x2a2a36, 1);
+      g.fillRect(0, 10, 64, 86);
+      g.fillStyle(0x3a3a48, 1);
+      g.fillRect(0, 6, 64, 4);
+      // Windows (some broken)
+      g.fillStyle(0x553f1a, 1);
+      const windows: [number, number][] = [
+        [6, 20], [22, 20], [38, 20], [54, 20],
+        [6, 40], [38, 40],
+        [6, 60], [22, 60], [54, 60],
+        [22, 80], [38, 80],
+      ];
+      for (const [wx, wy] of windows) {
+        g.fillRect(wx, wy, 6, 8);
+      }
+      // Faint glow in a few windows
+      g.fillStyle(0xaa7733, 0.5);
+      g.fillRect(6, 20, 6, 2);
+      g.fillRect(22, 60, 6, 2);
+    });
+    // Street-lamp post (mostly dark, faint flicker)
+    SpriteGenerator.drawTexture(scene, 'lamppost', 16, 64, (g) => {
+      g.fillStyle(0x14141c, 1);
+      g.fillRect(7, 0, 2, 60);
+      g.fillRect(2, 60, 12, 4);
+      g.fillStyle(0xaa7733, 0.7);
+      g.fillCircle(8, 3, 4);
+      g.fillStyle(0xffeebb, 0.5);
+      g.fillCircle(8, 3, 2);
+    });
+  }
+
+  private static generateTRexBossFrames(scene: Phaser.Scene): void {
+    // Phase 1 — green/olive heavy dinosaur (90x70)
+    SpriteGenerator.drawTexture(scene, 'trex_boss', 90, 70, (g) => {
+      // Body
+      g.fillStyle(0x3a5f2e, 1);
+      g.fillRect(20, 22, 50, 30);
+      // Head
+      g.fillRect(54, 8, 30, 22);
+      // Tail
+      g.fillTriangle(0, 36, 20, 28, 20, 44);
+      // Legs
+      g.fillRect(28, 50, 8, 18);
+      g.fillRect(50, 50, 8, 18);
+      // Arms (small)
+      g.fillRect(48, 32, 5, 8);
+      // Belly highlight
+      g.fillStyle(0x82a663, 1);
+      g.fillRect(24, 36, 40, 12);
+      g.fillRect(58, 16, 22, 8);
+      // Teeth
+      g.fillStyle(0xfff8d0, 1);
+      g.fillRect(58, 26, 2, 3);
+      g.fillRect(63, 26, 2, 3);
+      g.fillRect(68, 26, 2, 3);
+      g.fillRect(73, 26, 2, 3);
+      // Eye
+      g.fillStyle(0xff3322, 1);
+      g.fillCircle(72, 14, 3);
+      g.fillStyle(0x000000, 1);
+      g.fillCircle(73, 14, 1);
+    });
+
+    // Phase 2 — darker red-tinted, more aggressive
+    SpriteGenerator.drawTexture(scene, 'trex_boss_phase2', 90, 70, (g) => {
+      g.fillStyle(0x5e3424, 1);
+      g.fillRect(20, 22, 50, 30);
+      g.fillRect(54, 8, 30, 22);
+      g.fillTriangle(0, 36, 20, 28, 20, 44);
+      g.fillRect(28, 50, 8, 18);
+      g.fillRect(50, 50, 8, 18);
+      g.fillRect(48, 32, 5, 8);
+      g.fillStyle(0x8b5440, 1);
+      g.fillRect(24, 36, 40, 12);
+      g.fillRect(58, 16, 22, 8);
+      g.fillStyle(0xfff8d0, 1);
+      g.fillRect(58, 26, 2, 3);
+      g.fillRect(63, 26, 2, 3);
+      g.fillRect(68, 26, 2, 3);
+      g.fillRect(73, 26, 2, 3);
+      // Glowing eye
+      g.fillStyle(0xffaa00, 1);
+      g.fillCircle(72, 14, 4);
+      g.fillStyle(0xff2200, 1);
+      g.fillCircle(73, 14, 2);
+    });
+
+    // Phase 3 — battle-scarred, smoke-stained black/red
+    SpriteGenerator.drawTexture(scene, 'trex_boss_phase3', 90, 70, (g) => {
+      g.fillStyle(0x3a1a14, 1);
+      g.fillRect(20, 22, 50, 30);
+      g.fillRect(54, 8, 30, 22);
+      g.fillTriangle(0, 36, 20, 28, 20, 44);
+      g.fillRect(28, 50, 8, 18);
+      g.fillRect(50, 50, 8, 18);
+      g.fillRect(48, 32, 5, 8);
+      g.fillStyle(0x6e2818, 1);
+      g.fillRect(24, 36, 40, 12);
+      g.fillRect(58, 16, 22, 8);
+      // Scars
+      g.fillStyle(0x000000, 1);
+      g.fillRect(35, 28, 12, 1);
+      g.fillRect(60, 32, 8, 1);
+      g.fillStyle(0xfff8d0, 1);
+      g.fillRect(58, 26, 2, 3);
+      g.fillRect(63, 26, 2, 3);
+      g.fillRect(68, 26, 2, 3);
+      g.fillRect(73, 26, 2, 3);
+      // Eye glowing yellow-white
+      g.fillStyle(0xfff0aa, 1);
+      g.fillCircle(72, 14, 5);
+      g.fillStyle(0xff5500, 1);
+      g.fillCircle(73, 14, 2);
+    });
+  }
+
+  private static generateMiniTRex(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'mini_trex', 32, 28, (g) => {
+      g.fillStyle(0x3a5f2e, 1);
+      g.fillRect(8, 10, 18, 12);
+      g.fillRect(20, 4, 11, 8);
+      g.fillTriangle(0, 14, 8, 11, 8, 17);
+      g.fillRect(10, 22, 3, 6);
+      g.fillRect(18, 22, 3, 6);
+      g.fillStyle(0x82a663, 1);
+      g.fillRect(10, 16, 14, 5);
+      g.fillRect(22, 8, 8, 3);
+      g.fillStyle(0xff3322, 1);
+      g.fillCircle(26, 7, 2);
+      g.fillStyle(0xfff8d0, 1);
+      g.fillRect(22, 10, 1, 2);
+      g.fillRect(25, 10, 1, 2);
+      g.fillRect(28, 10, 1, 2);
+    });
+  }
+
+  private static generateShockwave(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'shockwave', 28, 16, (g) => {
+      g.fillStyle(0xffaa44, 0.85);
+      g.fillRect(2, 8, 24, 4);
+      g.fillStyle(0xffe066, 1);
+      g.fillRect(4, 9, 20, 2);
+      // Crackles above the wave
+      g.fillStyle(0xfff0aa, 0.9);
+      g.fillRect(6, 4, 2, 2);
+      g.fillRect(14, 2, 2, 4);
+      g.fillRect(22, 5, 2, 2);
+      g.fillStyle(0xff8822, 1);
+      g.fillRect(1, 11, 26, 1);
+      g.fillRect(0, 12, 28, 1);
+    });
+  }
+
+  private static generateNerfRiflePickup(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'nerf_rifle_pickup', 32, 24, (g) => {
+      // Rifle body (orange + blue)
+      g.fillStyle(0xff7711, 1);
+      g.fillRect(4, 10, 20, 8);
+      g.fillStyle(0xffaa55, 1);
+      g.fillRect(4, 10, 20, 2);
+      // Scope on top
+      g.fillStyle(0x2266cc, 1);
+      g.fillRect(9, 5, 8, 5);
+      g.fillStyle(0x66aaff, 1);
+      g.fillRect(11, 6, 4, 3);
+      // Barrel (longer than foam gun)
+      g.fillStyle(0xff5500, 1);
+      g.fillRect(24, 12, 7, 4);
+      g.fillStyle(0xffe600, 1);
+      g.fillRect(30, 12, 2, 4);
+      // Stock + grip
+      g.fillStyle(0x553322, 1);
+      g.fillRect(0, 12, 4, 6);
+      g.fillRect(8, 18, 4, 4);
+      // Outline
+      g.fillStyle(0x14141c, 1);
+      g.fillRect(0, 9, 32, 1);
+      g.fillRect(0, 18, 24, 1);
+    });
+  }
+
+  private static generateNerfProjectile(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'projectile_nerf', 14, 8, (g) => {
+      // Dart with orange body and yellow tip
+      g.fillStyle(0xff5500, 1);
+      g.fillRect(0, 2, 10, 4);
+      g.fillStyle(0xffaa33, 1);
+      g.fillRect(0, 3, 10, 2);
+      // Foam tip
+      g.fillStyle(0xffe066, 1);
+      g.fillCircle(11, 4, 3);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(10, 3, 1);
+      // Tail fins
+      g.fillStyle(0x553322, 1);
+      g.fillRect(0, 0, 2, 2);
+      g.fillRect(0, 6, 2, 2);
     });
   }
 }
