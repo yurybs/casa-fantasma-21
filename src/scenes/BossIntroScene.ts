@@ -38,6 +38,13 @@ const BOSS_INFO: Record<BossKind, BossInfo> = {
     weakness: 'Combo aéreo',
     spriteKey: 'scarecrow_boss',
   },
+  trex: {
+    number: '#004',
+    name: 'T-REX',
+    type: 'Bestial',
+    weakness: 'Contra-ataque após carga',
+    spriteKey: 'trex_boss',
+  },
 };
 
 /**

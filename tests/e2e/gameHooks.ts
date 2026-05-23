@@ -36,7 +36,7 @@ export interface GameHooks {
   getLevelId: () => number;
   hasBoss: () => boolean;
   getBossHp: () => number;
-  getBossPhase: () => 'phase1' | 'phase2' | 'none';
+  getBossPhase: () => 'phase1' | 'phase2' | 'phase3' | 'none';
   damageBoss: (n: number) => void;
   getMiniGhostCount: () => number;
   hasWaterGun: () => boolean;
@@ -53,8 +53,8 @@ export interface GameHooks {
   getEnemyKinds: () => string[];
   getJuggleBallCount: () => number;
   getFireTrailCount: () => number;
-  getLevelTheme: () => 'forest' | 'cave';
-  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'none';
+  getLevelTheme: () => 'forest' | 'cave' | 'city';
+  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'none';
   getMiniClownCount: () => number;
   getCrowCount: () => number;
   isConfusionActive: () => boolean;
@@ -62,6 +62,14 @@ export interface GameHooks {
   getStarRemaining: () => number;
   activateStar: () => void;
   addExtraHeart: () => void;
+  // Sprint 5 additions
+  getMiniTRexCount: () => number;
+  getShockwaveCount: () => number;
+  isCameraShaking: () => boolean;
+  getCameraShakeOffset: () => { x: number; y: number };
+  hasNerfRifle: () => boolean;
+  getNerfRifleRemaining: () => number;
+  activateNerfRifle: () => void;
 }
 
 export interface MapHooks {

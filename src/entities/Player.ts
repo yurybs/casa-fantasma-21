@@ -5,6 +5,7 @@ import {
   PHYSICS,
   STAR_DURATION_MS,
   HP_PER_HEART,
+  NERF_RIFLE_DURATION_MS,
 } from '../types/GameTypes';
 
 export interface PlayerEvents {
@@ -17,6 +18,8 @@ export interface PlayerEvents {
   onStarStart?: () => void;
   onStarEnd?: () => void;
   onMaxHpIncreased?: (maxHp: number) => void;
+  onNerfRifleStart?: () => void;
+  onNerfRifleEnd?: () => void;
 }
 
 export class Player {
@@ -34,6 +37,7 @@ export class Player {
   shootCooldownRemaining: number = 0;
   invincibilityRemaining: number = 0;
   starRemaining: number = 0;
+  nerfRifleRemaining: number = 0;
 
   vx: number = 0;
   vy: number = 0;
@@ -54,6 +58,11 @@ export class Player {
   /** True while the Star power-up is active (full damage immunity + contact damage). */
   get hasStar(): boolean {
     return this.starRemaining > 0;
+  }
+
+  /** True while the NerfRifle power-up is active (faster shots + bonus damage). */
+  get hasNerfRifle(): boolean {
+    return this.nerfRifleRemaining > 0;
   }
 
   takeDamage(damage: number): boolean {
@@ -178,6 +187,13 @@ export class Player {
     if (!wasActive) this.events.onStarStart?.();
   }
 
+  /** Activates the NerfRifle power-up. Refreshes timer if already active. */
+  activateNerfRifle(durationMs: number = NERF_RIFLE_DURATION_MS): void {
+    const wasActive = this.nerfRifleRemaining > 0;
+    this.nerfRifleRemaining = durationMs;
+    if (!wasActive) this.events.onNerfRifleStart?.();
+  }
+
   /**
    * Increases maxHp by HP_PER_HEART (one extra heart). Also fully heals.
    * Returns true if the increase was applied.
@@ -203,6 +219,12 @@ export class Player {
       this.starRemaining = Math.max(0, this.starRemaining - deltaMs);
       if (this.starRemaining === 0) {
         this.events.onStarEnd?.();
+      }
+    }
+    if (this.nerfRifleRemaining > 0) {
+      this.nerfRifleRemaining = Math.max(0, this.nerfRifleRemaining - deltaMs);
+      if (this.nerfRifleRemaining === 0) {
+        this.events.onNerfRifleEnd?.();
       }
     }
   }

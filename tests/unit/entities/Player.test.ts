@@ -284,4 +284,40 @@ describe('Player', () => {
       expect(p.hp).toBe(10);
     });
   });
+
+  describe('Sprint 5 — NerfRifle', () => {
+    it('inicia sem nerfRifle', () => {
+      const p = new Player();
+      expect(p.hasNerfRifle).toBe(false);
+      expect(p.nerfRifleRemaining).toBe(0);
+    });
+
+    it('activateNerfRifle ativa o estado e dispara onNerfRifleStart', () => {
+      const onNerfRifleStart = vi.fn();
+      const p = new Player({ onNerfRifleStart });
+      p.activateNerfRifle();
+      expect(p.hasNerfRifle).toBe(true);
+      expect(onNerfRifleStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('nerfRifleRemaining decai com o tempo e dispara onNerfRifleEnd', () => {
+      const onNerfRifleEnd = vi.fn();
+      const p = new Player({ onNerfRifleEnd });
+      p.activateNerfRifle(1000);
+      p.update(500);
+      expect(p.hasNerfRifle).toBe(true);
+      p.update(600);
+      expect(p.hasNerfRifle).toBe(false);
+      expect(onNerfRifleEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('reativar não emite onNerfRifleStart duas vezes', () => {
+      const onNerfRifleStart = vi.fn();
+      const p = new Player({ onNerfRifleStart });
+      p.activateNerfRifle(1000);
+      p.activateNerfRifle(1000); // refresh
+      expect(onNerfRifleStart).toHaveBeenCalledTimes(1);
+      expect(p.nerfRifleRemaining).toBe(1000);
+    });
+  });
 });

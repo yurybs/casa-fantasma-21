@@ -8,7 +8,7 @@ export type SfxKey =
   | 'power_up'
   | 'enemy_die';
 
-export type MusicKey = 'bgm_world1' | 'bgm_world2' | 'bgm_menu';
+export type MusicKey = 'bgm_world1' | 'bgm_world2' | 'bgm_world3' | 'bgm_menu';
 
 export interface AudioEngine {
   playSfx(key: SfxKey, volume: number): void;

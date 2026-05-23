@@ -19,8 +19,10 @@ import { FireGhost } from '../entities/enemies/FireGhost';
 import { Crow } from '../entities/enemies/Crow';
 import { ClownBoss } from '../entities/enemies/ClownBoss';
 import { ScarecrowBoss } from '../entities/enemies/ScarecrowBoss';
+import { TRexBoss } from '../entities/enemies/TRexBoss';
 import { MiniClown } from '../entities/enemies/MiniClown';
 import { MiniScarecrow } from '../entities/enemies/MiniScarecrow';
+import { MiniTRex } from '../entities/enemies/MiniTRex';
 import { FoamGun, Projectile as FoamProjectile } from '../weapons/FoamGun';
 import { WaterGun, WaterProjectile } from '../weapons/WaterGun';
 import { InputSystem } from '../systems/InputSystem';
@@ -30,8 +32,13 @@ import { SoundSystem, NullAudioEngine } from '../systems/SoundSystem';
 import { GameAudioBindings } from '../systems/GameAudioBindings';
 import { ParticleEffects } from '../systems/ParticleEffects';
 import { ScreenConfusion } from '../systems/ScreenConfusion';
+import { CameraSystem } from '../systems/CameraSystem';
 import { TouchControls } from '../ui/TouchControls';
 import { fadeIn, fadeToScene } from '../utils/SceneTransition';
+import {
+  NERF_RIFLE_DAMAGE_BONUS,
+  NERF_RIFLE_SPEED_MULTIPLIER,
+} from '../types/GameTypes';
 
 type EnemyKind =
   | 'skeleton'
@@ -41,7 +48,8 @@ type EnemyKind =
   | 'fire_ghost'
   | 'crow'
   | 'mini_clown'
-  | 'mini_scarecrow';
+  | 'mini_scarecrow'
+  | 'mini_trex';
 
 type EnemyLogic =
   | SkeletonLogic
@@ -51,7 +59,8 @@ type EnemyLogic =
   | FireGhost
   | Crow
   | MiniClown
-  | MiniScarecrow;
+  | MiniScarecrow
+  | MiniTRex;
 
 interface EnemyEntry {
   logic: EnemyLogic;
@@ -61,13 +70,22 @@ interface EnemyEntry {
   hasGravity: boolean;
 }
 
-type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss;
-type BossKind = 'ghost' | 'clown' | 'scarecrow';
+type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss | TRexBoss;
+type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex';
 
 interface BossEntry {
   logic: BossLogic;
   sprite: Phaser.Physics.Arcade.Sprite;
   kind: BossKind;
+}
+
+interface ShockwaveSprite {
+  sprite: Phaser.GameObjects.Image;
+  x: number;
+  y: number;
+  vx: number;
+  damage: number;
+  ttlMs: number;
 }
 
 interface ProjectileSprite {
@@ -102,7 +120,7 @@ interface CheckpointSprite {
   active: boolean;
 }
 
-type PowerUpKind = 'water_gun' | 'star' | 'extra_heart';
+type PowerUpKind = 'water_gun' | 'star' | 'extra_heart' | 'nerf_rifle';
 
 interface PowerUpSprite {
   sprite: Phaser.Physics.Arcade.Sprite;
@@ -143,6 +161,8 @@ export class GameScene extends Phaser.Scene {
   private audio!: GameAudioBindings;
   private particles!: ParticleEffects;
   private confusion!: ScreenConfusion;
+  private camera!: CameraSystem;
+  private shockwaves: ShockwaveSprite[] = [];
   private touch?: TouchControls;
   private timeRemaining: number = 0;
   private gameEnded: boolean = false;
@@ -168,6 +188,7 @@ export class GameScene extends Phaser.Scene {
     this.bones = [];
     this.juggleBalls = [];
     this.fireTrails = [];
+    this.shockwaves = [];
     this.coinSprites = [];
     this.checkpoints = [];
     this.powerUps = [];
@@ -203,6 +224,7 @@ export class GameScene extends Phaser.Scene {
     this.audio = new GameAudioBindings(this.gameSound);
     this.particles = new ParticleEffects(this);
     this.confusion = new ScreenConfusion(this);
+    this.camera = new CameraSystem();
 
     this.drawBackground();
     this.buildPlatforms();
@@ -223,7 +245,10 @@ export class GameScene extends Phaser.Scene {
     this.touch = new TouchControls(this, this.inputs);
     this.touch.create();
 
-    const musicKey = this.level.world === 2 ? 'bgm_world2' : 'bgm_world1';
+    const musicKey =
+      this.level.world === 3 ? 'bgm_world3'
+      : this.level.world === 2 ? 'bgm_world2'
+      : 'bgm_world1';
     void this.gameSound.resume().then(() => this.gameSound.playMusic(musicKey));
 
     this.inputs.read();
@@ -241,6 +266,35 @@ export class GameScene extends Phaser.Scene {
         const x = 40 + i * 80 + ((i * 13) % 30);
         if (this.textures.exists('stalactite')) {
           this.add.image(x, 18, 'stalactite').setAlpha(0.85).setScrollFactor(0.5).setDepth(0);
+        }
+      }
+      return;
+    }
+
+    if (this.level.theme === 'city') {
+      // Distant abandoned buildings (parallax background)
+      const buildingPositions = [60, 260, 480, 700, 920, 1140];
+      for (const x of buildingPositions) {
+        if (x > w + 100) break;
+        if (this.textures.exists('building')) {
+          this.add
+            .image(x, groundY - 24, 'building')
+            .setOrigin(0.5, 1)
+            .setAlpha(0.85)
+            .setScrollFactor(0.4)
+            .setDepth(0);
+        }
+      }
+      // Closer lamp-posts
+      const lampPositions = [120, 360, 560, 800, 1040, 1280];
+      for (const x of lampPositions) {
+        if (x > w) break;
+        if (this.textures.exists('lamppost')) {
+          this.add
+            .image(x, groundY - 16, 'lamppost')
+            .setOrigin(0.5, 1)
+            .setScrollFactor(0.75)
+            .setDepth(0);
         }
       }
       return;
@@ -266,8 +320,14 @@ export class GameScene extends Phaser.Scene {
   private buildPlatforms(): void {
     this.platforms = this.physics.add.staticGroup();
     this.platformsPassthrough = this.physics.add.staticGroup();
-    const groundKey = this.level.theme === 'cave' ? 'tile_cave_ground' : 'tile_ground';
-    const platKey = this.level.theme === 'cave' ? 'tile_cave_platform' : 'tile_platform';
+    const groundKey =
+      this.level.theme === 'city' ? 'tile_city_ground'
+      : this.level.theme === 'cave' ? 'tile_cave_ground'
+      : 'tile_ground';
+    const platKey =
+      this.level.theme === 'city' ? 'tile_city_platform'
+      : this.level.theme === 'cave' ? 'tile_cave_platform'
+      : 'tile_platform';
     for (let y = 0; y < this.level.heightInTiles; y++) {
       for (let x = 0; x < this.level.widthInTiles; x++) {
         const tile = this.level.tiles[y][x];
@@ -378,6 +438,11 @@ export class GameScene extends Phaser.Scene {
         const sprite = this.makeGroundSprite(e.x, e.y, 'mini_scarecrow', 60);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'mini_scarecrow', tag: 'normal', hasGravity: true });
+      } else if (e.type === 'mini_trex') {
+        const logic = new MiniTRex();
+        const sprite = this.makeGroundSprite(e.x, e.y, 'mini_trex', 100);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_trex', tag: 'normal', hasGravity: true });
       }
     }
   }
@@ -433,6 +498,26 @@ export class GameScene extends Phaser.Scene {
       this.boss = { logic, sprite, kind: 'scarecrow' };
       this.armHitbox = this.add.rectangle(b.x, b.y, 4, 14, 0xffaa44, 0.6).setDepth(2);
       this.armHitbox.setVisible(false);
+    } else if (b.type === 'trex') {
+      const logic = new TRexBoss(b.x, b.y, {
+        onRoar: (intensity, durationMs) => {
+          this.camera.shake(intensity, durationMs);
+          this.audio.emit('enemy.die'); // reuse a heavy sound for the roar
+        },
+        onShockwave: (waves) =>
+          waves.forEach((w) =>
+            this.spawnShockwave(w.x, w.y, w.direction, w.speed, w.damage, w.ttlMs),
+          ),
+        onSpawnMiniTRex: (spawns) =>
+          spawns.forEach((s) => this.spawnMiniTRex(s.x, s.y)),
+      });
+      const sprite = this.physics.add.sprite(b.x, b.y, 'trex_boss');
+      sprite.setDisplaySize(90, 70);
+      sprite.setCollideWorldBounds(true);
+      sprite.setMaxVelocity(320, 600);
+      (sprite.body as Phaser.Physics.Arcade.Body).setSize(70, 60).setOffset(10, 5);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'trex' };
     }
   }
 
@@ -456,6 +541,29 @@ export class GameScene extends Phaser.Scene {
     const logic = new Crow(x, y, dir);
     const sprite = this.makeFlyingSprite(x, y, 'crow', 28);
     this.enemies.push({ logic, sprite, type: 'crow', tag: 'normal', hasGravity: false });
+  }
+
+  private spawnMiniTRex(x: number, y: number): void {
+    const logic = new MiniTRex();
+    logic.setPosition(x, y);
+    const sprite = this.makeGroundSprite(x, y, 'mini_trex', 100);
+    this.physics.add.collider(sprite, this.platforms);
+    this.physics.add.collider(sprite, this.platformsPassthrough);
+    this.enemies.push({ logic, sprite, type: 'mini_trex', tag: 'normal', hasGravity: true });
+  }
+
+  private spawnShockwave(
+    x: number,
+    y: number,
+    direction: Direction,
+    speed: number,
+    damage: number,
+    ttlMs: number,
+  ): void {
+    const sprite = this.add.image(x, y, 'shockwave').setDepth(2);
+    sprite.setFlipX(direction === Direction.Left);
+    const vx = direction === Direction.Left ? -speed : speed;
+    this.shockwaves.push({ sprite, x, y, vx, damage, ttlMs });
   }
 
   private spawnJuggleBall(x: number, y: number, vx: number, vy: number): void {
@@ -510,9 +618,13 @@ export class GameScene extends Phaser.Scene {
       const tex =
         p.type === 'water_gun' ? 'water_gun_pickup'
         : p.type === 'star' ? 'star_pickup'
+        : p.type === 'nerf_rifle' ? 'nerf_rifle_pickup'
         : 'extra_heart_pickup';
       const sprite = this.physics.add.sprite(p.x, p.y, tex);
-      const size = p.type === 'water_gun' ? 28 : p.type === 'star' ? 26 : 26;
+      const size =
+        p.type === 'water_gun' ? 28
+        : p.type === 'nerf_rifle' ? 30
+        : 26;
       sprite.setDisplaySize(size, size);
       (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
       this.powerUps.push({ sprite, type: p.type as PowerUpKind });
@@ -529,7 +641,7 @@ export class GameScene extends Phaser.Scene {
       this.physics.add.collider(e.sprite, this.platformsPassthrough);
     });
 
-    if (this.boss?.kind === 'clown') {
+    if (this.boss?.kind === 'clown' || this.boss?.kind === 'trex') {
       this.physics.add.collider(this.boss.sprite, this.platforms);
       this.physics.add.collider(this.boss.sprite, this.platformsPassthrough);
     }
@@ -556,11 +668,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnFoamProjectile(x: number, y: number, facing: Direction): void {
+    const nerfBoost = this.playerLogic.hasNerfRifle;
     if (this.hasWaterGun) {
       const data = this.waterGun.fire(x, y, facing);
       if (!data) return;
-      const sprite = this.physics.add.sprite(x, y, 'projectile_water');
-      sprite.setDisplaySize(12, 12);
+      if (nerfBoost) {
+        data.vx *= NERF_RIFLE_SPEED_MULTIPLIER;
+        data.damage += NERF_RIFLE_DAMAGE_BONUS;
+      }
+      const tex = nerfBoost ? 'projectile_nerf' : 'projectile_water';
+      const sprite = this.physics.add.sprite(x, y, tex);
+      sprite.setDisplaySize(nerfBoost ? 16 : 12, nerfBoost ? 10 : 12);
       sprite.setVelocity(data.vx, data.vy);
       (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
       this.projectiles.push({ sprite, data, isWater: true });
@@ -568,8 +686,13 @@ export class GameScene extends Phaser.Scene {
     } else {
       const data = this.foamGun.fire(x, y, facing);
       if (!data) return;
-      const sprite = this.physics.add.sprite(x, y, 'projectile_foam');
-      sprite.setDisplaySize(10, 10);
+      if (nerfBoost) {
+        data.vx *= NERF_RIFLE_SPEED_MULTIPLIER;
+        data.damage += NERF_RIFLE_DAMAGE_BONUS;
+      }
+      const tex = nerfBoost ? 'projectile_nerf' : 'projectile_foam';
+      const sprite = this.physics.add.sprite(x, y, tex);
+      sprite.setDisplaySize(nerfBoost ? 16 : 10, nerfBoost ? 10 : 10);
       sprite.setVelocity(data.vx, data.vy);
       (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
       this.projectiles.push({ sprite, data, isWater: false });
@@ -593,10 +716,12 @@ export class GameScene extends Phaser.Scene {
     this.handleProjectiles(delta);
     this.handleJuggleBalls(delta);
     this.handleFireTrails(delta);
+    this.handleShockwaves(delta);
     this.handleEnemyContacts();
     this.handleBossContact();
     this.handleCheckpointContacts();
     this.handlePowerUpContacts();
+    this.applyCameraShake(delta);
 
     this.timeRemaining = Math.max(0, this.timeRemaining - delta / 1000);
     if (this.timeRemaining <= 0 && !this.gameEnded) {
@@ -758,11 +883,26 @@ export class GameScene extends Phaser.Scene {
       if ((b.logic as ClownBoss).state === 'jumping' && b.logic.vy < 0) {
         b.sprite.setVelocityY(b.logic.vy);
       }
+    } else if (b.kind === 'trex') {
+      // T-Rex uses gravity for vertical, but its vx is set directly by the logic.
+      b.sprite.setVelocityX(b.logic.vx);
     }
     b.sprite.setFlipX(b.logic.facing === Direction.Left);
 
     if (b.kind === 'scarecrow') {
       this.updateScarecrowArmHitbox(b.logic as ScarecrowBoss);
+    }
+    if (b.kind === 'trex') {
+      // Swap sprite key on phase change for visual feedback.
+      const phase = (b.logic as TRexBoss).phase;
+      const wantKey =
+        phase === 'phase3' ? 'trex_boss_phase3'
+        : phase === 'phase2' ? 'trex_boss_phase2'
+        : 'trex_boss';
+      if (b.sprite.texture.key !== wantKey) {
+        b.sprite.setTexture(wantKey);
+        b.sprite.setDisplaySize(90, 70);
+      }
     }
 
     if (b.logic.isDead) {
@@ -918,6 +1058,46 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private handleShockwaves(delta: number): void {
+    const dt = delta / 1000;
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.x += s.vx * dt;
+      s.sprite.setPosition(s.x, s.y);
+      s.ttlMs -= delta;
+      const lifeFrac = Math.max(0, s.ttlMs / TRexBoss.shockwaveTtlMs);
+      s.sprite.setAlpha(0.4 + 0.6 * lifeFrac);
+      // Sinusoidal vertical bob for a more "wavy" feel.
+      s.sprite.setScale(1.0 + Math.sin((TRexBoss.shockwaveTtlMs - s.ttlMs) / 60) * 0.15);
+
+      if (s.ttlMs <= 0 || s.x < -50 || s.x > this.level.widthInTiles * TILE_SIZE + 50) {
+        s.sprite.destroy();
+        this.shockwaves.splice(i, 1);
+        continue;
+      }
+
+      // Ground hitbox — damages player when on ground and within ~12px horizontally
+      // (vertical check ensures jumping over the wave avoids damage).
+      const playerBody = this.playerSprite.body as Phaser.Physics.Arcade.Body;
+      const isOnGround = playerBody.blocked.down || playerBody.touching.down;
+      const dx = this.playerSprite.x - s.x;
+      const dy = this.playerSprite.y - s.y;
+      if (isOnGround && Math.abs(dx) < 14 && Math.abs(dy) < 28) {
+        this.playerLogic.takeDamage(s.damage);
+      }
+    }
+  }
+
+  private applyCameraShake(delta: number): void {
+    this.camera.update(delta);
+    if (this.camera.isShaking) {
+      this.cameras.main.setScroll(
+        this.cameras.main.scrollX + this.camera.offsetX,
+        this.cameras.main.scrollY + this.camera.offsetY,
+      );
+    }
+  }
+
   private computeDamage(p: ProjectileSprite, tag: EnemyTag): number {
     if (p.isWater) {
       return WaterGun.damageFor(p.data as WaterProjectile, tag);
@@ -1020,6 +1200,8 @@ export class GameScene extends Phaser.Scene {
         } else if (p.type === 'extra_heart') {
           this.playerLogic.addExtraHeart();
           this.save.addExtraHeart();
+        } else if (p.type === 'nerf_rifle') {
+          this.playerLogic.activateNerfRifle();
         }
         this.audio.emit('player.power_up');
         this.particles.coinSparkle(p.sprite.x, p.sprite.y);
@@ -1164,7 +1346,15 @@ export class GameScene extends Phaser.Scene {
         this.enemies.filter((e) => e.type === 'mini_ghost').length,
       getMiniClownCount: () =>
         this.enemies.filter((e) => e.type === 'mini_clown').length,
+      getMiniTRexCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_trex').length,
       getCrowCount: () => this.enemies.filter((e) => e.type === 'crow').length,
+      getShockwaveCount: () => this.shockwaves.length,
+      isCameraShaking: () => this.camera.isShaking,
+      getCameraShakeOffset: () => ({ x: this.camera.offsetX, y: this.camera.offsetY }),
+      hasNerfRifle: () => this.playerLogic.hasNerfRifle,
+      getNerfRifleRemaining: () => this.playerLogic.nerfRifleRemaining,
+      activateNerfRifle: () => this.playerLogic.activateNerfRifle(),
       isConfusionActive: () => this.confusion.isActive,
       hasWaterGun: () => this.hasWaterGun,
       grantWaterGun: () => {
