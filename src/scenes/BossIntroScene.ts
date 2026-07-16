@@ -45,6 +45,13 @@ const BOSS_INFO: Record<BossKind, BossInfo> = {
     weakness: 'Contra-ataque após carga',
     spriteKey: 'trex_boss',
   },
+  vampire: {
+    number: '#005',
+    name: 'VAMPIRO',
+    type: 'Noturno',
+    weakness: 'Água (bloqueia lifesteal)',
+    spriteKey: 'vampire_boss',
+  },
 };
 
 /**

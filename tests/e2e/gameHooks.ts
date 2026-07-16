@@ -54,7 +54,7 @@ export interface GameHooks {
   getJuggleBallCount: () => number;
   getFireTrailCount: () => number;
   getLevelTheme: () => 'forest' | 'cave' | 'city';
-  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'none';
+  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire' | 'none';
   getMiniClownCount: () => number;
   getCrowCount: () => number;
   isConfusionActive: () => boolean;
@@ -70,6 +70,14 @@ export interface GameHooks {
   hasNerfRifle: () => boolean;
   getNerfRifleRemaining: () => number;
   activateNerfRifle: () => void;
+  // Sprint 6 additions
+  getMiniVampireCount: () => number;
+  getBatCount: () => number;
+  getBossMaxHp: () => number;
+  isLifestealBlocked: () => boolean;
+  getLifestealHitCount: () => number;
+  registerLifestealHit: () => void;
+  blockBossLifesteal: () => void;
 }
 
 export interface MapHooks {

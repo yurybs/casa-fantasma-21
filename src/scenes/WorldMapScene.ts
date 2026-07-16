@@ -24,9 +24,12 @@ const NODES: MapNode[] = [
   { levelIndex: 5, x: 480, y: 200, name: 'Galeria das Tochas', isBoss: false, world: 2 },
   { levelIndex: 6, x: 580, y: 130, name: 'Arena do Espantalho', isBoss: true, world: 2 },
   // Mundo 3 — Cidade Abandonada (bottom row)
-  { levelIndex: 7, x: 250, y: 410, name: 'Ruas Vazias', isBoss: false, world: 3 },
-  { levelIndex: 8, x: 400, y: 470, name: 'Avenida em Ruínas', isBoss: false, world: 3 },
-  { levelIndex: 9, x: 580, y: 410, name: 'Arena do T-Rex', isBoss: true, world: 3 },
+  { levelIndex: 7, x: 110, y: 410, name: 'Ruas Vazias', isBoss: false, world: 3 },
+  { levelIndex: 8, x: 230, y: 470, name: 'Avenida em Ruínas', isBoss: false, world: 3 },
+  { levelIndex: 9, x: 350, y: 410, name: 'Arena do T-Rex', isBoss: true, world: 3 },
+  { levelIndex: 10, x: 470, y: 470, name: 'Beco das Sombras', isBoss: false, world: 3 },
+  { levelIndex: 11, x: 590, y: 410, name: 'Arena do Vampiro', isBoss: true, world: 3 },
+  { levelIndex: 12, x: 700, y: 470, name: 'Praça do Crepúsculo', isBoss: false, world: 3 },
 ];
 
 interface NodeVisuals {

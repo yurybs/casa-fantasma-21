@@ -313,6 +313,10 @@ export class SpriteGenerator {
     SpriteGenerator.generateShockwave(scene);
     SpriteGenerator.generateNerfRiflePickup(scene);
     SpriteGenerator.generateNerfProjectile(scene);
+    // Sprint 6 — Mundo 3 Parte 2 (Vampiro)
+    SpriteGenerator.generateVampireBossFrames(scene);
+    SpriteGenerator.generateMiniVampire(scene);
+    SpriteGenerator.generateBat(scene);
   }
 
   private static drawTexture(
@@ -1074,6 +1078,126 @@ export class SpriteGenerator {
       g.fillRect(0, 9, 32, 1);
       g.fillRect(0, 18, 24, 1);
     });
+  }
+
+  // ===== Sprint 6 — Mundo 3 Parte 2 (Vampiro) =====
+
+  private static generateVampireBossFrames(scene: Phaser.Scene): void {
+    // Phase 1 — caped vampire. 1=outline 2=skin 3=eye 4=hair 5=cape 6=cape_inner 7=suit 8=fang
+    const matrix1: number[][] = [
+      [0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0],
+      [0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0],
+      [0, 4, 1, 2, 2, 2, 2, 2, 2, 1, 4, 0],
+      [0, 1, 2, 2, 3, 2, 2, 3, 2, 2, 1, 0],
+      [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],
+      [0, 1, 2, 8, 2, 2, 2, 2, 8, 2, 1, 0],
+      [5, 5, 1, 2, 2, 2, 2, 2, 2, 1, 5, 5],
+      [5, 5, 5, 7, 7, 7, 7, 7, 7, 5, 5, 5],
+      [5, 6, 5, 7, 7, 1, 1, 7, 7, 5, 6, 5],
+      [5, 6, 5, 7, 7, 7, 7, 7, 7, 5, 6, 5],
+      [5, 6, 5, 5, 7, 7, 7, 7, 5, 5, 6, 5],
+      [5, 5, 0, 5, 5, 0, 0, 5, 5, 0, 5, 5],
+    ];
+    const palette1: Record<number, number> = {
+      1: 0x1a1024,
+      2: 0xe8e0e8,
+      3: 0xcc1122,
+      4: 0x14101c,
+      5: 0x3a1030,
+      6: 0x8b1a3a,
+      7: 0x241a30,
+      8: 0xffffff,
+    };
+    // Phase 2 — giant bat. 1=outline 2=wing 3=body 4=eye 5=ear 6=fang
+    const matrixBat: number[][] = [
+      [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+      [2, 5, 0, 0, 0, 5, 5, 5, 5, 0, 0, 0, 5, 2],
+      [2, 2, 2, 0, 5, 3, 3, 3, 3, 5, 0, 2, 2, 2],
+      [2, 2, 2, 2, 1, 3, 4, 4, 3, 1, 2, 2, 2, 2],
+      [2, 2, 2, 1, 3, 3, 3, 3, 3, 3, 1, 2, 2, 2],
+      [0, 2, 2, 1, 3, 6, 3, 3, 6, 3, 1, 2, 2, 0],
+      [0, 2, 1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 2, 0],
+      [0, 0, 2, 1, 3, 3, 3, 3, 3, 3, 1, 2, 0, 0],
+      [0, 0, 2, 2, 1, 3, 3, 3, 3, 1, 2, 2, 0, 0],
+      [0, 0, 0, 2, 2, 1, 1, 1, 1, 2, 2, 0, 0, 0],
+    ];
+    const paletteBat: Record<number, number> = {
+      1: 0x14101c,
+      2: 0x3a1030,
+      3: 0x241a30,
+      4: 0xff2244,
+      5: 0x1a1024,
+      6: 0xffffff,
+    };
+    const pxSize = 5;
+    SpriteGenerator.drawTexture(
+      scene,
+      'vampire_boss',
+      matrix1[0].length * pxSize,
+      matrix1.length * pxSize,
+      (g) => drawFromMatrix(g, matrix1, palette1, pxSize),
+    );
+    SpriteGenerator.drawTexture(
+      scene,
+      'vampire_boss_bat',
+      matrixBat[0].length * pxSize,
+      matrixBat.length * pxSize,
+      (g) => drawFromMatrix(g, matrixBat, paletteBat, pxSize),
+    );
+  }
+
+  private static generateMiniVampire(scene: Phaser.Scene): void {
+    // 1=outline 2=skin 3=eye 4=cape 5=fang
+    const matrix: number[][] = [
+      [0, 4, 0, 0, 0, 0, 4, 0],
+      [0, 1, 4, 0, 0, 4, 1, 0],
+      [0, 1, 2, 2, 2, 2, 1, 0],
+      [0, 1, 2, 3, 3, 2, 1, 0],
+      [0, 1, 2, 2, 2, 2, 1, 0],
+      [0, 1, 5, 2, 2, 5, 1, 0],
+      [0, 4, 4, 4, 4, 4, 4, 0],
+      [0, 4, 0, 4, 4, 0, 4, 0],
+    ];
+    const palette: Record<number, number> = {
+      1: 0x1a1024,
+      2: 0xe8e0e8,
+      3: 0xcc1122,
+      4: 0x3a1030,
+      5: 0xffffff,
+    };
+    const pxSize = 4;
+    SpriteGenerator.drawTexture(
+      scene,
+      'mini_vampire',
+      matrix[0].length * pxSize,
+      matrix.length * pxSize,
+      (g) => drawFromMatrix(g, matrix, palette, pxSize),
+    );
+  }
+
+  private static generateBat(scene: Phaser.Scene): void {
+    // 1=wing 2=body 3=eye
+    const matrix: number[][] = [
+      [1, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 0, 2, 2, 0, 1, 1],
+      [1, 1, 2, 2, 2, 2, 1, 1],
+      [0, 1, 2, 3, 3, 2, 1, 0],
+      [0, 0, 2, 2, 2, 2, 0, 0],
+      [0, 0, 0, 2, 2, 0, 0, 0],
+    ];
+    const palette: Record<number, number> = {
+      1: 0x3a1030,
+      2: 0x241a30,
+      3: 0xff2244,
+    };
+    const pxSize = 3;
+    SpriteGenerator.drawTexture(
+      scene,
+      'bat',
+      matrix[0].length * pxSize,
+      matrix.length * pxSize,
+      (g) => drawFromMatrix(g, matrix, palette, pxSize),
+    );
   }
 
   private static generateNerfProjectile(scene: Phaser.Scene): void {
