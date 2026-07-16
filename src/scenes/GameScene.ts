@@ -20,9 +20,12 @@ import { Crow } from '../entities/enemies/Crow';
 import { ClownBoss } from '../entities/enemies/ClownBoss';
 import { ScarecrowBoss } from '../entities/enemies/ScarecrowBoss';
 import { TRexBoss } from '../entities/enemies/TRexBoss';
+import { VampireBoss } from '../entities/enemies/VampireBoss';
 import { MiniClown } from '../entities/enemies/MiniClown';
 import { MiniScarecrow } from '../entities/enemies/MiniScarecrow';
 import { MiniTRex } from '../entities/enemies/MiniTRex';
+import { MiniVampire } from '../entities/enemies/MiniVampire';
+import { Bat } from '../entities/enemies/Bat';
 import { FoamGun, Projectile as FoamProjectile } from '../weapons/FoamGun';
 import { WaterGun, WaterProjectile } from '../weapons/WaterGun';
 import { InputSystem } from '../systems/InputSystem';
@@ -49,7 +52,9 @@ type EnemyKind =
   | 'crow'
   | 'mini_clown'
   | 'mini_scarecrow'
-  | 'mini_trex';
+  | 'mini_trex'
+  | 'mini_vampire'
+  | 'bat';
 
 type EnemyLogic =
   | SkeletonLogic
@@ -60,7 +65,9 @@ type EnemyLogic =
   | Crow
   | MiniClown
   | MiniScarecrow
-  | MiniTRex;
+  | MiniTRex
+  | MiniVampire
+  | Bat;
 
 interface EnemyEntry {
   logic: EnemyLogic;
@@ -70,8 +77,8 @@ interface EnemyEntry {
   hasGravity: boolean;
 }
 
-type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss | TRexBoss;
-type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex';
+type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss | TRexBoss | VampireBoss;
+type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire';
 
 interface BossEntry {
   logic: BossLogic;
@@ -173,6 +180,11 @@ export class GameScene extends Phaser.Scene {
   private respawnX: number = 0;
   private respawnY: number = 0;
   private armHitbox?: Phaser.GameObjects.Rectangle;
+  private bossBarBg?: Phaser.GameObjects.Rectangle;
+  private bossBarFill?: Phaser.GameObjects.Rectangle;
+  private bossBarLabel?: Phaser.GameObjects.Text;
+  private bossLifestealText?: Phaser.GameObjects.Text;
+  private bossBarFlashMs: number = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -443,6 +455,16 @@ export class GameScene extends Phaser.Scene {
         const sprite = this.makeGroundSprite(e.x, e.y, 'mini_trex', 100);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'mini_trex', tag: 'normal', hasGravity: true });
+      } else if (e.type === 'mini_vampire') {
+        const logic = new MiniVampire();
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'mini_vampire', 28);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_vampire', tag: 'ghost', hasGravity: false });
+      } else if (e.type === 'bat') {
+        const logic = new Bat();
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'bat', 22);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'bat', tag: 'normal', hasGravity: false });
       }
     }
   }
@@ -518,7 +540,98 @@ export class GameScene extends Phaser.Scene {
       (sprite.body as Phaser.Physics.Arcade.Body).setSize(70, 60).setOffset(10, 5);
       logic.setPosition(b.x, b.y);
       this.boss = { logic, sprite, kind: 'trex' };
+    } else if (b.type === 'vampire') {
+      const logic = new VampireBoss(b.x, b.y, {
+        onSpawnBats: (spawns) => spawns.forEach((s) => this.spawnBatEnemy(s.x, s.y)),
+        onSpawnMiniVampires: (spawns) =>
+          spawns.forEach((s) => this.spawnMiniVampire(s.x, s.y)),
+        onLifesteal: (amount) => {
+          this.bossBarFlashMs = 450;
+          this.particles.coinSparkle(this.boss?.sprite.x ?? b.x, this.boss?.sprite.y ?? b.y);
+          void amount;
+        },
+        onLifestealBlocked: () => this.audio.emit('player.power_up'),
+      });
+      const sprite = this.makeFlyingSprite(b.x, b.y, 'vampire_boss', 60);
+      sprite.setDisplaySize(60, 60);
+      sprite.setDepth(2);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'vampire' };
     }
+    if (this.boss) {
+      this.createBossBar();
+    }
+  }
+
+  private createBossBar(): void {
+    if (!this.boss) return;
+    const names: Record<BossKind, string> = {
+      ghost: 'FANTASMA',
+      clown: 'PALHAÇO',
+      scarecrow: 'ESPANTALHO',
+      trex: 'T-REX',
+      vampire: 'VAMPIRO',
+    };
+    const cx = GAME_WIDTH / 2;
+    this.bossBarBg = this.add
+      .rectangle(cx, 46, 320, 14, 0x220a14, 0.9)
+      .setStrokeStyle(2, 0x000000, 1)
+      .setScrollFactor(0)
+      .setDepth(1000);
+    this.bossBarFill = this.add
+      .rectangle(cx - 158, 46, 316, 10, 0xcc1133, 1)
+      .setOrigin(0, 0.5)
+      .setScrollFactor(0)
+      .setDepth(1001);
+    this.bossBarLabel = this.add
+      .text(cx, 30, names[this.boss.kind], {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5)
+      .setStroke('#000000', 3)
+      .setScrollFactor(0)
+      .setDepth(1001);
+    this.bossLifestealText = this.add
+      .text(cx, 62, 'LIFESTEAL BLOQUEADO', {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#66ddff',
+      })
+      .setOrigin(0.5)
+      .setStroke('#000000', 3)
+      .setScrollFactor(0)
+      .setDepth(1001)
+      .setVisible(false);
+  }
+
+  private updateBossBar(delta: number): void {
+    if (!this.boss || !this.bossBarFill) return;
+    const frac = Math.max(0, this.boss.logic.hp / this.boss.logic.maxHp);
+    this.bossBarFill.width = 316 * frac;
+    if (this.bossBarFlashMs > 0) {
+      this.bossBarFlashMs = Math.max(0, this.bossBarFlashMs - delta);
+      // Green pulse while the lifesteal heal is being applied.
+      this.bossBarFill.setFillStyle(0x44dd66, 1);
+    } else {
+      this.bossBarFill.setFillStyle(0xcc1133, 1);
+    }
+    if (this.bossLifestealText && this.boss.kind === 'vampire') {
+      const blocked = (this.boss.logic as VampireBoss).isLifestealBlocked;
+      this.bossLifestealText.setVisible(blocked);
+    }
+  }
+
+  private destroyBossBar(): void {
+    this.bossBarBg?.destroy();
+    this.bossBarFill?.destroy();
+    this.bossBarLabel?.destroy();
+    this.bossLifestealText?.destroy();
+    this.bossBarBg = undefined;
+    this.bossBarFill = undefined;
+    this.bossBarLabel = undefined;
+    this.bossLifestealText = undefined;
   }
 
   private spawnMiniGhost(x: number, y: number): void {
@@ -541,6 +654,23 @@ export class GameScene extends Phaser.Scene {
     const logic = new Crow(x, y, dir);
     const sprite = this.makeFlyingSprite(x, y, 'crow', 28);
     this.enemies.push({ logic, sprite, type: 'crow', tag: 'normal', hasGravity: false });
+  }
+
+  private spawnBatEnemy(x: number, y: number): void {
+    // Cap live bats so long fights don't flood the arena.
+    const alive = this.enemies.filter((e) => e.type === 'bat').length;
+    if (alive >= 4) return;
+    const logic = new Bat();
+    logic.setPosition(x, y);
+    const sprite = this.makeFlyingSprite(x, y, 'bat', 22);
+    this.enemies.push({ logic, sprite, type: 'bat', tag: 'normal', hasGravity: false });
+  }
+
+  private spawnMiniVampire(x: number, y: number): void {
+    const logic = new MiniVampire();
+    logic.setPosition(x, y);
+    const sprite = this.makeFlyingSprite(x, y, 'mini_vampire', 28);
+    this.enemies.push({ logic, sprite, type: 'mini_vampire', tag: 'ghost', hasGravity: false });
   }
 
   private spawnMiniTRex(x: number, y: number): void {
@@ -721,6 +851,7 @@ export class GameScene extends Phaser.Scene {
     this.handleBossContact();
     this.handleCheckpointContacts();
     this.handlePowerUpContacts();
+    this.updateBossBar(delta);
     this.applyCameraShake(delta);
 
     this.timeRemaining = Math.max(0, this.timeRemaining - delta / 1000);
@@ -875,7 +1006,7 @@ export class GameScene extends Phaser.Scene {
     b.logic.x = b.sprite.x;
     b.logic.y = b.sprite.y;
     b.logic.update(delta, this.playerSprite.x, this.playerSprite.y);
-    if (b.kind === 'ghost' || b.kind === 'scarecrow') {
+    if (b.kind === 'ghost' || b.kind === 'scarecrow' || b.kind === 'vampire') {
       b.sprite.setVelocity(b.logic.vx, b.logic.vy);
     } else if (b.kind === 'clown') {
       // Clown uses gravity normally (it's a ground-based boss with hops).
@@ -912,6 +1043,7 @@ export class GameScene extends Phaser.Scene {
       this.armHitbox?.destroy();
       this.armHitbox = undefined;
       this.confusion.stop();
+      this.destroyBossBar();
       this.boss = undefined;
       this.endGame('victory');
     }
@@ -974,9 +1106,14 @@ export class GameScene extends Phaser.Scene {
             this.boss.sprite.getBounds(),
           )
         ) {
-          const bossTag: EnemyTag = this.boss.kind === 'ghost' ? 'ghost' : 'normal';
+          const bossTag: EnemyTag =
+            this.boss.kind === 'ghost' || this.boss.kind === 'vampire' ? 'ghost' : 'normal';
           const dmg = this.computeDamage(p, bossTag);
           this.boss.logic.takeDamage(dmg);
+          // Water counter: a water hit suppresses the Vampire lifesteal for 5s.
+          if (p.isWater && this.boss.kind === 'vampire') {
+            (this.boss.logic as VampireBoss).blockLifesteal();
+          }
           dead = true;
         }
       }
@@ -1134,7 +1271,11 @@ export class GameScene extends Phaser.Scene {
             this.audio.emit('enemy.die');
           }
         } else {
-          this.playerLogic.takeDamage(e.logic.damage);
+          const damaged = this.playerLogic.takeDamage(e.logic.damage);
+          // The Vampire's bats feed its lifesteal counter.
+          if (damaged && e.type === 'bat' && this.boss?.kind === 'vampire') {
+            (this.boss.logic as VampireBoss).registerHitOnPlayer();
+          }
         }
       }
     }
@@ -1151,7 +1292,10 @@ export class GameScene extends Phaser.Scene {
       if (this.playerLogic.hasStar) {
         this.boss.logic.takeDamage(1);
       } else {
-        this.playerLogic.takeDamage(this.boss.logic.damage);
+        const damaged = this.playerLogic.takeDamage(this.boss.logic.damage);
+        if (damaged && this.boss.kind === 'vampire') {
+          (this.boss.logic as VampireBoss).registerHitOnPlayer();
+        }
       }
     }
     if (this.armHitbox && this.armHitbox.visible) {
@@ -1284,6 +1428,15 @@ export class GameScene extends Phaser.Scene {
       } else {
         b.sprite.rotation = 0;
       }
+    } else if (b.kind === 'vampire') {
+      const vb = b.logic as VampireBoss;
+      const wantKey = vb.phase === 'phase2' ? 'vampire_boss_bat' : 'vampire_boss';
+      if (b.sprite.texture.key !== wantKey) {
+        b.sprite.setTexture(wantKey);
+        // Giant bat form is wider than the caped form.
+        if (wantKey === 'vampire_boss_bat') b.sprite.setDisplaySize(84, 60);
+        else b.sprite.setDisplaySize(60, 60);
+      }
     }
   }
 
@@ -1348,6 +1501,27 @@ export class GameScene extends Phaser.Scene {
         this.enemies.filter((e) => e.type === 'mini_clown').length,
       getMiniTRexCount: () =>
         this.enemies.filter((e) => e.type === 'mini_trex').length,
+      getMiniVampireCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_vampire').length,
+      getBatCount: () => this.enemies.filter((e) => e.type === 'bat').length,
+      getBossMaxHp: () => this.boss?.logic.maxHp ?? 0,
+      isLifestealBlocked: () =>
+        this.boss?.kind === 'vampire' &&
+        (this.boss.logic as VampireBoss).isLifestealBlocked,
+      getLifestealHitCount: () =>
+        this.boss?.kind === 'vampire'
+          ? (this.boss.logic as VampireBoss).lifestealHitCount
+          : 0,
+      registerLifestealHit: () => {
+        if (this.boss?.kind === 'vampire') {
+          (this.boss.logic as VampireBoss).registerHitOnPlayer();
+        }
+      },
+      blockBossLifesteal: () => {
+        if (this.boss?.kind === 'vampire') {
+          (this.boss.logic as VampireBoss).blockLifesteal();
+        }
+      },
       getCrowCount: () => this.enemies.filter((e) => e.type === 'crow').length,
       getShockwaveCount: () => this.shockwaves.length,
       isCameraShaking: () => this.camera.isShaking,

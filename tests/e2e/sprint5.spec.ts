@@ -196,12 +196,12 @@ test.describe('Sprint 5 — Mundo 3 (Cidade Abandonada + T-Rex)', () => {
     await page.keyboard.press('m');
     await page.waitForFunction(() => !!window.__map, null, { timeout: 10000 });
 
-    // Cursor moves through 9 nodes
+    // Cursor starts at currentLevel (7) — Mundo 3 nodes are reachable
     const unlocked7 = await page.evaluate(() => window.__map!.isLevelUnlocked(7));
     expect(unlocked7).toBe(true);
 
-    // Move cursor 8 times to reach the last node
-    for (let i = 0; i < 8; i++) {
+    // Move cursor 2 nodes forward: 7 → 8 → 9 (Arena do T-Rex)
+    for (let i = 0; i < 2; i++) {
       await page.evaluate(() => window.__map!.moveCursor(1));
     }
     expect(await page.evaluate(() => window.__map!.getCursorLevelIndex())).toBe(9);

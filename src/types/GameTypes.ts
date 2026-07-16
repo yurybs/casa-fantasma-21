@@ -94,6 +94,9 @@ export enum EntityType {
   MiniScarecrow = 'mini_scarecrow',
   TRexBoss = 'trex_boss',
   MiniTRex = 'mini_trex',
+  VampireBoss = 'vampire_boss',
+  MiniVampire = 'mini_vampire',
+  Bat = 'bat',
   Projectile = 'projectile',
   Coin = 'coin',
   Flag = 'flag',
@@ -114,7 +117,9 @@ export type EnemyKind =
   | 'crow'
   | 'mini_clown'
   | 'mini_scarecrow'
-  | 'mini_trex';
+  | 'mini_trex'
+  | 'mini_vampire'
+  | 'bat';
 
 /** Tag used for damage calculation: water-element shots deal 2x to ghost-tagged enemies. */
 export type EnemyTag = 'normal' | 'ghost';

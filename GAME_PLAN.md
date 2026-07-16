@@ -631,7 +631,7 @@ Mundo 2 (Caverna Assombrada) com tileset de caverna, 2 novos bosses e inimigos, 
 ## SPRINT 6 — Mundo 3 Parte 1 (Níveis 7–9 + T-Rex)
 
 **Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar (após Sprint 5)
+**Status:** ✅ **CONCLUÍDO** (entregue como Sprint 5, branch `sprint/5-world3-trex`)
 
 ### Objetivo
 Início do Mundo 3 (Cidade Abandonada) com tileset urbano, T-Rex com 3 fases e sistema de camera shake.
@@ -657,7 +657,7 @@ Início do Mundo 3 (Cidade Abandonada) com tileset urbano, T-Rex com 3 fases e s
 ## SPRINT 7 — Mundo 3 Parte 2 (Níveis 10–12 + Vampiro)
 
 **Duração estimada:** 1 semana
-**Gate:** Aguardando autorização para iniciar
+**Status:** ✅ **CONCLUÍDO** (entregue como Sprint 6, branch `sprint/6-world3-vampire`) — VampireBoss 2 fases com lifesteal + bloqueio por água, Bat teleguiado, MiniVampire, barra de HP do boss com indicador de lifesteal, níveis 10–12, mapa com 12 nodes
 
 ### Objetivo
 Encerrar o Mundo 3 com o Vampiro, mecânica de lifesteal visível no HUD e counter via Pistola de Água.
@@ -792,8 +792,8 @@ tests/e2e/regression.spec.ts
 | **2** | Nível 1 polido + Áudio + Mobile + CI/CD + GitHub Pages | 1 | — | ✅ **CONCLUÍDO** (170 testes) |
 | **3** | Mundo 1 completo + Boss Fantasma + Mapa de Mundo | 1–3 | Fantasma | ✅ **CONCLUÍDO** (247 testes) |
 | **4** | Mundo 2 + Palhaço + Espantalho + Caverna | 1–6 | Palhaço, Espantalho | ✅ **CONCLUÍDO** (Sprint 4) |
-| **5** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | Aguardando Sprint 4 |
-| **6** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | Aguardando Sprint 5 |
+| **5** | Mundo 3 início + T-Rex 3 fases + Camera Shake | 1–9 | T-Rex | ✅ **CONCLUÍDO** |
+| **6** | Mundo 3 completo + Vampiro + Lifesteal | 1–12 | Vampiro | ✅ **CONCLUÍDO** (436 testes) |
 | **7** | Mundo 4 início + Bola de Fogo + Polvo + Tinta | 1–15 | Bola de Fogo, Polvo | Aguardando Sprint 6 |
 | **8** | Mundo 4 parte 2 + Escorpião + DoT + Armadura | 1–19 | Escorpião | Aguardando Sprint 7 |
 | **9** | Jogo completo + Robô Final 4 fases + Cutscene + QA | 1–21 | Robô do Mal | Aguardando Sprint 8 |

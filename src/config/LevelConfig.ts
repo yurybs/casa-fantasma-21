@@ -24,7 +24,7 @@ export interface PowerUpSpawn {
   y: number;
 }
 
-export type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex';
+export type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire';
 
 export interface BossSpawn {
   type: BossKind;
@@ -560,6 +560,174 @@ const buildLevel9 = (): LevelData => {
   };
 };
 
+// =============================================================================
+// LEVEL 10 — Cidade Abandonada — Beco das Sombras (Sprint 6 normal)
+// Long alley with FireGhost + MiniTRex mix and a mid-level checkpoint.
+// =============================================================================
+const buildLevel10 = (): LevelData => {
+  const W = 78;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+
+  carvePit(tiles, 17, 19);
+  carvePit(tiles, 38, 40);
+  carvePit(tiles, 57, 59);
+
+  placePlatform(tiles, 5, 9, H - 6);
+  placePlatform(tiles, 13, 16, H - 9);
+  placePlatform(tiles, 22, 26, H - 7);
+  placePlatform(tiles, 30, 34, H - 10);
+  placePlatform(tiles, 43, 47, H - 6);
+  placePlatform(tiles, 50, 54, H - 9);
+  placePlatform(tiles, 62, 66, H - 7);
+  placePlatform(tiles, 70, 74, H - 10);
+
+  return {
+    id: 10,
+    name: 'Cidade Abandonada — Beco das Sombras',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: { x: (W - 3) * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    enemies: [
+      { type: 'fire_ghost', x: 8 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+      { type: 'mini_trex', x: 14 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'zombie', x: 24 * TILE_SIZE, y: (H - 9) * TILE_SIZE },
+      { type: 'fire_ghost', x: 32 * TILE_SIZE, y: (H - 12) * TILE_SIZE },
+      { type: 'mini_trex', x: 45 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+      { type: 'skeleton', x: 52 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+      { type: 'fire_ghost', x: 64 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+      { type: 'mini_trex', x: 72 * TILE_SIZE, y: (H - 3) * TILE_SIZE },
+    ],
+    coins: [
+      ...[6, 7, 8].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[14, 15].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+      ...[23, 24, 25].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[31, 32, 33].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+      ...[44, 45, 46].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[51, 52, 53].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+      ...[63, 64, 65].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[71, 72, 73].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+    ],
+    checkpoints: [{ x: 42 * TILE_SIZE, y: (H - 4) * TILE_SIZE }],
+    powerUps: [{ type: 'extra_heart', x: 32 * TILE_SIZE, y: (H - 13) * TILE_SIZE }],
+    boss: null,
+    timeLimit: 440,
+    backgroundColor: '#15121e',
+    theme: 'city',
+    world: 3,
+  };
+};
+
+// =============================================================================
+// LEVEL 11 — Cidade Abandonada — Arena do Vampiro (Sprint 6 boss)
+// Closed arena. WaterGun pickup before the fight — it blocks the boss
+// lifesteal for 5s per hit. Raised platforms help dodge swoops and bats.
+// =============================================================================
+const buildLevel11 = (): LevelData => {
+  const W = 38;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+  placeWall(tiles, 0, 0, H - 1);
+  placeWall(tiles, W - 1, 0, H - 1);
+
+  placePlatform(tiles, 4, 9, H - 7);
+  placePlatform(tiles, 15, 22, H - 11);
+  placePlatform(tiles, 28, 33, H - 7);
+
+  return {
+    id: 11,
+    name: 'Cidade Abandonada — Arena do Vampiro',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: null,
+    enemies: [],
+    coins: [
+      ...[5, 6, 7].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[16, 17, 18, 19, 20].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+      ...[29, 30, 31].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+    ],
+    checkpoints: [],
+    powerUps: [
+      { type: 'water_gun', x: 18 * TILE_SIZE, y: (H - 13) * TILE_SIZE },
+      { type: 'star', x: 6 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+    ],
+    boss: { type: 'vampire', x: 28 * TILE_SIZE, y: 7 * TILE_SIZE },
+    timeLimit: 300,
+    backgroundColor: '#100a18',
+    theme: 'city',
+    world: 3,
+  };
+};
+
+// =============================================================================
+// LEVEL 12 — Cidade Abandonada — Praça do Crepúsculo (Sprint 6 normal)
+// Closes Mundo 3: MiniVampire swarms + FireGhost patrols + a checkpoint.
+// =============================================================================
+const buildLevel12 = (): LevelData => {
+  const W = 80;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+
+  carvePit(tiles, 20, 22);
+  carvePit(tiles, 41, 43);
+  carvePit(tiles, 60, 62);
+  carvePit(tiles, 71, 72);
+
+  placePlatform(tiles, 5, 9, H - 6);
+  placePlatform(tiles, 12, 16, H - 9);
+  placePlatform(tiles, 24, 28, H - 7);
+  placePlatform(tiles, 31, 36, H - 11);
+  placePlatform(tiles, 45, 49, H - 6);
+  placePlatform(tiles, 52, 56, H - 10);
+  placePlatform(tiles, 64, 68, H - 7);
+  placePlatform(tiles, 74, 78, H - 9);
+
+  return {
+    id: 12,
+    name: 'Cidade Abandonada — Praça do Crepúsculo',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: { x: (W - 3) * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    enemies: [
+      { type: 'mini_vampire', x: 8 * TILE_SIZE, y: 6 * TILE_SIZE },
+      { type: 'fire_ghost', x: 14 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+      { type: 'mini_vampire', x: 26 * TILE_SIZE, y: 5 * TILE_SIZE },
+      { type: 'zombie', x: 33 * TILE_SIZE, y: (H - 13) * TILE_SIZE },
+      { type: 'fire_ghost', x: 47 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+      { type: 'mini_vampire', x: 54 * TILE_SIZE, y: 6 * TILE_SIZE },
+      { type: 'bat', x: 58 * TILE_SIZE, y: 5 * TILE_SIZE },
+      { type: 'mini_vampire', x: 66 * TILE_SIZE, y: 5 * TILE_SIZE },
+      { type: 'fire_ghost', x: 76 * TILE_SIZE, y: (H - 11) * TILE_SIZE },
+    ],
+    coins: [
+      ...[6, 7, 8].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[13, 14, 15].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+      ...[25, 26, 27].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[32, 33, 34, 35].map((x) => ({ x: x * TILE_SIZE, y: (H - 13) * TILE_SIZE })),
+      ...[46, 47, 48].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[53, 54, 55].map((x) => ({ x: x * TILE_SIZE, y: (H - 12) * TILE_SIZE })),
+      ...[65, 66, 67].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[75, 76, 77].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+    ],
+    checkpoints: [{ x: 44 * TILE_SIZE, y: (H - 4) * TILE_SIZE }],
+    powerUps: [{ type: 'star', x: 34 * TILE_SIZE, y: (H - 14) * TILE_SIZE }],
+    boss: null,
+    timeLimit: 480,
+    backgroundColor: '#191320',
+    theme: 'city',
+    world: 3,
+  };
+};
+
 export const LEVEL_1: LevelData = buildLevel1();
 export const LEVEL_2: LevelData = buildLevel2();
 export const LEVEL_3: LevelData = buildLevel3();
@@ -569,6 +737,9 @@ export const LEVEL_6: LevelData = buildLevel6();
 export const LEVEL_7: LevelData = buildLevel7();
 export const LEVEL_8: LevelData = buildLevel8();
 export const LEVEL_9: LevelData = buildLevel9();
+export const LEVEL_10: LevelData = buildLevel10();
+export const LEVEL_11: LevelData = buildLevel11();
+export const LEVEL_12: LevelData = buildLevel12();
 
 export const LEVELS: LevelData[] = [
   LEVEL_1,
@@ -580,6 +751,9 @@ export const LEVELS: LevelData[] = [
   LEVEL_7,
   LEVEL_8,
   LEVEL_9,
+  LEVEL_10,
+  LEVEL_11,
+  LEVEL_12,
 ];
 
 export function getLevelByIndex(levelIndex: number): LevelData {
