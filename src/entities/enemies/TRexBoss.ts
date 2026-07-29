@@ -26,9 +26,9 @@ export interface TRexBossEvents extends EnemyEvents {
   onSpawnMiniTRex?: (spawns: MiniTRexSpawn[]) => void;
 }
 
-const TREX_BOSS_HP = 18;
-const PHASE2_HP_THRESHOLD = 12; // ~66% — enters charging phase
-const PHASE3_HP_THRESHOLD = 6;  // ~33% — enters shockwave phase
+const TREX_BOSS_HP = 28;
+const PHASE2_HP_THRESHOLD = 18; // ~64% — enters charging phase
+const PHASE3_HP_THRESHOLD = 9;  // ~32% — enters shockwave phase
 
 const WALK_SPEED_PHASE1 = 55;
 const WALK_SPEED_PHASE2 = 70;
@@ -57,9 +57,9 @@ const SHOCKWAVE_DAMAGE = 1;
 /**
  * TRexBoss (Level 9): three-phase boss in the abandoned-city arena.
  *
- * - Phase 1 (HP 18→12): heavy walking patrol, periodic roar that shakes
+ * - Phase 1 (HP 28→18): heavy walking patrol, periodic roar that shakes
  *   the camera. Damage by contact.
- * - Phase 2 (HP 12→6): roar still triggers shake; adds a full-arena
+ * - Phase 2 (HP 18→9): roar still triggers shake; adds a full-arena
  *   horizontal charge attack with a brief recover window where it is
  *   vulnerable to player counter-attack. Spawns 2 MiniTRex on entry.
  * - Phase 3 (HP <=6): roar shockwave — emits two ground-crawling

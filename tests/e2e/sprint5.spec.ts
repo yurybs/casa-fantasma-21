@@ -145,8 +145,8 @@ test.describe('Sprint 5 — Mundo 3 (Cidade Abandonada + T-Rex)', () => {
     // Damage boss into phase 2
     const hpInit = await page.evaluate(() => window.__game!.getBossHp());
     await page.evaluate(() => {
-      // Inflict 6 damage to trigger phase 2 (HP threshold = 12, starting HP = 18)
-      for (let i = 0; i < 6; i++) window.__game!.damageBoss(1);
+      // Inflict 10 damage to trigger phase 2 (HP threshold = 18, starting HP = 28)
+      for (let i = 0; i < 10; i++) window.__game!.damageBoss(1);
     });
     expect(await page.evaluate(() => window.__game!.getBossPhase())).toBe('phase2');
     const miniCount = await page.evaluate(() => window.__game!.getMiniTRexCount());
@@ -169,9 +169,9 @@ test.describe('Sprint 5 — Mundo 3 (Cidade Abandonada + T-Rex)', () => {
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => !!window.__game && window.__game.hasBoss(), null, { timeout: 10000 });
 
-    // Damage boss into phase 3 (HP <= 6, starting at 18 → need 12 damage)
+    // Damage boss into phase 3 (HP <= 9, starting at 28 → need 19 damage)
     await page.evaluate(() => {
-      for (let i = 0; i < 12; i++) window.__game!.damageBoss(1);
+      for (let i = 0; i < 19; i++) window.__game!.damageBoss(1);
     });
     expect(await page.evaluate(() => window.__game!.getBossPhase())).toBe('phase3');
 

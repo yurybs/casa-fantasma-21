@@ -46,11 +46,11 @@ describe('WaterGun damage routing', () => {
     expect(s.isDead).toBe(true);
   });
 
-  it('water gun: dano contra GhostBoss (8 hp) → 4 tiros', () => {
+  it('water gun: dano contra GhostBoss (12 hp) → 6 tiros', () => {
     const w = new WaterGun();
     const boss = new GhostBoss(400, 200);
     let shots = 0;
-    while (!boss.isDead && shots < 10) {
+    while (!boss.isDead && shots < 12) {
       const p = w.fire(0, 0, Direction.Right);
       if (p) {
         boss.takeDamage(WaterGun.damageFor(p, 'ghost'));
@@ -58,7 +58,8 @@ describe('WaterGun damage routing', () => {
       }
       w.update(w.cooldownMs + 5);
     }
-    expect(shots).toBe(4);
+    // 12 HP ÷ 2 (water double-damage vs ghost) = 6 shots.
+    expect(shots).toBe(6);
     expect(boss.isDead).toBe(true);
   });
 

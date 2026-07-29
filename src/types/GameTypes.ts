@@ -119,7 +119,9 @@ export type EnemyKind =
   | 'mini_scarecrow'
   | 'mini_trex'
   | 'mini_vampire'
-  | 'bat';
+  | 'bat'
+  | 'mini_fireball'
+  | 'mini_octopus';
 
 /** Tag used for damage calculation: water-element shots deal 2x to ghost-tagged enemies. */
 export type EnemyTag = 'normal' | 'ghost';

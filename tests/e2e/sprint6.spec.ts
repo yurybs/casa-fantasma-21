@@ -137,9 +137,9 @@ test.describe('Sprint 6 — Mundo 3 Parte 2 (Vampiro + Lifesteal)', () => {
   test('phase 2: transformação em morcego gigante spawna mini vampiros', async ({ page }) => {
     await enterVampireArena(page);
 
-    // HP 16, threshold 8 → 8 damage triggers phase 2
+    // HP 24, threshold 12 → 12 damage triggers phase 2
     await page.evaluate(() => {
-      for (let i = 0; i < 8; i++) window.__game!.damageBoss(1);
+      for (let i = 0; i < 12; i++) window.__game!.damageBoss(1);
     });
     expect(await page.evaluate(() => window.__game!.getBossPhase())).toBe('phase2');
     expect(
@@ -173,7 +173,7 @@ test.describe('Sprint 6 — Mundo 3 Parte 2 (Vampiro + Lifesteal)', () => {
     expect(kinds.filter((k: string) => k === 'bat').length).toBeGreaterThan(0);
   });
 
-  test('WorldMap mostra 12 nodes com Arena do Vampiro desbloqueável', async ({ page }) => {
+  test('WorldMap: Arena do Vampiro (11) desbloqueável e nós do Mundo 3 navegáveis', async ({ page }) => {
     await gotoWithSave(
       page,
       seedSave({ currentLevel: 11, levelsCompleted: completedThrough(10) }),
@@ -184,10 +184,8 @@ test.describe('Sprint 6 — Mundo 3 Parte 2 (Vampiro + Lifesteal)', () => {
 
     expect(await page.evaluate(() => window.__map!.isLevelUnlocked(11))).toBe(true);
 
-    // Move cursor to the last node (12 nodes → 11 moves from the first)
-    for (let i = 0; i < 11; i++) {
-      await page.evaluate(() => window.__map!.moveCursor(1));
-    }
+    // Cursor starts on the current level (11). Advancing once reaches level 12.
+    await page.evaluate(() => window.__map!.moveCursor(1));
     expect(await page.evaluate(() => window.__map!.getCursorLevelIndex())).toBe(12);
   });
 });

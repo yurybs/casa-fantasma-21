@@ -129,7 +129,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     expect(hasBoss).toBe(true);
   });
 
-  test('boss inicia com 8 HP em fase 1', async ({ page }) => {
+  test('boss inicia com 12 HP em fase 1', async ({ page }) => {
     await enterGameScene(page);
     await page.evaluate(() => {
       const save = window.localStorage;
@@ -162,7 +162,7 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
     );
     const hp = await page.evaluate(() => window.__game!.getBossHp());
     const phase = await page.evaluate(() => window.__game!.getBossPhase());
-    expect(hp).toBe(8);
+    expect(hp).toBe(12);
     expect(phase).toBe('phase1');
   });
 
@@ -196,7 +196,8 @@ test.describe('Sprint 3 — Mundo 1 Completo (mapa, boss, checkpoints, save)', (
       null,
       { timeout: 6000 },
     );
-    await page.evaluate(() => window.__game!.damageBoss(4));
+    // GhostBoss now has 12 HP; phase2 threshold is 6. Deal 6 to cross it.
+    await page.evaluate(() => window.__game!.damageBoss(6));
     await page.waitForTimeout(300);
     const phase = await page.evaluate(() => window.__game!.getBossPhase());
     const minis = await page.evaluate(() => window.__game!.getMiniGhostCount());

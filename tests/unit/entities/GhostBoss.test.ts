@@ -18,9 +18,10 @@ const stepUntilState = (
 };
 
 describe('GhostBoss', () => {
-  it('inicia com 8 HP em phase1 e estado float', () => {
+  it('inicia com 12 HP em phase1 e estado float', () => {
     const boss = new GhostBoss(400, 200);
-    expect(boss.hp).toBe(8);
+    expect(boss.hp).toBe(12);
+    expect(boss.hp).toBe(GhostBoss.maxHp);
     expect(boss.phase).toBe('phase1');
     expect(boss.state).toBe('float');
     expect(boss.tag).toBe('ghost');
@@ -115,7 +116,7 @@ describe('GhostBoss', () => {
     const boss = new GhostBoss(400, 200);
     boss.isInvulnerable = true;
     boss.takeDamage(5);
-    expect(boss.hp).toBe(8);
+    expect(boss.hp).toBe(GhostBoss.maxHp);
   });
 
   it('boss morto não emite onSpawnMinis quando damage adicional chega', () => {

@@ -24,7 +24,7 @@ export interface PowerUpSpawn {
   y: number;
 }
 
-export type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire';
+export type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire' | 'fireball' | 'octopus';
 
 export interface BossSpawn {
   type: BossKind;
@@ -33,7 +33,7 @@ export interface BossSpawn {
 }
 
 /** Tile theme used by GameScene to pick the correct sprite keys. */
-export type LevelTheme = 'forest' | 'cave' | 'city';
+export type LevelTheme = 'forest' | 'cave' | 'city' | 'castle';
 
 export interface LevelData {
   id: number;
@@ -51,7 +51,7 @@ export interface LevelData {
   timeLimit: number;
   backgroundColor: string;
   theme: LevelTheme;
-  /** World index (1-based) — 1 = Floresta, 2 = Caverna. */
+  /** World index (1-based) — 1 = Floresta, 2 = Caverna, 3 = Cidade, 4 = Castelo. */
   world: number;
 }
 
@@ -88,6 +88,78 @@ const placePlatform = (grid: number[][], x1: number, x2: number, y: number): voi
 
 const placeWall = (grid: number[][], x: number, y1: number, y2: number): void => {
   for (let y = y1; y <= y2; y++) grid[y][x] = 1;
+};
+
+// ── Extra terrain helpers (Sprint 7) — give levels structural variety ────────
+// beyond the flat-ground + floating-platforms recipe.
+
+/**
+ * Solid staircase of steps. Each step is `stepW` tiles wide and 1 tile taller
+ * than the previous. `dir` = +1 ascends (going right), -1 descends.
+ * Steps are solid ground (tile 1) rising from the floor, so the player can
+ * walk up/down them. `baseTopY` is the top Y of the first step.
+ */
+const placeStaircase = (
+  grid: number[][],
+  startX: number,
+  baseTopY: number,
+  steps: number,
+  dir: 1 | -1 = 1,
+  stepW: number = 2,
+): void => {
+  const h = grid.length;
+  for (let s = 0; s < steps; s++) {
+    const topY = baseTopY - s;
+    const x0 = startX + s * stepW * dir;
+    for (let i = 0; i < stepW; i++) {
+      const x = x0 + i * dir;
+      if (x < 0 || x >= grid[0].length) continue;
+      for (let y = topY; y < h; y++) grid[y][x] = 1;
+    }
+  }
+};
+
+/**
+ * Raised solid mesa/plateau: a block of solid ground from `topY` down to the
+ * floor, spanning columns x1..x2. Creates a higher walkable surface.
+ */
+const placePlateau = (grid: number[][], x1: number, x2: number, topY: number): void => {
+  const h = grid.length;
+  for (let x = x1; x <= x2; x++) {
+    if (x < 0 || x >= grid[0].length) continue;
+    for (let y = topY; y < h; y++) grid[y][x] = 1;
+  }
+};
+
+/**
+ * Ceiling block hanging from the top: solid tiles from y1..y2 across x1..x2.
+ * Used to create low tunnels / overhangs the player must duck under or weave
+ * around — a very different feel from open-air platforming.
+ */
+const placeCeilingBlock = (
+  grid: number[][],
+  x1: number,
+  x2: number,
+  y1: number,
+  y2: number,
+): void => {
+  for (let x = x1; x <= x2; x++) {
+    if (x < 0 || x >= grid[0].length) continue;
+    for (let y = y1; y <= y2; y++) {
+      if (y < 0 || y >= grid.length) continue;
+      grid[y][x] = 1;
+    }
+  }
+};
+
+/**
+ * Vertical column/pillar of solid tiles rising from the floor up to `topY`.
+ * A single-tile-wide obstacle that breaks up long flat stretches.
+ */
+const placeColumn = (grid: number[][], x: number, topY: number): void => {
+  const h = grid.length;
+  if (x < 0 || x >= grid[0].length) return;
+  for (let y = topY; y < h; y++) grid[y][x] = 1;
 };
 
 // =============================================================================
@@ -211,10 +283,12 @@ const buildLevel3 = (): LevelData => {
   placePlatform(tiles, 6, 9, H - 7);
   placePlatform(tiles, 13, 16, H - 5);
   placePlatform(tiles, 22, 25, H - 8);
-  placePlatform(tiles, 30, 33, H - 6);
   placePlatform(tiles, 36, 40, H - 9);
   placePlatform(tiles, 47, 50, H - 7);
   placePlatform(tiles, 60, 63, H - 8);
+  // Terrain variety: an entrance ramp and a raised mesa mid-level.
+  placeStaircase(tiles, 3, H - 3, 3, 1, 2);
+  placePlateau(tiles, 29, 33, H - 6);
 
   return {
     id: 3,
@@ -410,10 +484,11 @@ const buildLevel7 = (): LevelData => {
   placePlatform(tiles, 6, 10, H - 6);
   placePlatform(tiles, 14, 17, H - 8);
   placePlatform(tiles, 24, 28, H - 7);
-  placePlatform(tiles, 32, 36, H - 5);
   placePlatform(tiles, 44, 48, H - 8);
   placePlatform(tiles, 52, 56, H - 6);
-  placePlatform(tiles, 62, 66, H - 9);
+  // Terrain variety: a low ceiling tunnel to duck through and a closing ramp.
+  placeCeilingBlock(tiles, 31, 37, 0, 5);
+  placeStaircase(tiles, 62, H - 3, 3, 1, 2);
 
   return {
     id: 7,
@@ -576,12 +651,13 @@ const buildLevel10 = (): LevelData => {
 
   placePlatform(tiles, 5, 9, H - 6);
   placePlatform(tiles, 13, 16, H - 9);
-  placePlatform(tiles, 22, 26, H - 7);
   placePlatform(tiles, 30, 34, H - 10);
   placePlatform(tiles, 43, 47, H - 6);
   placePlatform(tiles, 50, 54, H - 9);
-  placePlatform(tiles, 62, 66, H - 7);
   placePlatform(tiles, 70, 74, H - 10);
+  // Terrain variety: a raised mesa early and a stepped climb before the exit.
+  placePlateau(tiles, 22, 26, H - 5);
+  placeStaircase(tiles, 62, H - 3, 3, 1, 2);
 
   return {
     id: 10,
@@ -728,6 +804,170 @@ const buildLevel12 = (): LevelData => {
   };
 };
 
+// =============================================================================
+// LEVEL 13 — Castelo do Robô — Salão das Chamas (Sprint 7 boss: Bola de Fogo)
+// Arena with lava-gap hazards: the floor has several pits (bottomless) forcing
+// the player onto plateaus and staircases while dodging the drifting boss.
+// =============================================================================
+const buildLevel13 = (): LevelData => {
+  const W = 40;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+  placeWall(tiles, 0, 0, H - 1);
+  placeWall(tiles, W - 1, 0, H - 1);
+
+  // Lava pits break the floor into islands.
+  carvePit(tiles, 11, 13);
+  carvePit(tiles, 26, 28);
+
+  // Staircase up on the left, plateau in the middle, staircase down on the right.
+  placeStaircase(tiles, 3, H - 3, 3, 1, 2);
+  placePlateau(tiles, 17, 23, H - 8);
+  placeStaircase(tiles, 37, H - 3, 3, -1, 2);
+
+  return {
+    id: 13,
+    name: 'Castelo do Robô — Salão das Chamas',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: null,
+    enemies: [],
+    coins: [
+      ...[18, 19, 20, 21, 22].map((x) => ({ x: x * TILE_SIZE, y: (H - 9) * TILE_SIZE })),
+      ...[5, 6].map((x) => ({ x: x * TILE_SIZE, y: (H - 5) * TILE_SIZE })),
+      ...[33, 34].map((x) => ({ x: x * TILE_SIZE, y: (H - 5) * TILE_SIZE })),
+    ],
+    checkpoints: [],
+    powerUps: [{ type: 'water_gun', x: 20 * TILE_SIZE, y: (H - 10) * TILE_SIZE }],
+    boss: { type: 'fireball', x: 30 * TILE_SIZE, y: 8 * TILE_SIZE },
+    timeLimit: 300,
+    backgroundColor: '#0e0a12',
+    theme: 'castle',
+    world: 4,
+  };
+};
+
+// =============================================================================
+// LEVEL 14 — Castelo do Robô — Torre de Engrenagens (Sprint 7 normal)
+// A VERTICAL climb — genuinely different from the flat "run right" levels.
+// The player ascends a tall tower via staircases, plateaus and ceiling
+// tunnels, fighting fireballs/octopus minis on the way up.
+// =============================================================================
+const buildLevel14 = (): LevelData => {
+  const W = 48;
+  const H = 40; // tall level
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+  placeWall(tiles, 0, 0, H - 1);
+  placeWall(tiles, W - 1, 0, H - 1);
+
+  // Ascending switchback plateaus climbing the tower.
+  placePlateau(tiles, 2, 10, H - 6);
+  placePlateau(tiles, 16, 24, H - 10);
+  placePlateau(tiles, 30, 40, H - 14);
+  placePlateau(tiles, 6, 16, H - 18);
+  placePlateau(tiles, 24, 34, H - 22);
+  placePlateau(tiles, 10, 20, H - 26);
+  placePlateau(tiles, 28, 44, H - 30);
+  placePlateau(tiles, 4, 14, H - 34);
+
+  // Ceiling tunnels force the player to weave through gaps.
+  placeCeilingBlock(tiles, 20, 30, 0, 4);
+  placeCeilingBlock(tiles, 8, 14, 6, 9);
+  placeColumn(tiles, 22, H - 6);
+  placeColumn(tiles, 35, H - 14);
+
+  const flagX = 8;
+  const flagY = H - 35;
+
+  return {
+    id: 14,
+    name: 'Castelo do Robô — Torre de Engrenagens',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 3 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: { x: flagX * TILE_SIZE, y: flagY * TILE_SIZE },
+    enemies: [
+      { type: 'mini_octopus', x: 6 * TILE_SIZE, y: (H - 7) * TILE_SIZE },
+      { type: 'mini_fireball', x: 20 * TILE_SIZE, y: (H - 13) * TILE_SIZE },
+      { type: 'mini_octopus', x: 34 * TILE_SIZE, y: (H - 15) * TILE_SIZE },
+      { type: 'mini_fireball', x: 12 * TILE_SIZE, y: (H - 20) * TILE_SIZE },
+      { type: 'skeleton', x: 30 * TILE_SIZE, y: (H - 23) * TILE_SIZE },
+      { type: 'mini_fireball', x: 16 * TILE_SIZE, y: (H - 28) * TILE_SIZE },
+      { type: 'mini_octopus', x: 34 * TILE_SIZE, y: (H - 31) * TILE_SIZE },
+      { type: 'mini_fireball', x: 10 * TILE_SIZE, y: (H - 35) * TILE_SIZE },
+    ],
+    coins: [
+      ...[4, 5, 6].map((x) => ({ x: x * TILE_SIZE, y: (H - 7) * TILE_SIZE })),
+      ...[18, 19, 20].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+      ...[32, 33, 34].map((x) => ({ x: x * TILE_SIZE, y: (H - 15) * TILE_SIZE })),
+      ...[10, 11, 12].map((x) => ({ x: x * TILE_SIZE, y: (H - 19) * TILE_SIZE })),
+      ...[26, 27, 28].map((x) => ({ x: x * TILE_SIZE, y: (H - 23) * TILE_SIZE })),
+      ...[14, 15, 16].map((x) => ({ x: x * TILE_SIZE, y: (H - 27) * TILE_SIZE })),
+      ...[30, 31, 32].map((x) => ({ x: x * TILE_SIZE, y: (H - 31) * TILE_SIZE })),
+    ],
+    checkpoints: [{ x: 34 * TILE_SIZE, y: (H - 15) * TILE_SIZE }],
+    powerUps: [{ type: 'nerf_rifle', x: 12 * TILE_SIZE, y: (H - 19) * TILE_SIZE }],
+    boss: null,
+    timeLimit: 520,
+    backgroundColor: '#0c0a14',
+    theme: 'castle',
+    world: 4,
+  };
+};
+
+// =============================================================================
+// LEVEL 15 — Castelo do Robô — Câmara do Polvo (Sprint 7 boss: Polvo)
+// Arena with a central machine pillar and a ceiling overhang — the octopus
+// anchors on a raised platform and lashes tentacles + inks the screen.
+// =============================================================================
+const buildLevel15 = (): LevelData => {
+  const W = 42;
+  const H = 24;
+  const tiles = buildEmptyGrid(W, H);
+  fillGround(tiles, 2);
+  placeWall(tiles, 0, 0, H - 1);
+  placeWall(tiles, W - 1, 0, H - 1);
+
+  // Central pillar splits the arena into two sides.
+  placeColumn(tiles, 21, H - 9);
+  // Side plateaus to climb for aerial combos on the boss.
+  placePlateau(tiles, 4, 9, H - 7);
+  placePlateau(tiles, 32, 37, H - 7);
+  // Ceiling overhang in the middle.
+  placeCeilingBlock(tiles, 16, 26, 0, 3);
+
+  return {
+    id: 15,
+    name: 'Castelo do Robô — Câmara do Polvo',
+    widthInTiles: W,
+    heightInTiles: H,
+    tiles,
+    playerSpawn: { x: 2 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    flagPos: null,
+    enemies: [],
+    coins: [
+      ...[5, 6, 7].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[33, 34, 35].map((x) => ({ x: x * TILE_SIZE, y: (H - 8) * TILE_SIZE })),
+      ...[19, 20, 22, 23].map((x) => ({ x: x * TILE_SIZE, y: (H - 11) * TILE_SIZE })),
+    ],
+    checkpoints: [],
+    powerUps: [
+      { type: 'star', x: 6 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+      { type: 'water_gun', x: 35 * TILE_SIZE, y: (H - 8) * TILE_SIZE },
+    ],
+    boss: { type: 'octopus', x: 30 * TILE_SIZE, y: (H - 4) * TILE_SIZE },
+    timeLimit: 320,
+    backgroundColor: '#0a0810',
+    theme: 'castle',
+    world: 4,
+  };
+};
+
 export const LEVEL_1: LevelData = buildLevel1();
 export const LEVEL_2: LevelData = buildLevel2();
 export const LEVEL_3: LevelData = buildLevel3();
@@ -740,6 +980,9 @@ export const LEVEL_9: LevelData = buildLevel9();
 export const LEVEL_10: LevelData = buildLevel10();
 export const LEVEL_11: LevelData = buildLevel11();
 export const LEVEL_12: LevelData = buildLevel12();
+export const LEVEL_13: LevelData = buildLevel13();
+export const LEVEL_14: LevelData = buildLevel14();
+export const LEVEL_15: LevelData = buildLevel15();
 
 export const LEVELS: LevelData[] = [
   LEVEL_1,
@@ -754,6 +997,9 @@ export const LEVELS: LevelData[] = [
   LEVEL_10,
   LEVEL_11,
   LEVEL_12,
+  LEVEL_13,
+  LEVEL_14,
+  LEVEL_15,
 ];
 
 export function getLevelByIndex(levelIndex: number): LevelData {
