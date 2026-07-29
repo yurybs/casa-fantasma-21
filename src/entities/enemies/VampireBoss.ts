@@ -22,8 +22,8 @@ export interface VampireBossEvents extends EnemyEvents {
   onLifestealBlocked?: (durationMs: number) => void;
 }
 
-const VAMPIRE_BOSS_HP = 16;
-const PHASE2_HP_THRESHOLD = 8; // ≤50% — transforms into giant bat
+const VAMPIRE_BOSS_HP = 24;
+const PHASE2_HP_THRESHOLD = 12; // ≤50% — transforms into giant bat
 
 const HOVER_SPEED = 70;
 const PHASE2_SPEED_MULTIPLIER = 3;
@@ -46,11 +46,11 @@ const LIFESTEAL_BLOCK_MS = 5000;
 /**
  * VampireBoss (Level 11): two-phase flying boss of the abandoned city.
  *
- * - Phase 1 (HP 16→8): hovers around its origin with a sinusoidal bob,
+ * - Phase 1 (HP 24→12): hovers around its origin with a sinusoidal bob,
  *   periodically launching homing bats at the player. Every
  *   HITS_PER_LIFESTEAL successful hits on the player (contact or bat)
  *   heal the boss by LIFESTEAL_AMOUNT HP — unless lifesteal is blocked.
- * - Phase 2 (HP ≤8): transforms into a giant bat — movement speed ×3,
+ * - Phase 2 (HP ≤12): transforms into a giant bat — movement speed ×3,
  *   swoops directly at the player, then returns to hover height.
  *   Spawns 2 MiniVampires on entry. Lifesteal keeps working.
  * - Counter: a water projectile hit blocks lifesteal for 5s (the hit

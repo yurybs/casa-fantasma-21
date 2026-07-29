@@ -21,6 +21,10 @@ import { ClownBoss } from '../entities/enemies/ClownBoss';
 import { ScarecrowBoss } from '../entities/enemies/ScarecrowBoss';
 import { TRexBoss } from '../entities/enemies/TRexBoss';
 import { VampireBoss } from '../entities/enemies/VampireBoss';
+import { FireballBoss } from '../entities/enemies/FireballBoss';
+import { OctopusBoss } from '../entities/enemies/OctopusBoss';
+import { MiniFireball } from '../entities/enemies/MiniFireball';
+import { MiniOctopus } from '../entities/enemies/MiniOctopus';
 import { MiniClown } from '../entities/enemies/MiniClown';
 import { MiniScarecrow } from '../entities/enemies/MiniScarecrow';
 import { MiniTRex } from '../entities/enemies/MiniTRex';
@@ -35,6 +39,7 @@ import { SoundSystem, NullAudioEngine } from '../systems/SoundSystem';
 import { GameAudioBindings } from '../systems/GameAudioBindings';
 import { ParticleEffects } from '../systems/ParticleEffects';
 import { ScreenConfusion } from '../systems/ScreenConfusion';
+import { InkOverlay } from '../systems/InkOverlay';
 import { CameraSystem } from '../systems/CameraSystem';
 import { TouchControls } from '../ui/TouchControls';
 import { fadeIn, fadeToScene } from '../utils/SceneTransition';
@@ -54,7 +59,9 @@ type EnemyKind =
   | 'mini_scarecrow'
   | 'mini_trex'
   | 'mini_vampire'
-  | 'bat';
+  | 'bat'
+  | 'mini_fireball'
+  | 'mini_octopus';
 
 type EnemyLogic =
   | SkeletonLogic
@@ -67,7 +74,9 @@ type EnemyLogic =
   | MiniScarecrow
   | MiniTRex
   | MiniVampire
-  | Bat;
+  | Bat
+  | MiniFireball
+  | MiniOctopus;
 
 interface EnemyEntry {
   logic: EnemyLogic;
@@ -77,8 +86,8 @@ interface EnemyEntry {
   hasGravity: boolean;
 }
 
-type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss | TRexBoss | VampireBoss;
-type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire';
+type BossLogic = GhostBoss | ClownBoss | ScarecrowBoss | TRexBoss | VampireBoss | FireballBoss | OctopusBoss;
+type BossKind = 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire' | 'fireball' | 'octopus';
 
 interface BossEntry {
   logic: BossLogic;
@@ -168,8 +177,10 @@ export class GameScene extends Phaser.Scene {
   private audio!: GameAudioBindings;
   private particles!: ParticleEffects;
   private confusion!: ScreenConfusion;
+  private ink!: InkOverlay;
   private camera!: CameraSystem;
   private shockwaves: ShockwaveSprite[] = [];
+  private tentacleHitbox?: Phaser.GameObjects.Rectangle;
   private touch?: TouchControls;
   private timeRemaining: number = 0;
   private gameEnded: boolean = false;
@@ -236,6 +247,7 @@ export class GameScene extends Phaser.Scene {
     this.audio = new GameAudioBindings(this.gameSound);
     this.particles = new ParticleEffects(this);
     this.confusion = new ScreenConfusion(this);
+    this.ink = new InkOverlay(this);
     this.camera = new CameraSystem();
 
     this.drawBackground();
@@ -258,14 +270,18 @@ export class GameScene extends Phaser.Scene {
     this.touch.create();
 
     const musicKey =
-      this.level.world === 3 ? 'bgm_world3'
+      this.level.world === 4 ? 'bgm_world4'
+      : this.level.world === 3 ? 'bgm_world3'
       : this.level.world === 2 ? 'bgm_world2'
       : 'bgm_world1';
     void this.gameSound.resume().then(() => this.gameSound.playMusic(musicKey));
 
     this.inputs.read();
 
-    this.events.once('shutdown', () => this.confusion.stop());
+    this.events.once('shutdown', () => {
+      this.confusion.stop();
+      this.ink.stop();
+    });
     this.exposeTestHooks();
   }
 
@@ -312,6 +328,35 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    if (this.level.theme === 'castle') {
+      // Machine pillars in the background + hanging conduits from the ceiling.
+      const pillarPositions = [100, 340, 600, 860, 1120, 1380];
+      for (const x of pillarPositions) {
+        if (x > w) break;
+        if (this.textures.exists('machine_pillar')) {
+          this.add
+            .image(x, groundY - 12, 'machine_pillar')
+            .setOrigin(0.5, 1)
+            .setAlpha(0.7)
+            .setScrollFactor(0.45)
+            .setDepth(0);
+        }
+      }
+      const conduitPositions = [200, 480, 760, 1040, 1320];
+      for (const x of conduitPositions) {
+        if (x > w) break;
+        if (this.textures.exists('conduit')) {
+          this.add
+            .image(x, 8, 'conduit')
+            .setOrigin(0.5, 0)
+            .setAlpha(0.75)
+            .setScrollFactor(0.6)
+            .setDepth(0);
+        }
+      }
+      return;
+    }
+
     const positions = [80, 280, 460, 660, 880, 1080, 1240];
     for (const x of positions) {
       if (x > w) break;
@@ -333,11 +378,13 @@ export class GameScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     this.platformsPassthrough = this.physics.add.staticGroup();
     const groundKey =
-      this.level.theme === 'city' ? 'tile_city_ground'
+      this.level.theme === 'castle' ? 'tile_castle_ground'
+      : this.level.theme === 'city' ? 'tile_city_ground'
       : this.level.theme === 'cave' ? 'tile_cave_ground'
       : 'tile_ground';
     const platKey =
-      this.level.theme === 'city' ? 'tile_city_platform'
+      this.level.theme === 'castle' ? 'tile_castle_platform'
+      : this.level.theme === 'city' ? 'tile_city_platform'
       : this.level.theme === 'cave' ? 'tile_cave_platform'
       : 'tile_platform';
     for (let y = 0; y < this.level.heightInTiles; y++) {
@@ -465,6 +512,16 @@ export class GameScene extends Phaser.Scene {
         const sprite = this.makeFlyingSprite(e.x, e.y, 'bat', 22);
         logic.setPosition(e.x, e.y);
         this.enemies.push({ logic, sprite, type: 'bat', tag: 'normal', hasGravity: false });
+      } else if (e.type === 'mini_fireball') {
+        const logic = new MiniFireball();
+        const sprite = this.makeFlyingSprite(e.x, e.y, 'mini_fireball', 24);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_fireball', tag: 'ghost', hasGravity: false });
+      } else if (e.type === 'mini_octopus') {
+        const logic = new MiniOctopus();
+        const sprite = this.makeGroundSprite(e.x, e.y, 'mini_octopus', 80);
+        logic.setPosition(e.x, e.y);
+        this.enemies.push({ logic, sprite, type: 'mini_octopus', tag: 'normal', hasGravity: true });
       }
     }
   }
@@ -557,6 +614,32 @@ export class GameScene extends Phaser.Scene {
       sprite.setDepth(2);
       logic.setPosition(b.x, b.y);
       this.boss = { logic, sprite, kind: 'vampire' };
+    } else if (b.type === 'fireball') {
+      const logic = new FireballBoss(b.x, b.y, {
+        onDropTrail: (drop) => this.spawnFireTrail(drop.x, drop.y),
+        onLobExplosive: (s) => this.spawnExplosive(s.x, s.y, s.vx, s.vy),
+        onSpawnMiniFireballs: (spawns) =>
+          spawns.forEach((s) => this.spawnMiniFireball(s.x, s.y)),
+      });
+      const sprite = this.makeFlyingSprite(b.x, b.y, 'fireball_boss', 60);
+      sprite.setDepth(2);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'fireball' };
+    } else if (b.type === 'octopus') {
+      const logic = new OctopusBoss(b.x, b.y, {
+        onInkSplash: (durationMs) => {
+          this.ink.start(durationMs);
+          this.audio.emit('player.hit');
+        },
+        onSpawnMiniOctopus: (spawns) =>
+          spawns.forEach((s) => this.spawnMiniOctopus(s.x, s.y)),
+      });
+      const sprite = this.makeFlyingSprite(b.x, b.y, 'octopus_boss', 76);
+      sprite.setDepth(2);
+      logic.setPosition(b.x, b.y);
+      this.boss = { logic, sprite, kind: 'octopus' };
+      this.tentacleHitbox = this.add.rectangle(b.x, b.y, 4, 12, 0x8a3fb0, 0.55).setDepth(2);
+      this.tentacleHitbox.setVisible(false);
     }
     if (this.boss) {
       this.createBossBar();
@@ -571,6 +654,8 @@ export class GameScene extends Phaser.Scene {
       scarecrow: 'ESPANTALHO',
       trex: 'T-REX',
       vampire: 'VAMPIRO',
+      fireball: 'BOLA DE FOGO',
+      octopus: 'POLVO',
     };
     const cx = GAME_WIDTH / 2;
     this.bossBarBg = this.add
@@ -680,6 +765,31 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(sprite, this.platforms);
     this.physics.add.collider(sprite, this.platformsPassthrough);
     this.enemies.push({ logic, sprite, type: 'mini_trex', tag: 'normal', hasGravity: true });
+  }
+
+  private spawnMiniFireball(x: number, y: number): void {
+    const logic = new MiniFireball();
+    logic.setPosition(x, y);
+    const sprite = this.makeFlyingSprite(x, y, 'mini_fireball', 24);
+    this.enemies.push({ logic, sprite, type: 'mini_fireball', tag: 'ghost', hasGravity: false });
+  }
+
+  private spawnMiniOctopus(x: number, y: number): void {
+    const logic = new MiniOctopus();
+    logic.setPosition(x, y);
+    const sprite = this.makeGroundSprite(x, y, 'mini_octopus', 80);
+    this.physics.add.collider(sprite, this.platforms);
+    this.physics.add.collider(sprite, this.platformsPassthrough);
+    this.enemies.push({ logic, sprite, type: 'mini_octopus', tag: 'normal', hasGravity: true });
+  }
+
+  /** Explosive lob — reuses the arc-gravity juggle-ball projectile system. */
+  private spawnExplosive(x: number, y: number, vx: number, vy: number): void {
+    const sprite = this.physics.add.sprite(x, y, 'explosive');
+    sprite.setDisplaySize(16, 16);
+    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+    sprite.setVelocity(vx, vy);
+    this.juggleBalls.push({ sprite, ttlMs: JUGGLE_BALL_TTL_MS, damage: 2 });
   }
 
   private spawnShockwave(
@@ -1006,7 +1116,13 @@ export class GameScene extends Phaser.Scene {
     b.logic.x = b.sprite.x;
     b.logic.y = b.sprite.y;
     b.logic.update(delta, this.playerSprite.x, this.playerSprite.y);
-    if (b.kind === 'ghost' || b.kind === 'scarecrow' || b.kind === 'vampire') {
+    if (
+      b.kind === 'ghost' ||
+      b.kind === 'scarecrow' ||
+      b.kind === 'vampire' ||
+      b.kind === 'fireball' ||
+      b.kind === 'octopus'
+    ) {
       b.sprite.setVelocity(b.logic.vx, b.logic.vy);
     } else if (b.kind === 'clown') {
       // Clown uses gravity normally (it's a ground-based boss with hops).
@@ -1023,6 +1139,9 @@ export class GameScene extends Phaser.Scene {
     if (b.kind === 'scarecrow') {
       this.updateScarecrowArmHitbox(b.logic as ScarecrowBoss);
     }
+    if (b.kind === 'octopus') {
+      this.updateTentacleHitbox(b.logic as OctopusBoss);
+    }
     if (b.kind === 'trex') {
       // Swap sprite key on phase change for visual feedback.
       const phase = (b.logic as TRexBoss).phase;
@@ -1035,6 +1154,22 @@ export class GameScene extends Phaser.Scene {
         b.sprite.setDisplaySize(90, 70);
       }
     }
+    if (b.kind === 'fireball') {
+      const phase = (b.logic as FireballBoss).phase;
+      const wantKey = phase === 'phase2' ? 'fireball_boss_phase2' : 'fireball_boss';
+      if (b.sprite.texture.key !== wantKey) {
+        b.sprite.setTexture(wantKey);
+        b.sprite.setDisplaySize(60, 60);
+      }
+    }
+    if (b.kind === 'octopus') {
+      const phase = (b.logic as OctopusBoss).phase;
+      const wantKey = phase === 'phase2' ? 'octopus_boss_phase2' : 'octopus_boss';
+      if (b.sprite.texture.key !== wantKey) {
+        b.sprite.setTexture(wantKey);
+        b.sprite.setDisplaySize(76, 76);
+      }
+    }
 
     if (b.logic.isDead) {
       this.particles.enemyDeath(b.sprite.x, b.sprite.y);
@@ -1042,11 +1177,35 @@ export class GameScene extends Phaser.Scene {
       b.sprite.destroy();
       this.armHitbox?.destroy();
       this.armHitbox = undefined;
+      this.tentacleHitbox?.destroy();
+      this.tentacleHitbox = undefined;
       this.confusion.stop();
+      this.ink.stop();
       this.destroyBossBar();
       this.boss = undefined;
       this.endGame('victory');
     }
+  }
+
+  /**
+   * Positions the tentacle hitbox at the OctopusBoss's currently-striking
+   * tentacle. The tentacle points outward at its assigned angle and extends
+   * to `tentacleReach`; the hitbox is a rectangle placed at its midpoint.
+   */
+  private updateTentacleHitbox(boss: OctopusBoss): void {
+    if (!this.tentacleHitbox) return;
+    if (boss.state !== 'striking' || boss.activeTentacle < 0) {
+      this.tentacleHitbox.setVisible(false);
+      return;
+    }
+    const reach = OctopusBoss.tentacleReach;
+    const angle = (boss.activeTentacle / boss.tentacleCount) * Math.PI * 2;
+    const midX = boss.x + Math.cos(angle) * (reach / 2);
+    const midY = boss.y + Math.sin(angle) * (reach / 2);
+    this.tentacleHitbox.setVisible(true);
+    this.tentacleHitbox.setSize(reach, 12);
+    this.tentacleHitbox.setPosition(midX, midY);
+    this.tentacleHitbox.setRotation(angle);
   }
 
   private updateScarecrowArmHitbox(boss: ScarecrowBoss): void {
@@ -1306,6 +1465,14 @@ export class GameScene extends Phaser.Scene {
         this.playerLogic.takeDamage(1);
       }
     }
+    if (this.tentacleHitbox && this.tentacleHitbox.visible) {
+      const tentBounds = this.tentacleHitbox.getBounds();
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(tentBounds, this.playerSprite.getBounds())
+      ) {
+        this.playerLogic.takeDamage(1);
+      }
+    }
   }
 
   private handleCheckpointContacts(): void {
@@ -1523,6 +1690,10 @@ export class GameScene extends Phaser.Scene {
         }
       },
       getCrowCount: () => this.enemies.filter((e) => e.type === 'crow').length,
+      getMiniFireballCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_fireball').length,
+      getMiniOctopusCount: () =>
+        this.enemies.filter((e) => e.type === 'mini_octopus').length,
       getShockwaveCount: () => this.shockwaves.length,
       isCameraShaking: () => this.camera.isShaking,
       getCameraShakeOffset: () => ({ x: this.camera.offsetX, y: this.camera.offsetY }),
@@ -1530,6 +1701,11 @@ export class GameScene extends Phaser.Scene {
       getNerfRifleRemaining: () => this.playerLogic.nerfRifleRemaining,
       activateNerfRifle: () => this.playerLogic.activateNerfRifle(),
       isConfusionActive: () => this.confusion.isActive,
+      isInkActive: () => this.ink.isActive,
+      getTentacleCount: () =>
+        this.boss?.kind === 'octopus'
+          ? (this.boss.logic as OctopusBoss).tentacleCount
+          : 0,
       hasWaterGun: () => this.hasWaterGun,
       grantWaterGun: () => {
         this.hasWaterGun = true;

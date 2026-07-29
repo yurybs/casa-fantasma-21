@@ -312,6 +312,76 @@ const TRACK_WORLD3: MusicTrack = {
   ],
 };
 
+// ─── bgm_world4 — Castelo do Robô (Mundo 4) ──────────────────────────────────
+// Heavy, mechanical march — a robot fortress. Square-wave lead over a steady
+// sawtooth bass ostinato in E-minor pentatonic (E G A B D). BPM 116, deliberate
+// and menacing. trackGain 0.42 to leave headroom for the boss fights.
+const TRACK_WORLD4: MusicTrack = {
+  bpm: 116,
+  waveType: 'square',
+  trackGain: 0.42,
+  notes: [
+    // ── Intro: marching bass ostinato ─────────────────────────────────────
+    { freq: E4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: E4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: G4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: E4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: D4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: E4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: R,  duration: 2,   rest: true },
+
+    // ── A: cold mechanical lead ───────────────────────────────────────────
+    { freq: E5, duration: 1   },
+    { freq: B4, duration: 0.5 },
+    { freq: E5, duration: 0.5 },
+    { freq: G5, duration: 1   },
+    { freq: E5, duration: 1   },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: D5, duration: 0.5 },
+    { freq: B4, duration: 0.5 },
+    { freq: A4, duration: 1.5 },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── A2: answer, climbing ──────────────────────────────────────────────
+    { freq: E5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: A5, duration: 1   },
+    { freq: B5, duration: 1   },
+    { freq: A5, duration: 0.5 },
+    { freq: G5, duration: 0.5 },
+    { freq: E5, duration: 1   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── B: tense staccato section (short notes + rests) ───────────────────
+    { freq: E5, duration: 0.5 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: E5, duration: 0.5 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: G5, duration: 0.5 },
+    { freq: R,  duration: 0.5, rest: true },
+    { freq: D5, duration: 0.5 },
+    { freq: E5, duration: 1   },
+    { freq: R,  duration: 1.5, rest: true },
+
+    // ── C: descending resolution over bass ────────────────────────────────
+    { freq: B5, duration: 1   },
+    { freq: A5, duration: 1   },
+    { freq: G5, duration: 1   },
+    { freq: E5, duration: 1   },
+    { freq: D5, duration: 1   },
+    { freq: B4, duration: 2   },
+    { freq: R,  duration: 1,   rest: true },
+
+    // ── Bass close + loop bridge ──────────────────────────────────────────
+    { freq: E4, duration: 1,   type: 'sawtooth', gain: 0.5 },
+    { freq: G4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: A4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: B4, duration: 1,   type: 'sawtooth', gain: 0.45 },
+    { freq: E4, duration: 2,   type: 'sawtooth', gain: 0.5 },
+    { freq: R,  duration: 2,   rest: true },
+  ],
+};
+
 // ─── bgm_menu — Tela de Título ────────────────────────────────────────────────
 // Gentle arpeggiated waltz (3/4 feel) — atmospheric, welcoming, SNES-map inspired.
 const TRACK_MENU: MusicTrack = {
@@ -374,6 +444,7 @@ const MUSIC_TRACKS: Record<MusicKey, MusicTrack> = {
   bgm_world1: TRACK_WORLD1,
   bgm_world2: TRACK_WORLD2,
   bgm_world3: TRACK_WORLD3,
+  bgm_world4: TRACK_WORLD4,
   bgm_menu: TRACK_MENU,
 };
 

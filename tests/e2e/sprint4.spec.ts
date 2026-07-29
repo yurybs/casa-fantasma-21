@@ -91,7 +91,7 @@ test.describe('Sprint 4 — Mundo 2: Caverna Assombrada (Palhaço, Espantalho, F
     const hp = await page.evaluate(() => window.__game!.getBossHp());
     const phase = await page.evaluate(() => window.__game!.getBossPhase());
     expect(kind).toBe('clown');
-    expect(hp).toBe(12);
+    expect(hp).toBe(18);
     expect(phase).toBe('phase1');
   });
 
@@ -112,7 +112,8 @@ test.describe('Sprint 4 — Mundo 2: Caverna Assombrada (Palhaço, Espantalho, F
       null,
       { timeout: 6000 },
     );
-    await page.evaluate(() => window.__game!.damageBoss(6));
+    // ClownBoss now has 18 HP; phase2 threshold is 9. Deal 9 to cross it.
+    await page.evaluate(() => window.__game!.damageBoss(9));
     await page.waitForTimeout(200);
     const phase = await page.evaluate(() => window.__game!.getBossPhase());
     const confusion = await page.evaluate(() => window.__game!.isConfusionActive());

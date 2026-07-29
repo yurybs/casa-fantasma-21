@@ -52,6 +52,20 @@ const BOSS_INFO: Record<BossKind, BossInfo> = {
     weakness: 'Água (bloqueia lifesteal)',
     spriteKey: 'vampire_boss',
   },
+  fireball: {
+    number: '#006',
+    name: 'BOLA DE FOGO',
+    type: 'Ígneo',
+    weakness: 'Água',
+    spriteKey: 'fireball_boss',
+  },
+  octopus: {
+    number: '#007',
+    name: 'POLVO',
+    type: 'Abissal',
+    weakness: 'Combo aéreo',
+    spriteKey: 'octopus_boss',
+  },
 };
 
 /**

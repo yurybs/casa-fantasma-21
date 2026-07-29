@@ -30,6 +30,10 @@ const NODES: MapNode[] = [
   { levelIndex: 10, x: 470, y: 470, name: 'Beco das Sombras', isBoss: false, world: 3 },
   { levelIndex: 11, x: 590, y: 410, name: 'Arena do Vampiro', isBoss: true, world: 3 },
   { levelIndex: 12, x: 700, y: 470, name: 'Praça do Crepúsculo', isBoss: false, world: 3 },
+  // Mundo 4 — Castelo do Robô (middle band, right→left)
+  { levelIndex: 13, x: 580, y: 300, name: 'Salão das Chamas', isBoss: true, world: 4 },
+  { levelIndex: 14, x: 400, y: 300, name: 'Torre de Engrenagens', isBoss: false, world: 4 },
+  { levelIndex: 15, x: 220, y: 300, name: 'Câmara do Polvo', isBoss: true, world: 4 },
 ];
 
 interface NodeVisuals {
@@ -122,10 +126,24 @@ export class WorldMapScene extends Phaser.Scene {
       }
     }
 
-    // Mundo 3 backdrop (bottom strip) — dark city
-    this.add.rectangle(GAME_WIDTH / 2, 440, GAME_WIDTH - 60, 180, 0x14141c, 1).setOrigin(0.5);
+    // Mundo 4 backdrop (middle band) — steel castle
+    this.add.rectangle(GAME_WIDTH / 2, 300, GAME_WIDTH - 80, 78, 0x1a1d26, 1).setOrigin(0.5);
     this.add
-      .text(GAME_WIDTH / 2, 360, 'Mundo 3 · Cidade Abandonada', {
+      .text(GAME_WIDTH / 2, 268, 'Mundo 4 · Castelo do Robô', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#66ddff',
+      })
+      .setOrigin(0.5);
+    if (this.textures.exists('machine_pillar')) {
+      this.add.image(120, 332, 'machine_pillar').setOrigin(0.5, 1).setScale(0.4).setAlpha(0.6);
+      this.add.image(680, 332, 'machine_pillar').setOrigin(0.5, 1).setScale(0.4).setAlpha(0.6);
+    }
+
+    // Mundo 3 backdrop (bottom strip) — dark city
+    this.add.rectangle(GAME_WIDTH / 2, 448, GAME_WIDTH - 60, 164, 0x14141c, 1).setOrigin(0.5);
+    this.add
+      .text(GAME_WIDTH / 2, 378, 'Mundo 3 · Cidade Abandonada', {
         fontFamily: 'monospace',
         fontSize: '13px',
         color: '#ff9966',
@@ -134,12 +152,12 @@ export class WorldMapScene extends Phaser.Scene {
     if (this.textures.exists('building')) {
       for (let i = 0; i < 5; i++) {
         const x = 80 + i * 140;
-        this.add.image(x, 510, 'building').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.7);
+        this.add.image(x, 516, 'building').setOrigin(0.5, 1).setScale(0.45).setAlpha(0.7);
       }
     }
     if (this.textures.exists('lamppost')) {
-      this.add.image(180, 510, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
-      this.add.image(620, 510, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
+      this.add.image(180, 516, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
+      this.add.image(620, 516, 'lamppost').setOrigin(0.5, 1).setScale(0.5).setAlpha(0.85);
     }
   }
 

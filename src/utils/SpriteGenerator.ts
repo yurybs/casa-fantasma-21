@@ -317,6 +317,15 @@ export class SpriteGenerator {
     SpriteGenerator.generateVampireBossFrames(scene);
     SpriteGenerator.generateMiniVampire(scene);
     SpriteGenerator.generateBat(scene);
+    // Sprint 7 — Mundo 4 (Castelo do Robô)
+    SpriteGenerator.generateCastleTiles(scene);
+    SpriteGenerator.generateCastleDecor(scene);
+    SpriteGenerator.generateFireballBossFrames(scene);
+    SpriteGenerator.generateOctopusBossFrames(scene);
+    SpriteGenerator.generateMiniFireball(scene);
+    SpriteGenerator.generateMiniOctopus(scene);
+    SpriteGenerator.generateExplosive(scene);
+    SpriteGenerator.generateTentacle(scene);
   }
 
   private static drawTexture(
@@ -1216,6 +1225,217 @@ export class SpriteGenerator {
       g.fillStyle(0x553322, 1);
       g.fillRect(0, 0, 2, 2);
       g.fillRect(0, 6, 2, 2);
+    });
+  }
+
+  // ===== Sprint 7 — Mundo 4 (Castelo do Robô) =====
+
+  private static generateCastleTiles(scene: Phaser.Scene): void {
+    // Dark metallic plated ground tile
+    SpriteGenerator.drawTexture(scene, 'tile_castle_ground', 16, 16, (g) => {
+      g.fillStyle(0x2b2f3a, 1);
+      g.fillRect(0, 0, 16, 16);
+      g.fillStyle(0x3d4250, 1);
+      g.fillRect(0, 0, 16, 4);
+      g.fillStyle(0x565d70, 1);
+      g.fillRect(0, 4, 16, 1);
+      // Panel seams
+      g.fillStyle(0x181b22, 1);
+      g.fillRect(8, 5, 1, 11);
+      g.fillRect(0, 10, 16, 1);
+      // Rivets
+      g.fillStyle(0x8a93a6, 1);
+      g.fillRect(3, 7, 1, 1);
+      g.fillRect(12, 7, 1, 1);
+      g.fillRect(3, 13, 1, 1);
+      g.fillRect(12, 13, 1, 1);
+      g.fillStyle(0x0c0e14, 1);
+      g.fillRect(0, 0, 16, 1);
+      g.fillRect(0, 15, 16, 1);
+      g.fillRect(0, 0, 1, 16);
+      g.fillRect(15, 0, 1, 16);
+    });
+    // Glowing-edge tech platform
+    SpriteGenerator.drawTexture(scene, 'tile_castle_platform', 16, 16, (g) => {
+      g.fillStyle(0x323847, 1);
+      g.fillRect(0, 0, 16, 16);
+      // Neon top edge
+      g.fillStyle(0x22bbdd, 1);
+      g.fillRect(0, 0, 16, 2);
+      g.fillStyle(0x66eeff, 1);
+      g.fillRect(0, 2, 16, 1);
+      // Panel detail
+      g.fillStyle(0x1b2029, 1);
+      g.fillRect(4, 6, 8, 1);
+      g.fillRect(2, 10, 12, 1);
+      g.fillStyle(0x8a93a6, 1);
+      g.fillRect(3, 8, 1, 1);
+      g.fillRect(12, 8, 1, 1);
+      g.fillStyle(0x0c0e14, 1);
+      g.fillRect(0, 15, 16, 1);
+      g.fillRect(0, 0, 1, 16);
+      g.fillRect(15, 0, 1, 16);
+    });
+  }
+
+  private static generateCastleDecor(scene: Phaser.Scene): void {
+    // Tall machine pillar with blinking lights
+    SpriteGenerator.drawTexture(scene, 'machine_pillar', 40, 96, (g) => {
+      g.fillStyle(0x232733, 1);
+      g.fillRect(4, 4, 32, 92);
+      g.fillStyle(0x343a4a, 1);
+      g.fillRect(4, 4, 32, 6);
+      // Vent slats
+      g.fillStyle(0x0e1016, 1);
+      for (let y = 16; y < 90; y += 8) g.fillRect(8, y, 24, 3);
+      // Status lights
+      g.fillStyle(0x33ff88, 1);
+      g.fillCircle(12, 12, 2);
+      g.fillStyle(0xff3355, 1);
+      g.fillCircle(28, 12, 2);
+      g.fillStyle(0x22bbdd, 0.8);
+      g.fillCircle(20, 12, 2);
+    });
+    // Hanging cable/conduit
+    SpriteGenerator.drawTexture(scene, 'conduit', 24, 40, (g) => {
+      g.fillStyle(0x181b22, 1);
+      g.fillRect(10, 0, 4, 40);
+      g.fillStyle(0x3d4250, 1);
+      g.fillRect(6, 34, 12, 6);
+      g.fillStyle(0x22bbdd, 0.7);
+      g.fillCircle(12, 37, 2);
+    });
+  }
+
+  private static generateFireballBossFrames(scene: Phaser.Scene): void {
+    const drawFireball = (g: Phaser.GameObjects.Graphics, core: number, mid: number, outer: number): void => {
+      // Outer flame aura
+      g.fillStyle(outer, 0.9);
+      g.fillCircle(32, 34, 28);
+      g.fillStyle(mid, 1);
+      g.fillCircle(32, 32, 20);
+      g.fillStyle(core, 1);
+      g.fillCircle(32, 30, 12);
+      // Flame licks on top
+      g.fillStyle(outer, 0.9);
+      g.fillTriangle(20, 12, 26, 2, 30, 14);
+      g.fillTriangle(34, 14, 40, 0, 44, 16);
+      // Eyes
+      g.fillStyle(0x2a0a00, 1);
+      g.fillCircle(27, 30, 3);
+      g.fillCircle(38, 30, 3);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(27, 29, 1);
+      g.fillCircle(38, 29, 1);
+    };
+    SpriteGenerator.drawTexture(scene, 'fireball_boss', 64, 64, (g) =>
+      drawFireball(g, 0xffe066, 0xff8822, 0xff3300),
+    );
+    // Phase 2 — hotter blue-white core
+    SpriteGenerator.drawTexture(scene, 'fireball_boss_phase2', 64, 64, (g) =>
+      drawFireball(g, 0xbfeaff, 0x66aaff, 0x2255ff),
+    );
+  }
+
+  private static generateOctopusBossFrames(scene: Phaser.Scene): void {
+    const drawOctopus = (g: Phaser.GameObjects.Graphics, body: number, belly: number, arms: number, armCount: number): void => {
+      // Tentacles radiating from the base
+      g.fillStyle(arms, 1);
+      for (let i = 0; i < armCount; i++) {
+        const a = (i / armCount) * Math.PI * 2;
+        const bx = 40 + Math.cos(a) * 20;
+        const by = 46 + Math.sin(a) * 10;
+        const tx = 40 + Math.cos(a) * 34;
+        const ty = 52 + Math.sin(a) * 18;
+        g.fillTriangle(40, 46, bx, by, tx, ty);
+      }
+      // Bulbous head
+      g.fillStyle(body, 1);
+      g.fillCircle(40, 30, 24);
+      g.fillStyle(belly, 1);
+      g.fillCircle(40, 34, 15);
+      // Eyes
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(32, 26, 6);
+      g.fillCircle(48, 26, 6);
+      g.fillStyle(0x111122, 1);
+      g.fillCircle(33, 27, 3);
+      g.fillCircle(49, 27, 3);
+    };
+    SpriteGenerator.drawTexture(scene, 'octopus_boss', 80, 72, (g) =>
+      drawOctopus(g, 0x8a3fb0, 0xb06fd0, 0x6a2f90, 4),
+    );
+    // Phase 2 — angrier red-purple, 6 arms
+    SpriteGenerator.drawTexture(scene, 'octopus_boss_phase2', 80, 72, (g) =>
+      drawOctopus(g, 0xb03f6f, 0xd06f9f, 0x902f5a, 6),
+    );
+  }
+
+  private static generateMiniFireball(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'mini_fireball', 24, 24, (g) => {
+      g.fillStyle(0xff3300, 0.9);
+      g.fillCircle(12, 13, 11);
+      g.fillStyle(0xff8822, 1);
+      g.fillCircle(12, 12, 8);
+      g.fillStyle(0xffe066, 1);
+      g.fillCircle(12, 11, 4);
+      g.fillStyle(0xff3300, 0.9);
+      g.fillTriangle(7, 4, 10, 0, 13, 5);
+      g.fillStyle(0x2a0a00, 1);
+      g.fillCircle(10, 12, 1);
+      g.fillCircle(15, 12, 1);
+    });
+  }
+
+  private static generateMiniOctopus(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'mini_octopus', 28, 24, (g) => {
+      // Little arms
+      g.fillStyle(0x6a2f90, 1);
+      for (let i = 0; i < 4; i++) {
+        const bx = 6 + i * 5;
+        g.fillTriangle(bx, 16, bx + 2, 24, bx + 4, 16);
+      }
+      // Head
+      g.fillStyle(0x8a3fb0, 1);
+      g.fillCircle(14, 11, 10);
+      g.fillStyle(0xb06fd0, 1);
+      g.fillCircle(14, 13, 6);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(10, 9, 3);
+      g.fillCircle(18, 9, 3);
+      g.fillStyle(0x111122, 1);
+      g.fillCircle(11, 10, 1);
+      g.fillCircle(19, 10, 1);
+    });
+  }
+
+  private static generateExplosive(scene: Phaser.Scene): void {
+    SpriteGenerator.drawTexture(scene, 'explosive', 16, 16, (g) => {
+      // Fiery bomb
+      g.fillStyle(0x1a1a22, 1);
+      g.fillCircle(8, 9, 6);
+      g.fillStyle(0xff5522, 1);
+      g.fillCircle(8, 9, 4);
+      g.fillStyle(0xffcc44, 1);
+      g.fillCircle(8, 9, 2);
+      // Fuse spark
+      g.fillStyle(0x555555, 1);
+      g.fillRect(8, 1, 2, 3);
+      g.fillStyle(0xffee66, 1);
+      g.fillCircle(9, 1, 2);
+    });
+  }
+
+  private static generateTentacle(scene: Phaser.Scene): void {
+    // A single tapered tentacle segment used as a strike hitbox visual.
+    SpriteGenerator.drawTexture(scene, 'tentacle', 64, 16, (g) => {
+      g.fillStyle(0x6a2f90, 1);
+      g.fillTriangle(0, 4, 0, 12, 64, 8);
+      g.fillStyle(0x8a3fb0, 1);
+      g.fillTriangle(0, 6, 0, 10, 52, 8);
+      // Suckers
+      g.fillStyle(0xd0a0e0, 1);
+      for (let i = 8; i < 52; i += 10) g.fillCircle(i, 8, 1.5);
     });
   }
 }

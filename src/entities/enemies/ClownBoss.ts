@@ -27,8 +27,8 @@ export interface ClownBossEvents extends EnemyEvents {
   onJump?: () => void;
 }
 
-const CLOWN_BOSS_HP = 12;
-const PHASE2_HP_THRESHOLD = 6;
+const CLOWN_BOSS_HP = 18;
+const PHASE2_HP_THRESHOLD = 9;
 const PATROL_SPEED_PHASE1 = 80;
 const PATROL_SPEED_PHASE2 = 130;
 const JUMP_INTERVAL_MS_PHASE1 = 5000;

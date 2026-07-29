@@ -53,8 +53,16 @@ export interface GameHooks {
   getEnemyKinds: () => string[];
   getJuggleBallCount: () => number;
   getFireTrailCount: () => number;
-  getLevelTheme: () => 'forest' | 'cave' | 'city';
-  getBossKind: () => 'ghost' | 'clown' | 'scarecrow' | 'trex' | 'vampire' | 'none';
+  getLevelTheme: () => 'forest' | 'cave' | 'city' | 'castle';
+  getBossKind: () =>
+    | 'ghost'
+    | 'clown'
+    | 'scarecrow'
+    | 'trex'
+    | 'vampire'
+    | 'fireball'
+    | 'octopus'
+    | 'none';
   getMiniClownCount: () => number;
   getCrowCount: () => number;
   isConfusionActive: () => boolean;
@@ -78,6 +86,11 @@ export interface GameHooks {
   getLifestealHitCount: () => number;
   registerLifestealHit: () => void;
   blockBossLifesteal: () => void;
+  // Sprint 7 additions
+  getMiniFireballCount: () => number;
+  getMiniOctopusCount: () => number;
+  isInkActive: () => boolean;
+  getTentacleCount: () => number;
 }
 
 export interface MapHooks {

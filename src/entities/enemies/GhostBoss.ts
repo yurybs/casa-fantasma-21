@@ -15,7 +15,7 @@ export interface GhostBossEvents extends EnemyEvents {
   onDashStart?: () => void;
 }
 
-const GHOST_BOSS_HP = 8;
+const GHOST_BOSS_HP = 12;
 const FLOAT_AMP_X_PHASE1 = 60;
 const FLOAT_AMP_X_PHASE2 = 90;
 const FLOAT_AMP_Y = 30;
@@ -26,7 +26,7 @@ const DASH_INTERVAL_MS_PHASE2 = 2200;
 const DASH_SPEED = 320;
 const DASH_DURATION_MS = 700;
 const RECOVER_DURATION_MS = 600;
-const PHASE2_HP_THRESHOLD = 4;
+const PHASE2_HP_THRESHOLD = 6;
 
 /**
  * Boss enemy for Level 2: floats, periodically dash-attacks the player,

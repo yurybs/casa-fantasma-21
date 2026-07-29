@@ -17,7 +17,7 @@ export interface ScarecrowBossEvents extends EnemyEvents {
   onRotateStart?: () => void;
 }
 
-const SCARECROW_BOSS_HP = 12;
+const SCARECROW_BOSS_HP = 18;
 const PHASE2_HP_THRESHOLD = Math.floor(SCARECROW_BOSS_HP * 0.4);
 const ARM_REACH_TILES = 3;
 const TILE_PIXELS = 16;
